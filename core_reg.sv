@@ -405,12 +405,13 @@ assign instruction_jump_address_extern=instruction_jump_address;
 reg [15:0] temporary0;
 reg [15:0] temporary1;
 
-reg [15:0] temporary2;
+wire [18:0]temporary2;
 reg [15:0] temporary3;
 reg [15:0] temporary4;
 reg [15:0] temporary5;
 wire [17:0]temporary6;
 reg [15:0] temporary7;
+
 
 reg [16:0] adderOutput;
 
@@ -537,7 +538,8 @@ always @(posedge main_clk) adderControl2_r<=adderControl2_lut[instructionIn[15:1
 always @(posedge main_clk) step<=stepNext;
 
 
-assign temporary6={2'b0,temporary2}+{2'b0,temporary3}+{2'b0,temporary4}+{2'b0,temporary5};
+assign temporary2=(adderControl1_r +({2'b0,temporary3,1'b1}+{2'b0,temporary4,1'b0}))+{2'b0,temporary5,1'b0};
+assign temporary6=temporary2[18:1];
 
 
 //reg conditional_jump_signal;
@@ -550,7 +552,7 @@ always @(posedge main_clk) begin
 	//conditional_jump_signal<=!(instant_user_reg_override_active[instructionIn[11:8]]?instant_user_reg_wide_or[instructionIn[11:8]]:user_reg_wide_or[instructionIn[11:8]]); // if wide_or is 0 then jump is 1
 end
 
-reg sim_is_first=0; // used only for simulation testing
+reg sim_is_first=0; // `sim_is_first` is used only for simulation testing
 always @(posedge main_clk) sim_is_first<=1;
 
 always @(posedge main_clk) begin
@@ -579,7 +581,6 @@ always_comb begin
 	temporary0[14]=bitwise_lut[{instructionCurrent[13:12],vr2[14],vr1[14]}];
 	temporary0[15]=bitwise_lut[{instructionCurrent[13:12],vr2[15],vr1[15]}];
 	
-	temporary2=adderControl1_r;
 	temporary3=vr1;
 	temporary4={16{adderControl0_r}} ^ vr2;
 	temporary5={16{adderControl2_r}} & (instructionCurrent[15]?user_reg[4'hF]:vr0);
@@ -1955,11 +1956,11 @@ module core_main(
 	output		     [3:0]		VGA_R,
 	output		          		VGA_HS,
 	output		          		VGA_VS,
-`ifndef USE_FORMAL
+
 	output [7:0] hex_display [5:0],
 	
 	input 		     [9:0]		SW,
-`endif
+
 	input vga_clk,
 	input main_clk,
 	
@@ -1967,15 +1968,6 @@ module core_main(
 	output [15:0] debug_stack_pointer,
 	output [25:0] debug_instruction_fetch_address,
 	input debug_scheduler
-
-`ifdef USE_FORMAL
-,input formal_init_finished
-,input init_set_cache_sig
-,input init_set_way_sig
-,input [ 10:0] formal_init_addr
-,input [127:0] formal_init_data
-`endif
-
 
 );
 
@@ -2026,7 +2018,7 @@ reg [15:0] stack_pointer_p4=16'h0004;
 
 reg [15:0] user_reg [15:0]='{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
 
-wire user_reg_wide_or [15:0];//='{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+wire user_reg_wide_or [15:0];
 assign user_reg_wide_or[0]=(| user_reg[0]);
 assign user_reg_wide_or[1]=(| user_reg[1]);
 assign user_reg_wide_or[2]=(| user_reg[2]);
@@ -2783,7 +2775,7 @@ always_comb begin
 	executerWriteWideOrSelected[15]=((|(executer0WriteValues[15])) & executer0DoWrite[15]) | ((|(executer1WriteValues[15])) & executer1DoWrite[15]) | ((|(executer2WriteValues[15])) & executer2DoWrite[15]) | ((|(executer3WriteValues[15])) & executer3DoWrite[15]);
 end
 
-`ifdef USE_FORMAL
+
 always @(posedge main_clk) begin
 	assert ((executer0DoWrite & executer1DoWrite)==0);
 	assert ((executer0DoWrite & executer2DoWrite)==0);
@@ -2792,16 +2784,7 @@ always @(posedge main_clk) begin
 	assert ((executer1DoWrite & executer3DoWrite)==0);
 	assert ((executer2DoWrite & executer3DoWrite)==0);
 end
-`else
-always @(posedge main_clk) begin
-	if ((executer0DoWrite & executer1DoWrite)!=0) begin $stop(); end
-	if ((executer0DoWrite & executer2DoWrite)!=0) begin $stop(); end
-	if ((executer0DoWrite & executer3DoWrite)!=0) begin $stop(); end
-	if ((executer1DoWrite & executer2DoWrite)!=0) begin $stop(); end
-	if ((executer1DoWrite & executer3DoWrite)!=0) begin $stop(); end
-	if ((executer2DoWrite & executer3DoWrite)!=0) begin $stop(); end
-end
-`endif
+
 
 always @(posedge main_clk) begin
 	if (executerDoWrite[0]) begin user_reg[0]<=executerWriteValuesSelected[0];end
@@ -3100,15 +3083,6 @@ full_memory full_memory_inst(
 	
 	vga_clk,
 	main_clk
-
-`ifdef USE_FORMAL
-,formal_init_sig
-,formal_init_data_way0
-,formal_init_data_way1
-,formal_init_data_way2
-,formal_init_data_way3
-,formal_init_data_cache
-`endif
 );
 
 

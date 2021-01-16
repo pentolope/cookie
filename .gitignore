@@ -1,6 +1,7 @@
 
 *.bak
 *.qws
+*.rpt
 
 db/*
 incremental_db/*
@@ -11,4 +12,5 @@ simulation/modelsim/*.mif
 simulation/modelsim/*.ver
 simulation/modelsim/*.wlf
 simulation/modelsim/*.do
+simulation/modelsim/msim_transcript
 

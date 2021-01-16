@@ -571,11 +571,7 @@ wire [4:0] raw_perm_out;
 
 assign perm_out=do_override?perm_in_r:raw_perm_out;
 
-`ifdef USE_FORMAL
-fo_cache_LRU fo_cache_LRU_inst(
-`else
 ip_cache_LRU ip_cache_LRU_inst(
-`endif
 	main_clk,
 	perm_in,
 	read_addr,
@@ -703,14 +699,6 @@ module cache_data(
 	input  calculated_cache_fault,
 	
 	input  main_clk
-
-`ifdef USE_FORMAL
-,input formal_init_finished
-,input init_set_cache_sig
-,input [10:0] formal_init_addr
-,input [127:0] formal_init_data
-`endif
-
 );
 
 reg [15:0] multi_access_out_full_data [7:0];
@@ -962,11 +950,8 @@ end
 
 
 
-`ifdef USE_FORMAL
-fo_cache_data fo_cache_data_inst(
-`else
+
 ip_cache_data ip_cache_data_inst(
-`endif
 	byte_enable,
 	main_clk,
 	write_data,
@@ -980,19 +965,10 @@ ip_cache_data ip_cache_data_inst(
 	},
 	do_write,
 	raw_out_full_data
-`ifdef USE_FORMAL
-,formal_init_finished
-,init_set_cache_sig
-,formal_init_addr
-,formal_init_data
-`endif
 );
 
-`ifdef USE_FORMAL
-fo_cache_dirty fo_cache_dirty_inst(
-`else
+
 ip_cache_dirty ip_cache_dirty_inst(
-`endif
 	main_clk,
 	do_write && !do_full_write,
 	{
@@ -1024,14 +1000,6 @@ module cache_way(
 	
 	input do_write,
 	input main_clk
-
-`ifdef USE_FORMAL
-,input formal_init_finished
-,input init_set_way_sig
-,input [  8:0] formal_init_addr
-,input [127:0] formal_init_data
-`endif
-
 );
 
 reg [12:0] saved_target=0;
@@ -1075,106 +1043,47 @@ assign out_addr_at_in_way_index=
 
 
 
-`ifdef USE_FORMAL
-fo_cache_addr_wayx fo_cache_addr_way0_inst(
-`else
+
 ip_cache_addr_way0 ip_cache_addr_way0_inst(
-`endif
+
 	main_clk,
 	target_address[25:13],
 	target_address[12: 4],
 	target_address[12: 4],
 	do_write && (in_way_index==2'd0),
 	raw_out0
-`ifdef USE_FORMAL
-,formal_init_finished
-,formal_init_sig
-,formal_init_addr
-,formal_init_data[ 12:  0]
-,2'd0
-`endif
 );
 
-
-
-`ifdef USE_FORMAL
-fo_cache_addr_wayx fo_cache_addr_way1_inst(
-`else
 ip_cache_addr_way1 ip_cache_addr_way1_inst(
-`endif
 	main_clk,
 	target_address[25:13],
 	target_address[12: 4],
 	target_address[12: 4],
 	do_write && (in_way_index==2'd1),
 	raw_out1
-`ifdef USE_FORMAL
-,formal_init_finished
-,formal_init_sig
-,formal_init_addr
-,formal_init_data[ 44: 32]
-,2'd1
-`endif
 );
 
 
-
-`ifdef USE_FORMAL
-fo_cache_addr_wayx fo_cache_addr_way2_inst(
-`else
 ip_cache_addr_way2 ip_cache_addr_way2_inst(
-`endif
 	main_clk,
 	target_address[25:13],
 	target_address[12: 4],
 	target_address[12: 4],
 	do_write && (in_way_index==2'd2),
 	raw_out2
-`ifdef USE_FORMAL
-,formal_init_finished
-,formal_init_sig
-,formal_init_addr
-,formal_init_data[ 76: 64]
-,2'd2
-`endif
 );
 
 
 
-`ifdef USE_FORMAL
-fo_cache_addr_wayx fo_cache_addr_way3_inst(
-`else
+
 ip_cache_addr_way3 ip_cache_addr_way3_inst(
-`endif
 	main_clk,
 	target_address[25:13],
 	target_address[12: 4],
 	target_address[12: 4],
 	do_write && (in_way_index==2'd3),
 	raw_out3
-`ifdef USE_FORMAL
-,formal_init_finished
-,formal_init_sig
-,formal_init_addr
-,formal_init_data[108: 96]
-,2'd3
-`endif
 );
-
-`ifdef USE_FORMAL
-always_comb begin
-	if (init_set_way_sig) begin
-		assume (formal_init_data[ 12:  0]!=formal_init_data[ 44: 32]);
-		assume (formal_init_data[ 12:  0]!=formal_init_data[ 76: 64]);
-		assume (formal_init_data[ 12:  0]!=formal_init_data[108: 96]);
-
-		assume (formal_init_data[ 44: 32]!=formal_init_data[ 76: 64]);
-		assume (formal_init_data[ 44: 32]!=formal_init_data[108: 96]);
-		
-		assume (formal_init_data[ 76: 64]!=formal_init_data[108: 96]);
-	end
-end
-`endif
 
 wire [1:0] way_index_lookup [7:0];
 assign way_index_lookup[{1'b0,1'b0,1'b0}]=2'd0;
@@ -1197,13 +1106,6 @@ assign out_way_index=way_index_lookup[{match[3],match[2],match[1]}];
 assign out_fault=!match[0] & !match[1] & !match[2] & !match[3];
 
 endmodule
-
-`ifdef USE_FORMAL
-module lcell(input in,output out);
-assign out=in;
-endmodule
-`endif
-
 
 module lcell_1(output o,input  i);
 lcell lc0 (.in(i),.out(o));
@@ -2098,16 +2000,6 @@ module full_memory(
 	
 	input  vga_clk,
 	input  main_clk
-
-`ifdef USE_FORMAL
-,input formal_init_finished
-,input init_set_cache_sig
-,input init_set_way_sig
-,input [ 10:0] formal_init_addr
-,input [127:0] formal_init_data
-`endif
-
-
 );
 
 
@@ -2568,15 +2460,6 @@ cache_way cache_way(
 	cache_way_target_address,
 	is_cache_being_filled, // do_set_cache_way
 	main_clk
-
-`ifdef USE_FORMAL
-,formal_init_finished
-,init_set_way_sig
-,formal_init_addr[8:0]
-,formal_init_data
-`endif
-
-
 );
 
 cache_data cache_data_inst(
@@ -2601,15 +2484,6 @@ cache_data cache_data_inst(
 	cache_no_write_override, // this does an override so that no write operation occures unless a do_full_write is performed
 	calculated_cache_fault,
 	main_clk
-
-`ifdef USE_FORMAL
-,formal_init_finished
-,init_set_cache_sig
-,formal_init_addr
-,formal_init_data
-`endif
-
-
 );
 
 cache_LRU cache_LRU_inst(
