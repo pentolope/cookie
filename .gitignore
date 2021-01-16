@@ -7,11 +7,4 @@ db/*
 incremental_db/*
 output_files/*
 
-simulation/modelsim/*.svo
-simulation/modelsim/*.mif
-simulation/modelsim/*.ver
-simulation/modelsim/*.wlf
-simulation/modelsim/*.do
-simulation/modelsim/rtl_work/*
-simulation/modelsim/msim_transcript
-
+simulation/modelsim/*
