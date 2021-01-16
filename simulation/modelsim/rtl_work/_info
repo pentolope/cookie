@@ -1,0 +1,1030 @@
+m255
+K4
+z2
+!s11f vlog 2020.1 2020.02, Feb 28 2020
+13
+!s112 1.1
+!i10d 8192
+!i10e 25
+!i10f 100
+cModel Technology
+Z0 dH:/FPGA/projects/cookie/simulation/modelsim
+vcache_data
+Z1 DXx6 sv_std 3 std 0 22 VYECXdT12H8WgbUP_5Y6:3
+Z2 !s110 1610765420
+!i10b 1
+!s100 BlSIUXzCEP]]Z3Rg`@1M60
+Z3 !s11b Dg1SIo80bB@j0V0VzS_@n1
+Ii7^Ug30BnJHKgM:9Hg:Vh2
+Z4 VDg1SIo80bB@j0V0VzS_@n1
+S1
+R0
+Z5 w1610648122
+Z6 8H:/FPGA/projects/cookie/internal_memory.sv
+Z7 FH:/FPGA/projects/cookie/internal_memory.sv
+!i122 11
+L0 683 328
+Z8 OV;L;2020.1;71
+r1
+!s85 0
+31
+Z9 !s108 1610765420.000000
+!s107 H:/FPGA/projects/cookie/AutoGen1.sv|H:/FPGA/projects/cookie/AutoGen3.sv|H:/FPGA/projects/cookie/vga_driver.sv|H:/FPGA/projects/cookie/core_reg.sv|H:/FPGA/projects/cookie/AutoGen0.sv|H:/FPGA/projects/cookie/internal_memory.sv|H:/FPGA/projects/cookie/top_cookie.sv|
+Z10 !s90 -F=H:/FPGA/projects/test2/simulation/modelsim/vlog.opt|-F=|-reportprogress|300|-sv|-work|work|+incdir+H:/FPGA/projects/cookie|H:/FPGA/projects/cookie/top_cookie.sv|
+!i113 1
+Z11 o-sv -work work
+Z12 !s92 -sv -work work +incdir+H:/FPGA/projects/cookie
+Z13 tShow_source 1 Hazard 1 Svlog 1 CvgOpt 0
+vcache_LRU
+R1
+R2
+!i10b 1
+!s100 0ZO][[6FQ8fH3a>CSg4HI2
+R3
+Iln;CW<4LWFGdPY2KBjS@n3
+R4
+S1
+R0
+Z14 w1610765395
+R7
+Z15 FH:/FPGA/projects/cookie/AutoGen0.sv
+!i122 11
+L0 641 165
+R8
+r1
+!s85 0
+31
+R9
+Z16 !s107 H:/FPGA/projects/cookie/AutoGen1.sv|H:/FPGA/projects/cookie/AutoGen3.sv|H:/FPGA/projects/cookie/vga_driver.sv|H:/FPGA/projects/cookie/core_reg.sv|H:/FPGA/projects/cookie/AutoGen0.sv|H:/FPGA/projects/cookie/internal_memory.sv|H:/FPGA/projects/cookie/top_cookie.sv|
+R10
+!i113 1
+R11
+R12
+R13
+ncache_@l@r@u
+vcache_LRU_old
+R1
+R2
+!i10b 1
+!s100 ?@<OXXCa7=FWb8SK29UII0
+R3
+Ie4:ljV?C:14V8=S[QYKEk0
+R4
+S1
+R0
+R14
+R7
+R15
+!i122 11
+L0 591 173
+R8
+r1
+!s85 0
+31
+R9
+R16
+R10
+!i113 1
+R11
+R12
+R13
+ncache_@l@r@u_old
+vcache_LRU_sub_read_through_write
+R1
+R2
+!i10b 1
+!s100 FnA5=ocB9LS_oE6^]Kf8Q0
+R3
+IG<d<bUleB`MCjjjgkPm723
+R4
+S1
+R0
+R5
+R6
+R7
+!i122 11
+L0 553 35
+R8
+r1
+!s85 0
+31
+R9
+R16
+R10
+!i113 1
+R11
+R12
+R13
+ncache_@l@r@u_sub_read_through_write
+vcache_way
+R1
+R2
+!i10b 1
+!s100 KQiz:lG;z<]J2S7nEYN]Q0
+R3
+I>?YzV2bKL3Dg3ULF=]99^3
+R4
+S1
+R0
+R5
+R6
+R7
+!i122 11
+L0 1015 185
+R8
+r1
+!s85 0
+31
+R9
+R16
+R10
+!i113 1
+R11
+R12
+R13
+vcore_executer
+R1
+R2
+!i10b 1
+!s100 A^BA:fGVzVWNTG`@1=ORT2
+R3
+IM^6i2bP3m0dn3I;1K;9io1
+R4
+S1
+R0
+Z17 w1610763122
+Z18 8H:/FPGA/projects/cookie/core_reg.sv
+Z19 FH:/FPGA/projects/cookie/core_reg.sv
+!i122 11
+L0 304 1352
+R8
+r1
+!s85 0
+31
+R9
+R16
+R10
+!i113 1
+R11
+R12
+R13
+vcore_main
+R1
+R2
+!i10b 1
+!s100 D5Y]m^IPaojAEBB@?NELR2
+R3
+IPUiSl]RKIC=cCI7[SGIi40
+R4
+S1
+R0
+R14
+R19
+FH:/FPGA/projects/cookie/AutoGen3.sv
+FH:/FPGA/projects/cookie/AutoGen1.sv
+!i122 11
+L0 1941 3346
+R8
+r1
+!s85 0
+31
+R9
+R16
+R10
+!i113 1
+R11
+R12
+R13
+vdivision_remainder
+R1
+R2
+!i10b 1
+!s100 Xzjh;dDMIfFnngk`FLcnb3
+R3
+IZZjifacZ;oNf8gQb;ZFl;1
+R4
+S1
+R0
+R17
+R18
+R19
+!i122 11
+L0 8 72
+R8
+r1
+!s85 0
+31
+R9
+R16
+R10
+!i113 1
+R11
+R12
+R13
+vdram_controller
+R1
+R2
+!i10b 1
+!s100 k]Rmd8]`GgNj9X8>:`@@01
+R3
+IGRnGOeE5eknBGF=37z>dI0
+R4
+S1
+R0
+R5
+R6
+R7
+!i122 11
+L0 6 545
+R8
+r1
+!s85 0
+31
+R9
+R16
+R10
+!i113 1
+R11
+R12
+R13
+vfake_dram
+R1
+R2
+!i10b 1
+!s100 5DCi]K=YLZzgz0:z<<aMH3
+R3
+IaVJHmWPYfZdcm9ko2]G^j2
+R4
+S1
+R0
+R5
+R6
+R7
+!i122 11
+L0 2674 257
+R8
+r1
+!s85 0
+31
+R9
+R16
+R10
+!i113 1
+R11
+R12
+R13
+vfull_memory
+R1
+R2
+!i10b 1
+!s100 cnXOYh09g;=EN`n?Y_T8j1
+R3
+I7nT8238^3YLF`fiRg<bSZ0
+R4
+S1
+R0
+R5
+R6
+R7
+!i122 11
+L0 2034 635
+R8
+r1
+!s85 0
+31
+R9
+R16
+R10
+!i113 1
+R11
+R12
+R13
+vgenerate_hex_display_base10
+R1
+R2
+!i10b 1
+!s100 KJRS=LI]ZX2o>YbUFohL00
+R3
+IKD[V:NmQM32UN;=N@95Kk0
+R4
+S1
+R0
+R17
+R18
+R19
+!i122 11
+L0 82 117
+R8
+r1
+!s85 0
+31
+R9
+R16
+R10
+!i113 1
+R11
+R12
+R13
+vgenerate_hex_display_base16
+R1
+R2
+!i10b 1
+!s100 9[KoX57]`z_RY:BBije<12
+R3
+Ine3g?j;XQi:4zcARAXAOI2
+R4
+S1
+R0
+R17
+R18
+R19
+!i122 11
+L0 201 65
+R8
+r1
+!s85 0
+31
+R9
+R16
+R10
+!i113 1
+R11
+R12
+R13
+vinstruction_categorizer
+R1
+R2
+!i10b 1
+!s100 j;gD:zhKJoEoH67Wa9FTm1
+R3
+I5F_KiXM42@dZDW`i0CU?;1
+R4
+S1
+R0
+R17
+R18
+R19
+!i122 11
+L0 1659 190
+R8
+r1
+!s85 0
+31
+R9
+R16
+R10
+!i113 1
+R11
+R12
+R13
+vinstruction_conflict_detector
+R1
+R2
+!i10b 1
+!s100 QLDk;U_d@f4VkPc[BV:lN0
+R3
+I3_71M=J>AdNgXLZ[:k5ER0
+R4
+S1
+R0
+R17
+R18
+R19
+!i122 11
+L0 1852 87
+R8
+r1
+!s85 0
+31
+R9
+R16
+R10
+!i113 1
+R11
+R12
+R13
+vip_cache_addr_way0
+R1
+Z20 !s110 1610765418
+!i10b 1
+!s100 z=c]@K_hblB`iKi;l0nk31
+R3
+I^TU>EWcILchgUd;1RYY6B0
+R4
+S1
+R0
+w1604191760
+8H:/FPGA/projects/cookie/ip_cache_addr_way0.v
+FH:/FPGA/projects/cookie/ip_cache_addr_way0.v
+!i122 8
+Z21 L0 40 75
+R8
+r1
+!s85 0
+31
+Z22 !s108 1610765418.000000
+!s107 H:/FPGA/projects/cookie/ip_cache_addr_way0.v|
+!s90 -F=H:/FPGA/projects/test2/simulation/modelsim/vlog.opt|-F=|-reportprogress|300|-sv|-work|work|+incdir+H:/FPGA/projects/cookie|H:/FPGA/projects/cookie/ip_cache_addr_way0.v|
+!i113 1
+R11
+R12
+R13
+vip_cache_addr_way1
+R1
+R20
+!i10b 1
+!s100 mScl8EoF5Fj;g>_=SRgcZ1
+R3
+InY@1JV8AJP^kEab<aGG_43
+R4
+S1
+R0
+w1604191814
+8H:/FPGA/projects/cookie/ip_cache_addr_way1.v
+FH:/FPGA/projects/cookie/ip_cache_addr_way1.v
+!i122 7
+R21
+R8
+r1
+!s85 0
+31
+Z23 !s108 1610765417.000000
+!s107 H:/FPGA/projects/cookie/ip_cache_addr_way1.v|
+!s90 -F=H:/FPGA/projects/test2/simulation/modelsim/vlog.opt|-F=|-reportprogress|300|-sv|-work|work|+incdir+H:/FPGA/projects/cookie|H:/FPGA/projects/cookie/ip_cache_addr_way1.v|
+!i113 1
+R11
+R12
+R13
+vip_cache_addr_way2
+R1
+Z24 !s110 1610765417
+!i10b 1
+!s100 Cdg_8U4`MD=AP=AR57No93
+R3
+IKm<27m]>MV2jeCDb<EzVM2
+R4
+S1
+R0
+w1604191874
+8H:/FPGA/projects/cookie/ip_cache_addr_way2.v
+FH:/FPGA/projects/cookie/ip_cache_addr_way2.v
+!i122 6
+R21
+R8
+r1
+!s85 0
+31
+R23
+!s107 H:/FPGA/projects/cookie/ip_cache_addr_way2.v|
+!s90 -F=H:/FPGA/projects/test2/simulation/modelsim/vlog.opt|-F=|-reportprogress|300|-sv|-work|work|+incdir+H:/FPGA/projects/cookie|H:/FPGA/projects/cookie/ip_cache_addr_way2.v|
+!i113 1
+R11
+R12
+R13
+vip_cache_addr_way3
+R1
+R24
+!i10b 1
+!s100 L5bg;EkXk?fJl3L1Xj7GO2
+R3
+Id=dd<jfh?IOGgl;z^@C`Z2
+R4
+S1
+R0
+w1604191919
+8H:/FPGA/projects/cookie/ip_cache_addr_way3.v
+FH:/FPGA/projects/cookie/ip_cache_addr_way3.v
+!i122 5
+R21
+R8
+r1
+!s85 0
+31
+Z25 !s108 1610765416.000000
+!s107 H:/FPGA/projects/cookie/ip_cache_addr_way3.v|
+!s90 -F=H:/FPGA/projects/test2/simulation/modelsim/vlog.opt|-F=|-reportprogress|300|-sv|-work|work|+incdir+H:/FPGA/projects/cookie|H:/FPGA/projects/cookie/ip_cache_addr_way3.v|
+!i113 1
+R11
+R12
+R13
+vip_cache_data
+R1
+!s110 1610765416
+!i10b 1
+!s100 IEiBHTXfZ9zQXiM`]SmB30
+R3
+IcHZRW;<iHHW@FBLhRkS903
+R4
+S1
+R0
+w1604695165
+8H:/FPGA/projects/cookie/ip_cache_data.v
+FH:/FPGA/projects/cookie/ip_cache_data.v
+!i122 4
+L0 40 79
+R8
+r1
+!s85 0
+31
+R25
+!s107 H:/FPGA/projects/cookie/ip_cache_data.v|
+!s90 -F=H:/FPGA/projects/test2/simulation/modelsim/vlog.opt|-F=|-reportprogress|300|-sv|-work|work|+incdir+H:/FPGA/projects/cookie|H:/FPGA/projects/cookie/ip_cache_data.v|
+!i113 1
+R11
+R12
+R13
+vip_cache_dirty
+R1
+Z26 !s110 1610765415
+!i10b 1
+!s100 hbAoMR:hOUW8j<]?z^eI11
+R3
+IIi]IzVE_zFFzW1FIF^CYD2
+R4
+S1
+R0
+w1604637629
+8H:/FPGA/projects/cookie/ip_cache_dirty.v
+FH:/FPGA/projects/cookie/ip_cache_dirty.v
+!i122 3
+R21
+R8
+r1
+!s85 0
+31
+Z27 !s108 1610765415.000000
+!s107 H:/FPGA/projects/cookie/ip_cache_dirty.v|
+!s90 -F=H:/FPGA/projects/test2/simulation/modelsim/vlog.opt|-F=|-reportprogress|300|-sv|-work|work|+incdir+H:/FPGA/projects/cookie|H:/FPGA/projects/cookie/ip_cache_dirty.v|
+!i113 1
+R11
+R12
+R13
+vip_cache_LRU
+R1
+R26
+!i10b 1
+!s100 IfeMICRf`=F[<BMn4VQYc1
+R3
+I;oH:1Y^20GeV8GMHFMbDa3
+R4
+S1
+R0
+w1602793695
+8H:/FPGA/projects/cookie/ip_cache_LRU.v
+FH:/FPGA/projects/cookie/ip_cache_LRU.v
+!i122 2
+L0 40 74
+R8
+r1
+!s85 0
+31
+R27
+!s107 H:/FPGA/projects/cookie/ip_cache_LRU.v|
+!s90 -F=H:/FPGA/projects/test2/simulation/modelsim/vlog.opt|-F=|-reportprogress|300|-sv|-work|work|+incdir+H:/FPGA/projects/cookie|H:/FPGA/projects/cookie/ip_cache_LRU.v|
+!i113 1
+R11
+R12
+R13
+nip_cache_@l@r@u
+vip_pll_internal
+R1
+Z28 !s110 1610765414
+!i10b 1
+!s100 6LC5nEH8jJ@d4L>dOf[QT1
+R3
+I<h>2ZX^Ke9naRhG6;MjDn0
+R4
+S1
+R0
+w1604193612
+8H:/FPGA/projects/cookie/ip_pll_internal.v
+FH:/FPGA/projects/cookie/ip_pll_internal.v
+!i122 1
+L0 40 115
+R8
+r1
+!s85 0
+31
+!s108 1610765414.000000
+!s107 H:/FPGA/projects/cookie/ip_pll_internal.v|
+!s90 -F=H:/FPGA/projects/test2/simulation/modelsim/vlog.opt|-F=|-reportprogress|300|-sv|-work|work|+incdir+H:/FPGA/projects/cookie|H:/FPGA/projects/cookie/ip_pll_internal.v|
+!i113 1
+R11
+R12
+R13
+vip_pll_internal_altpll
+R1
+Z29 !s110 1610765419
+!i10b 1
+!s100 _E:`kSnRbHUEe;I@lM^dN0
+R3
+I3HBAHiLhbFWXE71CFAT]X0
+R4
+S1
+R0
+w1610763376
+8H:/FPGA/projects/cookie/db/ip_pll_internal_altpll.v
+FH:/FPGA/projects/cookie/db/ip_pll_internal_altpll.v
+!i122 9
+L0 30 68
+R8
+r1
+!s85 0
+31
+R22
+!s107 H:/FPGA/projects/cookie/db/ip_pll_internal_altpll.v|
+!s90 -F=H:/FPGA/projects/test2/simulation/modelsim/vlog.opt|-F=|-reportprogress|300|-sv|-work|work|+incdir+H:/FPGA/projects/cookie/db|H:/FPGA/projects/cookie/db/ip_pll_internal_altpll.v|
+!i113 1
+R11
+Z30 !s92 -sv -work work +incdir+H:/FPGA/projects/cookie/db
+R13
+vip_pll_vga
+R1
+R28
+!i10b 1
+!s100 ^@=>HNYhcO4zB02m4=aNT3
+R3
+Iha;O0BoEZ:lf[0OiTDX5_1
+R4
+S1
+R0
+w1606762958
+8H:/FPGA/projects/cookie/ip_pll_vga.v
+FH:/FPGA/projects/cookie/ip_pll_vga.v
+!i122 0
+L0 40 110
+R8
+r1
+!s85 0
+31
+!s108 1610765413.000000
+!s107 H:/FPGA/projects/cookie/ip_pll_vga.v|
+!s90 -F=H:/FPGA/projects/test2/simulation/modelsim/vlog.opt|-F=|-reportprogress|300|-sv|-work|work|+incdir+H:/FPGA/projects/cookie|H:/FPGA/projects/cookie/ip_pll_vga.v|
+!i113 1
+R11
+R12
+R13
+vip_pll_vga_altpll
+R1
+R29
+!i10b 1
+!s100 J_b7XhW:P0BFdTWEDIcT@3
+R3
+IHmN@_MYJFGF5HPFFZ1oRA3
+R4
+S1
+R0
+w1610763377
+8H:/FPGA/projects/cookie/db/ip_pll_vga_altpll.v
+FH:/FPGA/projects/cookie/db/ip_pll_vga_altpll.v
+!i122 10
+L0 30 63
+R8
+r1
+!s85 0
+31
+!s108 1610765419.000000
+!s107 H:/FPGA/projects/cookie/db/ip_pll_vga_altpll.v|
+!s90 -F=H:/FPGA/projects/test2/simulation/modelsim/vlog.opt|-F=|-reportprogress|300|-sv|-work|work|+incdir+H:/FPGA/projects/cookie/db|H:/FPGA/projects/cookie/db/ip_pll_vga_altpll.v|
+!i113 1
+R11
+R30
+R13
+vlcell_1
+R1
+R2
+!i10b 1
+!s100 [RY;>9Xa`[_X32Jl6`G]?0
+R3
+IQ`@QMb4EIICQ0QJ07LPSh0
+R4
+S1
+R0
+R5
+R6
+R7
+!i122 11
+L0 1208 3
+R8
+r1
+!s85 0
+31
+R9
+R16
+R10
+!i113 1
+R11
+R12
+R13
+vlcell_16
+R1
+R2
+!i10b 1
+!s100 :ISY7=mRa_jke`h1NDZAi1
+R3
+I?YKXAAaCCzn@g1iYc4CoL3
+R4
+S1
+R0
+R5
+R6
+R7
+!i122 11
+L0 1241 18
+R8
+r1
+!s85 0
+31
+R9
+R16
+R10
+!i113 1
+R11
+R12
+R13
+vlcell_2
+R1
+R2
+!i10b 1
+!s100 z?O71mFU11OFKVeo6_XNd3
+R3
+I:@j0h]4Gl>;5kX2O24_WX1
+R4
+S1
+R0
+R5
+R6
+R7
+!i122 11
+L0 1211 4
+R8
+r1
+!s85 0
+31
+R9
+R16
+R10
+!i113 1
+R11
+R12
+R13
+vlcell_26
+R1
+R2
+!i10b 1
+!s100 HNHWRc?hBTWf>Ln<T<_f?0
+R3
+Io4Uo297C33FM=[l1T>RYT2
+R4
+S1
+R0
+R5
+R6
+R7
+!i122 11
+L0 1259 28
+R8
+r1
+!s85 0
+31
+R9
+R16
+R10
+!i113 1
+R11
+R12
+R13
+vlcell_3
+R1
+R2
+!i10b 1
+!s100 FQO^ISn=HdXHoImZR7KkG3
+R3
+Ig4X>W^;_h7H1PFW7l[T=H3
+R4
+S1
+R0
+R5
+R6
+R7
+!i122 11
+L0 1215 5
+R8
+r1
+!s85 0
+31
+R9
+R16
+R10
+!i113 1
+R11
+R12
+R13
+vlcell_4
+R1
+R2
+!i10b 1
+!s100 o<W7h`4IJ0;171cXz:d1P3
+R3
+IXI1Sjz:XEO6ZSegmG@T]J0
+R4
+S1
+R0
+R5
+R6
+R7
+!i122 11
+L0 1220 6
+R8
+r1
+!s85 0
+31
+R9
+R16
+R10
+!i113 1
+R11
+R12
+R13
+vlcell_5
+R1
+R2
+!i10b 1
+!s100 kIG=3DJdM?en]Y[;KG`@:1
+R3
+IkSOHg:XNUNF;Mhego_T^83
+R4
+S1
+R0
+R5
+R6
+R7
+!i122 11
+L0 1226 7
+R8
+r1
+!s85 0
+31
+R9
+R16
+R10
+!i113 1
+R11
+R12
+R13
+vlcell_6
+R1
+R2
+!i10b 1
+!s100 b?AWdZ`aCWz?]3Z0=i?lV0
+R3
+I;z_TR_zECUD`CE]nYmRFK0
+R4
+S1
+R0
+R5
+R6
+R7
+!i122 11
+L0 1233 8
+R8
+r1
+!s85 0
+31
+R9
+R16
+R10
+!i113 1
+R11
+R12
+R13
+vsim_enviroment
+R1
+R2
+!i10b 1
+!s100 ^?nZmV51E<=13H@DBWl0l3
+R3
+IXkVU2JAT89b=mdojMeg<;0
+R4
+S1
+R0
+Z31 w1610763355
+Z32 8H:/FPGA/projects/cookie/top_cookie.sv
+Z33 FH:/FPGA/projects/cookie/top_cookie.sv
+!i122 11
+L0 191 114
+R8
+r1
+!s85 0
+31
+R9
+R16
+R10
+!i113 1
+R11
+R12
+R13
+vsplit_cache_controller
+R1
+R2
+!i10b 1
+!s100 BOIaF_U0l[UMJ?o>L[bcj1
+R3
+I`kLYm7WI9=5EPnQLUPf^m3
+R4
+S1
+R0
+R5
+R6
+R7
+!i122 11
+L0 1852 180
+R8
+r1
+!s85 0
+31
+R9
+R16
+R10
+!i113 1
+R11
+R12
+R13
+vsplit_cache_controller_segment
+R1
+R2
+!i10b 1
+!s100 BK:78_@JGKn8ENe66^8^Y1
+R3
+I;5hz`]Z=Gj@`bc?^?I;I@1
+R4
+S1
+R0
+R5
+R6
+R7
+!i122 11
+L0 1291 559
+R8
+r1
+!s85 0
+31
+R9
+R16
+R10
+!i113 1
+R11
+R12
+R13
+vtop_cookie
+R1
+R2
+!i10b 1
+!s100 3jkca5fz_;aMWT=^<3FYA1
+R3
+IYG<E^kGb9CRRG`MUJ7IjN3
+R4
+S1
+R0
+R31
+R32
+R33
+!i122 11
+L0 26 163
+R8
+r1
+!s85 0
+31
+R9
+R16
+R10
+!i113 1
+R11
+R12
+R13
+vvga_driver
+R1
+R2
+!i10b 1
+!s100 aib`0oJL4Uo8?4RC3de4n1
+R3
+In4g<<C@zezDm4jh8hYO;;2
+R4
+S1
+R0
+w1607732759
+8H:/FPGA/projects/cookie/vga_driver.sv
+FH:/FPGA/projects/cookie/vga_driver.sv
+!i122 11
+L0 2 149
+R8
+r1
+!s85 0
+31
+R9
+R16
+R10
+!i113 1
+R11
+R12
+R13

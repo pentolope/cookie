@@ -1,0 +1,77 @@
+
+set_output_delay -max = Tsu_ext + Max_fpga2ext - (min_clk2ext - Max_clk2fpga)
+set_output_delay -min = -Th_ext + min_fpga2ext - (Max_clk2ext - min_clk2fpga)
+set_input_delay -max = Tco_ext + Max_ext2fpg - (min_clk2fpga - Max_clk2ext)
+set_input_delay -min = minTco_ext + min_ext2fpga - (Max_clk2fpga - min_clk2ext)
+
+
+set_output_delay -max = 1.5 + .2 - (-.1 - 0)
+set_output_delay -min = -.8 + 0 - (.3 - 0)
+
+set_input_delay -max = 5.4 + .2 - (0 - .3)
+set_input_delay -min = 2.7 + 0 - (0 - -.1)
+
+
+set_output_delay -max = 1.8
+set_output_delay -min = -1.1
+
+set_input_delay -max = 5.9
+set_input_delay -min = 2.6
+
+
+set_input_delay -max -clock {ip_pll_internal2_inst|altpll_component|auto_generated|pll1|clk[0]} 5.9 [get_ports DRAM_DQ*]
+set_input_delay -min -clock {ip_pll_internal2_inst|altpll_component|auto_generated|pll1|clk[0]} 2.6 [get_ports DRAM_DQ*]
+
+set_output_delay -max -clock {ip_pll_internal2_inst|altpll_component|auto_generated|pll1|clk[0]} 1.8 [get_ports DRAM_*]
+set_output_delay -min -clock {ip_pll_internal2_inst|altpll_component|auto_generated|pll1|clk[0]} -1.1 [get_ports DRAM_*]
+
+CHANGE: "set_output_delay -min" value changed to -2.0 to achieve proper timing across all timing corners
+
+
+The set_input_delay  constraint specifies the data arrival time at the input pin of a device with reference to the clock.
+The set_output_delay constraint specifies the data requirement at the device pin with respect to a clock specified by the -clock option. The clock must refer to a clock name in the design.
+
+
+External device parameters:
+Tsu_ext = Tsu of external device (setup time)
+Th_ext = Th of external device (hold time)
+Data delays on board:
+Max_fpga2ext = Max board delay to external device
+min_fpga2ext = min board delay to external device
+Clock delays on board:
+Max_clk2fpga = Max delay from board clock to FPGA
+min_clk2ext = min board delay from clock to external device
+Max_clk2ext = Max delay from board clock to external device
+min_clk2fpga = min board delay from clock to FPGA
+set_output_delay -max = Tsu_ext + Max_fpga2ext - (min_clk2ext - Max_clk2fpga)
+ = Tsu_ext + Max_fpga2ext - (min_clk_skew)
+set_output_delay -min = -Th_ext + min_fpga2ext - (Max_clk2ext - min_clk2fpga)
+ = -Th_ext + min_fpga2ext - (Max_clk_skew)
+For input constraints:
+External device parameters:
+Tco_ext = Tco of external device (max output delay)
+minTco_ext = min Tco of external device (min output delay)
+Data delays on board:
+Max_ext2fpga = Max board delay from external device to FPGA
+min_ext2fpga = min board delay from external device to FPGA
+Clock delays on board:
+Max_clk2fpga = Max delay from board clock to FPGA
+min_clk2fpga = min board delay from clock to FPGA
+Max_clk2ext = Max delay from board clock to external device
+min_clk2ext = min board delay from clock to external device
+set_input_delay -max = Tco_ext + Max_ext2fpg - (min_clk2fpga - Max_clk2ext)
+= Tco_ext + Max_ext2fpg - (min_clk_skew)
+set_input_delay -min = minTco_ext + min_ext2fpga - (Max_clk2fpga - min_clk2ext)
+ = minTco_ext + min_ext2fpga - (Max_clk_skew)
+
+
+
+
+
+
+
+
+
+
+
+
