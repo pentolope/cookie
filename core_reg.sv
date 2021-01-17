@@ -298,24 +298,173 @@ This is some temporary notes for figuring out how the hex display worked:
 		hex={d,m,lt,lb,b,rb,rt,t}
 
 */
+module recomb_mux_slice(
+	output o, // output
+	input b, // before
+	input r, // any override active is on
+	input [3:0] a, // override active
+	input [3:0] i // instant values
+);
+wire im0;
+wire im1;
+lcell_1 lcim0 (im0,(a[1] & i[1])|(a[0] & i[0])); // could try re-arranging the order. like maybe having 3 and 1 together would be better
+lcell_1 lcim1 (im1,(a[3] & i[3])|(a[2] & i[2]));
+lcell_1 lco (o,r ?(im0 | im1):b);
+endmodule
 
+module recomb_mux(
+	output [15:0] o, // output
+	input [15:0] b, // before
+	input [3:0] a, // override active
+	input [15:0] i [3:0] // instant values
+);
+wire [3:0] ac;
+lcell_4 lc_ac (ac,a);
+wire r; // any override active is on
+lcell_1 lcr (r,(ac[3] | ac[2] | ac[1] | ac[0]));
+wire [15:0] ic [3:0];
+lcell_16 lc_ic0 (ic[0],i[0]);
+lcell_16 lc_ic1 (ic[1],i[1]);
+lcell_16 lc_ic2 (ic[2],i[2]);
+lcell_16 lc_ic3 (ic[3],i[3]);
+recomb_mux_slice slice_0 (o[0],b[0],r,ac,{ic[3][0],ic[2][0],ic[1][0],ic[0][0]});
+recomb_mux_slice slice_1 (o[1],b[1],r,ac,{ic[3][1],ic[2][1],ic[1][1],ic[0][1]});
+recomb_mux_slice slice_2 (o[2],b[2],r,ac,{ic[3][2],ic[2][2],ic[1][2],ic[0][2]});
+recomb_mux_slice slice_3 (o[3],b[3],r,ac,{ic[3][3],ic[2][3],ic[1][3],ic[0][3]});
+recomb_mux_slice slice_4 (o[4],b[4],r,ac,{ic[3][4],ic[2][4],ic[1][4],ic[0][4]});
+recomb_mux_slice slice_5 (o[5],b[5],r,ac,{ic[3][5],ic[2][5],ic[1][5],ic[0][5]});
+recomb_mux_slice slice_6 (o[6],b[6],r,ac,{ic[3][6],ic[2][6],ic[1][6],ic[0][6]});
+recomb_mux_slice slice_7 (o[7],b[7],r,ac,{ic[3][7],ic[2][7],ic[1][7],ic[0][7]});
+recomb_mux_slice slice_8 (o[8],b[8],r,ac,{ic[3][8],ic[2][8],ic[1][8],ic[0][8]});
+recomb_mux_slice slice_9 (o[9],b[9],r,ac,{ic[3][9],ic[2][9],ic[1][9],ic[0][9]});
+recomb_mux_slice slice_10 (o[10],b[10],r,ac,{ic[3][10],ic[2][10],ic[1][10],ic[0][10]});
+recomb_mux_slice slice_11 (o[11],b[11],r,ac,{ic[3][11],ic[2][11],ic[1][11],ic[0][11]});
+recomb_mux_slice slice_12 (o[12],b[12],r,ac,{ic[3][12],ic[2][12],ic[1][12],ic[0][12]});
+recomb_mux_slice slice_13 (o[13],b[13],r,ac,{ic[3][13],ic[2][13],ic[1][13],ic[0][13]});
+recomb_mux_slice slice_14 (o[14],b[14],r,ac,{ic[3][14],ic[2][14],ic[1][14],ic[0][14]});
+recomb_mux_slice slice_15 (o[15],b[15],r,ac,{ic[3][15],ic[2][15],ic[1][15],ic[0][15]});
+endmodule
+
+module recomb_mux_all_user_reg(
+	output [15:0] o [15:0], // output
+	input  [15:0] b [15:0], // before
+	input  [15:0] a [3:0], // override active
+	input  [15:0] i0 [15:0], // instant values from executer 0
+	input  [15:0] i1 [15:0], // instant values from executer 1
+	input  [15:0] i2 [15:0], // instant values from executer 2
+	input  [15:0] i3 [15:0]  // instant values from executer 3
+);
+recomb_mux recomb_mux_0(
+	o[0],
+	b[0],
+	{a[3][0],a[2][0],a[1][0],a[0][0]},
+	'{i3[0],i2[0],i1[0],i0[0]}
+);
+recomb_mux recomb_mux_1(
+	o[1],
+	b[1],
+	{a[3][1],a[2][1],a[1][1],a[0][1]},
+	'{i3[1],i2[1],i1[1],i0[1]}
+);
+recomb_mux recomb_mux_2(
+	o[2],
+	b[2],
+	{a[3][2],a[2][2],a[1][2],a[0][2]},
+	'{i3[2],i2[2],i1[2],i0[2]}
+);
+recomb_mux recomb_mux_3(
+	o[3],
+	b[3],
+	{a[3][3],a[2][3],a[1][3],a[0][3]},
+	'{i3[3],i2[3],i1[3],i0[3]}
+);
+recomb_mux recomb_mux_4(
+	o[4],
+	b[4],
+	{a[3][4],a[2][4],a[1][4],a[0][4]},
+	'{i3[4],i2[4],i1[4],i0[4]}
+);
+recomb_mux recomb_mux_5(
+	o[5],
+	b[5],
+	{a[3][5],a[2][5],a[1][5],a[0][5]},
+	'{i3[5],i2[5],i1[5],i0[5]}
+);
+recomb_mux recomb_mux_6(
+	o[6],
+	b[6],
+	{a[3][6],a[2][6],a[1][6],a[0][6]},
+	'{i3[6],i2[6],i1[6],i0[6]}
+);
+recomb_mux recomb_mux_7(
+	o[7],
+	b[7],
+	{a[3][7],a[2][7],a[1][7],a[0][7]},
+	'{i3[7],i2[7],i1[7],i0[7]}
+);
+recomb_mux recomb_mux_8(
+	o[8],
+	b[8],
+	{a[3][8],a[2][8],a[1][8],a[0][8]},
+	'{i3[8],i2[8],i1[8],i0[8]}
+);
+recomb_mux recomb_mux_9(
+	o[9],
+	b[9],
+	{a[3][9],a[2][9],a[1][9],a[0][9]},
+	'{i3[9],i2[9],i1[9],i0[9]}
+);
+recomb_mux recomb_mux_10(
+	o[10],
+	b[10],
+	{a[3][10],a[2][10],a[1][10],a[0][10]},
+	'{i3[10],i2[10],i1[10],i0[10]}
+);
+recomb_mux recomb_mux_11(
+	o[11],
+	b[11],
+	{a[3][11],a[2][11],a[1][11],a[0][11]},
+	'{i3[11],i2[11],i1[11],i0[11]}
+);
+recomb_mux recomb_mux_12(
+	o[12],
+	b[12],
+	{a[3][12],a[2][12],a[1][12],a[0][12]},
+	'{i3[12],i2[12],i1[12],i0[12]}
+);
+recomb_mux recomb_mux_13(
+	o[13],
+	b[13],
+	{a[3][13],a[2][13],a[1][13],a[0][13]},
+	'{i3[13],i2[13],i1[13],i0[13]}
+);
+recomb_mux recomb_mux_14(
+	o[14],
+	b[14],
+	{a[3][14],a[2][14],a[1][14],a[0][14]},
+	'{i3[14],i2[14],i1[14],i0[14]}
+);
+recomb_mux recomb_mux_15(
+	o[15],
+	b[15],
+	{a[3][15],a[2][15],a[1][15],a[0][15]},
+	'{i3[15],i2[15],i1[15],i0[15]}
+);
+endmodule
 
 
 module core_executer(
-	input [15:0] instructionIn,
-	input [ 4:0] instructionInID,
+	input [15:0] instructionIn_extern,
+	input [ 4:0] instructionInID_extern,
 	input [25:0] instructionAddress,
 	
 	input doExecute,
 	input willExecute,
 
 	input [15:0] user_reg [15:0],
-	input user_reg_wide_or [15:0],
-	
 	input [15:0] instant_user_reg [15:0],
-	input instant_user_reg_wide_or [15:0],
-	input instant_user_reg_override_active [15:0],
-
+	
+	input [15:0] next_stack_pointer,
 	input [15:0] stack_pointer,
 	input [15:0] stack_pointer_m2,
 	input [15:0] stack_pointer_m4,
@@ -354,11 +503,20 @@ module core_executer(
 	input main_clk
 );
 
+wire [15:0] instructionIn;
+wire [ 4:0] instructionInID;
 
-reg [16:0] doWrite;
-reg [15:0] writeValues [16:0];
-assign doWrite_w=doWrite;
-assign writeValues_w=writeValues;
+lcell_16 lc_instruct_full (instructionIn,instructionIn_extern);
+lcell_5  lc_instruct_id (instructionInID,instructionInID_extern);
+
+reg [15:0] doWrite=0;
+reg [15:0] writeValues [15:0];
+reg doWrite_sp=0;
+reg [15:0] writeValue_sp;
+assign doWrite_w[15:0]=doWrite;
+assign doWrite_w[16]=doWrite_sp;
+assign writeValues_w[15:0]=writeValues[15:0];
+assign writeValues_w[16]=writeValue_sp;
 
 reg jump_signal=0;
 reg will_jump_next_cycle;
@@ -513,6 +671,14 @@ assign adderControl2_lut[4'b1111]=1'bx;
 reg [2:0] step=0;
 reg [2:0] stepNext;
 
+wire [15:0] nvr0;//=instant_user_reg[instructionIn[ 3:0]];
+wire [15:0] nvr1;//=instant_user_reg[instructionIn[ 7:4]];
+wire [15:0] nvr2;//=instant_user_reg[instructionIn[11:8]];
+
+lcell_16 lcell_nvr0(nvr0,instant_user_reg[instructionIn[ 3:0]]);
+lcell_16 lcell_nvr1(nvr1,instant_user_reg[instructionIn[ 7:4]]);
+lcell_16 lcell_nvr2(nvr2,instant_user_reg[instructionIn[11:8]]);
+
 reg [15:0] vr0=16'hFFFF;
 reg [15:0] vr1=16'hFFFF;
 reg [15:0] vr2=0;
@@ -520,7 +686,6 @@ reg [15:0] vr2=0;
 Initial value for vr0 and vr1 is to prevent packing into the multiplier blocks.
 I don't understand why quartus really wants to do that, it requires creating a duplicate register anyway and decreases system performance.
 */
-
 
 reg [15:0] instructionCurrent=0;
 reg [4:0] instructionCurrentID=0;
@@ -537,19 +702,13 @@ always @(posedge main_clk) adderControl1_r<=adderControl1_lut[instructionIn[15:1
 always @(posedge main_clk) adderControl2_r<=adderControl2_lut[instructionIn[15:12]];
 always @(posedge main_clk) step<=stepNext;
 
-
 assign temporary2=(adderControl1_r +({2'b0,temporary3,1'b1}+{2'b0,temporary4,1'b0}))+{2'b0,temporary5,1'b0};
 assign temporary6=temporary2[18:1];
 
-
-//reg conditional_jump_signal;
-
 always @(posedge main_clk) begin
-	vr0<=instant_user_reg_override_active[instructionIn[ 3:0]]?instant_user_reg[instructionIn[ 3:0]]:user_reg[instructionIn[ 3:0]];
-	vr1<=instant_user_reg_override_active[instructionIn[ 7:4]]?instant_user_reg[instructionIn[ 7:4]]:user_reg[instructionIn[ 7:4]];
-	vr2<=instant_user_reg_override_active[instructionIn[11:8]]?instant_user_reg[instructionIn[11:8]]:user_reg[instructionIn[11:8]];
-	
-	//conditional_jump_signal<=!(instant_user_reg_override_active[instructionIn[11:8]]?instant_user_reg_wide_or[instructionIn[11:8]]:user_reg_wide_or[instructionIn[11:8]]); // if wide_or is 0 then jump is 1
+	vr0<=nvr0;
+	vr1<=nvr1;
+	vr2<=nvr2;
 end
 
 reg sim_is_first=0; // `sim_is_first` is used only for simulation testing
@@ -564,35 +723,35 @@ always @(posedge main_clk) begin
 end
 
 always_comb begin
-	temporary0[0]=bitwise_lut[{instructionCurrent[13:12],vr2[0],vr1[0]}];
-	temporary0[1]=bitwise_lut[{instructionCurrent[13:12],vr2[1],vr1[1]}];
-	temporary0[2]=bitwise_lut[{instructionCurrent[13:12],vr2[2],vr1[2]}];
-	temporary0[3]=bitwise_lut[{instructionCurrent[13:12],vr2[3],vr1[3]}];
-	temporary0[4]=bitwise_lut[{instructionCurrent[13:12],vr2[4],vr1[4]}];
-	temporary0[5]=bitwise_lut[{instructionCurrent[13:12],vr2[5],vr1[5]}];
-	temporary0[6]=bitwise_lut[{instructionCurrent[13:12],vr2[6],vr1[6]}];
-	temporary0[7]=bitwise_lut[{instructionCurrent[13:12],vr2[7],vr1[7]}];
-	temporary0[8]=bitwise_lut[{instructionCurrent[13:12],vr2[8],vr1[8]}];
-	temporary0[9]=bitwise_lut[{instructionCurrent[13:12],vr2[9],vr1[9]}];
-	temporary0[10]=bitwise_lut[{instructionCurrent[13:12],vr2[10],vr1[10]}];
-	temporary0[11]=bitwise_lut[{instructionCurrent[13:12],vr2[11],vr1[11]}];
-	temporary0[12]=bitwise_lut[{instructionCurrent[13:12],vr2[12],vr1[12]}];
-	temporary0[13]=bitwise_lut[{instructionCurrent[13:12],vr2[13],vr1[13]}];
-	temporary0[14]=bitwise_lut[{instructionCurrent[13:12],vr2[14],vr1[14]}];
-	temporary0[15]=bitwise_lut[{instructionCurrent[13:12],vr2[15],vr1[15]}];
-	
+	temporary0[0]=bitwise_lut[{instructionIn[13:12],nvr2[0],nvr1[0]}];
+	temporary0[1]=bitwise_lut[{instructionIn[13:12],nvr2[1],nvr1[1]}];
+	temporary0[2]=bitwise_lut[{instructionIn[13:12],nvr2[2],nvr1[2]}];
+	temporary0[3]=bitwise_lut[{instructionIn[13:12],nvr2[3],nvr1[3]}];
+	temporary0[4]=bitwise_lut[{instructionIn[13:12],nvr2[4],nvr1[4]}];
+	temporary0[5]=bitwise_lut[{instructionIn[13:12],nvr2[5],nvr1[5]}];
+	temporary0[6]=bitwise_lut[{instructionIn[13:12],nvr2[6],nvr1[6]}];
+	temporary0[7]=bitwise_lut[{instructionIn[13:12],nvr2[7],nvr1[7]}];
+	temporary0[8]=bitwise_lut[{instructionIn[13:12],nvr2[8],nvr1[8]}];
+	temporary0[9]=bitwise_lut[{instructionIn[13:12],nvr2[9],nvr1[9]}];
+	temporary0[10]=bitwise_lut[{instructionIn[13:12],nvr2[10],nvr1[10]}];
+	temporary0[11]=bitwise_lut[{instructionIn[13:12],nvr2[11],nvr1[11]}];
+	temporary0[12]=bitwise_lut[{instructionIn[13:12],nvr2[12],nvr1[12]}];
+	temporary0[13]=bitwise_lut[{instructionIn[13:12],nvr2[13],nvr1[13]}];
+	temporary0[14]=bitwise_lut[{instructionIn[13:12],nvr2[14],nvr1[14]}];
+	temporary0[15]=bitwise_lut[{instructionIn[13:12],nvr2[15],nvr1[15]}];
+end
+always_comb begin
 	temporary3=vr1;
 	temporary4={16{adderControl0_r}} ^ vr2;
 	temporary5={16{adderControl2_r}} & (instructionCurrent[15]?user_reg[4'hF]:vr0);
 end
-
-
-always @(posedge main_clk) begin
-	adderOutput[15:0]<=temporary6[15:0];
-	adderOutput[16]<=(temporary6[17] | temporary6[16])?1'b1:1'b0;
-	
-	temporary7<=stack_pointer - vr0;
-	temporary7[0]<=1'b0;
+always_comb begin
+	adderOutput[15:0]=temporary6[15:0];
+	adderOutput[16]=(temporary6[17] | temporary6[16])?1'b1:1'b0;
+end
+always_comb begin
+	temporary7=stack_pointer - vr0;
+	temporary7[0]=1'b0;
 end
 
 always_comb begin
@@ -609,6 +768,9 @@ reg [ 2:0] divTemp2;
 reg [15:0] divTemp3;
 reg [15:0] divTemp4;
 reg [15:0] divTemp5;
+
+wire [16:0] divTemp6={1'b0,~vr1}+(2'b1+vr0[15]);
+wire [15:0] divTemp7=({16{((divTemp6[16])?1'b1:1'b0)}} & divTemp6[15:0]) | ({16{((divTemp6[16])?1'b0:1'b1)}} & {15'h0,vr0[15]});
 
 wire [16:0] divTable0 [2:0];
 wire [16:0] divTable1 [2:0];
@@ -629,358 +791,315 @@ assign divTable2[2]=({16{((divTable2[1][16])?1'b1:1'b0)}} & divTable2[1][15:0]) 
 wire [2:0] divPartialResult;
 assign divPartialResult={divTable0[1][16],divTable1[1][16],divTable2[1][16]};
 
-
-reg [15:0] destinationValue0; // to user_reg[instructionCurrent[3:0]]
-reg [15:0] destinationValue1; // to user_reg[instructionCurrent[7:4]]
-reg [15:0] destinationValue2; // to user_reg[4'hD]
-reg [15:0] destinationValue3; // to user_reg[4'hE]
-reg [15:0] destinationValue4; // to user_reg[4'hF]
-reg [15:0] destinationValue5; // to stack_pointer
-reg [15:0] destinationValue6; // to user_reg[4'h0]
-reg [15:0] destinationValue7; // to user_reg[4'h1]
-
-reg doWriteDestinationValue0;
-reg doWriteDestinationValue1;
-reg doWriteDestinationValue2;
-reg doWriteDestinationValue3;
-reg doWriteDestinationValue4;
-reg doWriteDestinationValue5;
-reg doWriteDestinationValue6;
-reg doWriteDestinationValue7;
-
-reg [15:0] writeDestinationValue0_target;
-reg [15:0] writeDestinationValue1_target;
-
-always_comb begin
-	writeDestinationValue0_target[4'h0]=(doWriteDestinationValue0 && instructionCurrent[3:0]==4'h0)?1'b1:1'b0;
-	writeDestinationValue1_target[4'h0]=(doWriteDestinationValue1 && instructionCurrent[7:4]==4'h0)?1'b1:1'b0;
-	writeDestinationValue0_target[4'h1]=(doWriteDestinationValue0 && instructionCurrent[3:0]==4'h1)?1'b1:1'b0;
-	writeDestinationValue1_target[4'h1]=(doWriteDestinationValue1 && instructionCurrent[7:4]==4'h1)?1'b1:1'b0;
-	writeDestinationValue0_target[4'h2]=(doWriteDestinationValue0 && instructionCurrent[3:0]==4'h2)?1'b1:1'b0;
-	writeDestinationValue1_target[4'h2]=(doWriteDestinationValue1 && instructionCurrent[7:4]==4'h2)?1'b1:1'b0;
-	writeDestinationValue0_target[4'h3]=(doWriteDestinationValue0 && instructionCurrent[3:0]==4'h3)?1'b1:1'b0;
-	writeDestinationValue1_target[4'h3]=(doWriteDestinationValue1 && instructionCurrent[7:4]==4'h3)?1'b1:1'b0;
-	writeDestinationValue0_target[4'h4]=(doWriteDestinationValue0 && instructionCurrent[3:0]==4'h4)?1'b1:1'b0;
-	writeDestinationValue1_target[4'h4]=(doWriteDestinationValue1 && instructionCurrent[7:4]==4'h4)?1'b1:1'b0;
-	writeDestinationValue0_target[4'h5]=(doWriteDestinationValue0 && instructionCurrent[3:0]==4'h5)?1'b1:1'b0;
-	writeDestinationValue1_target[4'h5]=(doWriteDestinationValue1 && instructionCurrent[7:4]==4'h5)?1'b1:1'b0;
-	writeDestinationValue0_target[4'h6]=(doWriteDestinationValue0 && instructionCurrent[3:0]==4'h6)?1'b1:1'b0;
-	writeDestinationValue1_target[4'h6]=(doWriteDestinationValue1 && instructionCurrent[7:4]==4'h6)?1'b1:1'b0;
-	writeDestinationValue0_target[4'h7]=(doWriteDestinationValue0 && instructionCurrent[3:0]==4'h7)?1'b1:1'b0;
-	writeDestinationValue1_target[4'h7]=(doWriteDestinationValue1 && instructionCurrent[7:4]==4'h7)?1'b1:1'b0;
-	writeDestinationValue0_target[4'h8]=(doWriteDestinationValue0 && instructionCurrent[3:0]==4'h8)?1'b1:1'b0;
-	writeDestinationValue1_target[4'h8]=(doWriteDestinationValue1 && instructionCurrent[7:4]==4'h8)?1'b1:1'b0;
-	writeDestinationValue0_target[4'h9]=(doWriteDestinationValue0 && instructionCurrent[3:0]==4'h9)?1'b1:1'b0;
-	writeDestinationValue1_target[4'h9]=(doWriteDestinationValue1 && instructionCurrent[7:4]==4'h9)?1'b1:1'b0;
-	writeDestinationValue0_target[4'hA]=(doWriteDestinationValue0 && instructionCurrent[3:0]==4'hA)?1'b1:1'b0;
-	writeDestinationValue1_target[4'hA]=(doWriteDestinationValue1 && instructionCurrent[7:4]==4'hA)?1'b1:1'b0;
-	writeDestinationValue0_target[4'hB]=(doWriteDestinationValue0 && instructionCurrent[3:0]==4'hB)?1'b1:1'b0;
-	writeDestinationValue1_target[4'hB]=(doWriteDestinationValue1 && instructionCurrent[7:4]==4'hB)?1'b1:1'b0;
-	writeDestinationValue0_target[4'hC]=(doWriteDestinationValue0 && instructionCurrent[3:0]==4'hC)?1'b1:1'b0;
-	writeDestinationValue1_target[4'hC]=(doWriteDestinationValue1 && instructionCurrent[7:4]==4'hC)?1'b1:1'b0;
-	writeDestinationValue0_target[4'hD]=(doWriteDestinationValue0 && instructionCurrent[3:0]==4'hD)?1'b1:1'b0;
-	writeDestinationValue1_target[4'hD]=(doWriteDestinationValue1 && instructionCurrent[7:4]==4'hD)?1'b1:1'b0;
-	writeDestinationValue0_target[4'hE]=(doWriteDestinationValue0 && instructionCurrent[3:0]==4'hE)?1'b1:1'b0;
-	writeDestinationValue1_target[4'hE]=(doWriteDestinationValue1 && instructionCurrent[7:4]==4'hE)?1'b1:1'b0;
-	writeDestinationValue0_target[4'hF]=(doWriteDestinationValue0 && instructionCurrent[3:0]==4'hF)?1'b1:1'b0;
-	writeDestinationValue1_target[4'hF]=(doWriteDestinationValue1 && instructionCurrent[7:4]==4'hF)?1'b1:1'b0;
-end
-
-always_comb begin
-	doWrite[0]=(writeDestinationValue0_target[4'h0] || writeDestinationValue1_target[4'h0] || doWriteDestinationValue6)?1'b1:1'b0;
-	doWrite[1]=(writeDestinationValue0_target[4'h1] || writeDestinationValue1_target[4'h1] || doWriteDestinationValue7)?1'b1:1'b0;
-	
-	doWrite[2]=(writeDestinationValue0_target[4'h2] || writeDestinationValue1_target[4'h2])?1'b1:1'b0;
-	doWrite[3]=(writeDestinationValue0_target[4'h3] || writeDestinationValue1_target[4'h3])?1'b1:1'b0;
-	doWrite[4]=(writeDestinationValue0_target[4'h4] || writeDestinationValue1_target[4'h4])?1'b1:1'b0;
-	doWrite[5]=(writeDestinationValue0_target[4'h5] || writeDestinationValue1_target[4'h5])?1'b1:1'b0;
-	doWrite[6]=(writeDestinationValue0_target[4'h6] || writeDestinationValue1_target[4'h6])?1'b1:1'b0;
-	doWrite[7]=(writeDestinationValue0_target[4'h7] || writeDestinationValue1_target[4'h7])?1'b1:1'b0;
-	doWrite[8]=(writeDestinationValue0_target[4'h8] || writeDestinationValue1_target[4'h8])?1'b1:1'b0;
-	doWrite[9]=(writeDestinationValue0_target[4'h9] || writeDestinationValue1_target[4'h9])?1'b1:1'b0;
-	doWrite[10]=(writeDestinationValue0_target[4'hA] || writeDestinationValue1_target[4'hA])?1'b1:1'b0;
-	doWrite[11]=(writeDestinationValue0_target[4'hB] || writeDestinationValue1_target[4'hB])?1'b1:1'b0;
-	doWrite[12]=(writeDestinationValue0_target[4'hC] || writeDestinationValue1_target[4'hC])?1'b1:1'b0;
-	
-	doWrite[13]=(writeDestinationValue0_target[4'hD] || writeDestinationValue1_target[4'hD] || doWriteDestinationValue2)?1'b1:1'b0;
-	doWrite[14]=(writeDestinationValue0_target[4'hE] || writeDestinationValue1_target[4'hE] || doWriteDestinationValue3)?1'b1:1'b0;
-	doWrite[15]=(writeDestinationValue0_target[4'hF] || writeDestinationValue1_target[4'hF] || doWriteDestinationValue4)?1'b1:1'b0;
-
-	doWrite[16]=(doWriteDestinationValue5)?1'b1:1'b0;
-end
-
-always_comb begin
-	writeValues[0]=doWriteDestinationValue6?destinationValue6:(writeDestinationValue1_target[4'h0]?destinationValue1:destinationValue0);
-	writeValues[1]=doWriteDestinationValue7?destinationValue7:(writeDestinationValue1_target[4'h1]?destinationValue1:destinationValue0);
-	
-	writeValues[2]=writeDestinationValue1_target[4'h2]?destinationValue1:destinationValue0;
-	writeValues[3]=writeDestinationValue1_target[4'h3]?destinationValue1:destinationValue0;
-	writeValues[4]=writeDestinationValue1_target[4'h4]?destinationValue1:destinationValue0;
-	writeValues[5]=writeDestinationValue1_target[4'h5]?destinationValue1:destinationValue0;
-	writeValues[6]=writeDestinationValue1_target[4'h6]?destinationValue1:destinationValue0;
-	writeValues[7]=writeDestinationValue1_target[4'h7]?destinationValue1:destinationValue0;
-	writeValues[8]=writeDestinationValue1_target[4'h8]?destinationValue1:destinationValue0;
-	writeValues[9]=writeDestinationValue1_target[4'h9]?destinationValue1:destinationValue0;
-	writeValues[10]=writeDestinationValue1_target[4'hA]?destinationValue1:destinationValue0;
-	writeValues[11]=writeDestinationValue1_target[4'hB]?destinationValue1:destinationValue0;
-	writeValues[12]=writeDestinationValue1_target[4'hC]?destinationValue1:destinationValue0;
-	
-	writeValues[13]=doWriteDestinationValue2?destinationValue2:(writeDestinationValue1_target[4'hD]?destinationValue1:destinationValue0);
-	writeValues[14]=doWriteDestinationValue3?destinationValue3:(writeDestinationValue1_target[4'hE]?destinationValue1:destinationValue0);
-	writeValues[15]=doWriteDestinationValue4?destinationValue4:(writeDestinationValue1_target[4'hF]?destinationValue1:destinationValue0);
-
-	writeValues[16]=destinationValue5;
+always @(posedge main_clk) begin
+	if (step!=3'd0) begin
+		assert (doExecute);
+	end
 end
 
 
+reg wa0=0; // r0
+reg wa1=0; // r1
+reg wa2=0; // 0 or 13
+reg wa3=0; // 1 or 14 or 15
 
+reg wb0; // discern if wa2 is for 0
+reg wb1; // discern if wa2 is for 13
+reg wb2; // discern if wa3 is for 1
+reg wb3; // discern if wa3 is for 14
+reg wb4; // discern if wa3 is for 15
+
+reg [15:0] wv0;
+reg [15:0] wv1;
+reg [15:0] wv2;
+reg [15:0] wv3;
 
 always_comb begin
-	mem_is_stack_access_write=0;
-	mem_is_stack_access_requesting=0;
-	mem_is_general_access_byte_operation=0;
-	mem_is_general_access_write=0;
-	mem_is_general_access_requesting=0;
-	mem_stack_access_size=3'hx;
-	mem_target_address_stack=16'hx;
-	mem_target_address_general=32'hx;
-	mem_data_in='{16'hx,16'hx,16'hx,16'hx};
-	instruction_jump_address=32'hx;
-	doWriteDestinationValue0=0;
-	doWriteDestinationValue1=0;
-	doWriteDestinationValue2=0;
-	doWriteDestinationValue3=0;
-	doWriteDestinationValue4=0;
-	doWriteDestinationValue5=0;
-	doWriteDestinationValue6=0;
-	doWriteDestinationValue7=0;
-	destinationValue0=16'hx;
-	destinationValue1=16'hx;
-	destinationValue2=16'hx;
-	destinationValue3=16'hx;
-	destinationValue4=16'hx;
-	destinationValue5=16'hx;
-	destinationValue6=16'hx;
-	destinationValue7=16'hx;
-	if (doExecute) begin
-		unique case (instructionCurrentID)
+	writeValues='{wv0,wv0,wv0,wv0,wv0,wv0,wv0,wv0,wv0,wv0,wv0,wv0,wv0,wv0,wv0,wv0};
+	if (wa1) writeValues[instructionCurrent[7:4]]=wv1;
+	if (wa2) writeValues[ 0]=wv2;
+	if (wa2) writeValues[13]=wv2;
+	if (wa3) writeValues[ 1]=wv3;
+	if (wa3) writeValues[14]=wv3;
+	if (wa3) writeValues[15]=wv3;
+end
+always_comb begin
+	doWrite=0;
+	if (wa0) doWrite[instructionCurrent[3:0]]=1'b1;
+	if (wa1) doWrite[instructionCurrent[7:4]]=1'b1;
+	if (wa2 & wb0) doWrite[ 0]=1'b1;
+	if (wa2 & wb1) doWrite[13]=1'b1;
+	if (wa3 & wb2) doWrite[ 1]=1'b1;
+	if (wa3 & wb3) doWrite[14]=1'b1;
+	if (wa3 & wb4) doWrite[15]=1'b1;
+end
+
+
+always @(posedge main_clk) begin
+	mem_is_stack_access_write<=0;
+	mem_is_stack_access_requesting<=0;
+	mem_is_general_access_byte_operation<=0;
+	mem_is_general_access_write<=0;
+	mem_is_general_access_requesting<=0;
+	mem_stack_access_size<=3'hx;
+	//doWrite<=0;
+	doWrite_sp<=0;
+	writeValue_sp<=16'hx;
+	wv0<=16'hx;
+	wv1<=16'hx;
+	wv2<=16'hx;
+	wv3<=16'hx;
+	wa0<=0;
+	wa1<=0;
+	wa2<=0;
+	wa3<=0;
+	wb0<=1'bx;
+	wb1<=1'bx;
+	wb2<=1'bx;
+	wb3<=1'bx;
+	wb4<=1'bx;
+	if (willExecute) begin
+		unique case (instructionInID)
 		0:begin
-			destinationValue0={8'h0,instructionCurrent[11:4]};
-			doWriteDestinationValue0=1;
+			//doWrite    [instructionIn[3:0]]<=1'b1;
+			wv0<={8'h0,instructionIn[11:4]};
+			wa0<=1;
 		end
 		1:begin
-			destinationValue0={instructionCurrent[11:4],vr0[7:0]};
-			doWriteDestinationValue0=1;
+			//doWrite    [instructionIn[3:0]]<=1'b1;
+			wv0<={instructionIn[11:4],nvr0[7:0]};
+			wa0<=1;
 		end
 		2:begin
-			mem_is_stack_access_write=0;
-			mem_stack_access_size=1;
-			mem_target_address_stack=temporary1;
-			destinationValue0=mem_data_out_large_r[0];
-			unique case (step)
+			mem_is_stack_access_write<=0;
+			mem_stack_access_size<=1;
+			unique case (stepNext)
 			0:begin
-				mem_is_stack_access_requesting=1;
+				mem_is_stack_access_requesting<=1;
 			end
 			1:begin
-				doWriteDestinationValue0=1;
+				//doWrite    [instructionIn[3:0]]<=1'b1;
+				wv0<=mem_data_out_large[0];
+				wa0<=1;
 			end
 			endcase
 		end
 		3:begin
-			mem_is_stack_access_write=1;
-			mem_is_stack_access_requesting=1;
-			mem_stack_access_size=1;
-			mem_target_address_stack=temporary1;
-			mem_data_in[0]=vr0;
+			mem_is_stack_access_write<=1;
+			mem_is_stack_access_requesting<=1;
+			mem_stack_access_size<=1;
 		end
 		4:begin
-			doWriteDestinationValue0=1;
-			destinationValue0=temporary0;
+			//doWrite    [instructionIn[3:0]]<=1'b1;
+			wv0<=temporary0;
+			wa0<=1;
 		end
 		5:begin
-			doWriteDestinationValue0=1;
-			destinationValue0=temporary0;
+			//doWrite    [instructionIn[3:0]]<=1'b1;
+			wv0<=temporary0;
+			wa0<=1;
 		end
 		6:begin
-			doWriteDestinationValue0=1;
-			destinationValue0=temporary0;
+			//doWrite    [instructionIn[3:0]]<=1'b1;
+			wv0<=temporary0;
+			wa0<=1;
 		end
 		7:begin
-			destinationValue1=adderOutput[15:0];
-			destinationValue0={15'h0,adderOutput[16]};
-			unique case (step)
+			unique case (stepNext)
 			0:begin
 			end
 			1:begin
-				doWriteDestinationValue0=1;
-				doWriteDestinationValue1=1;
+				//doWrite    [instructionIn[3:0]]<=1'b1;
+				//doWrite    [instructionIn[7:4]]<=1'b1;
+				wv0<={15'h0,adderOutput[16]};
+				wa0<=1;
+				wv1<=adderOutput[15:0];
+				wa1<=1;
 			end
 			endcase
 		end
 		8:begin
-			mem_is_general_access_byte_operation=0;
-			mem_is_general_access_write=0;
-			mem_target_address_general={vr2,vr1};
-			mem_target_address_general[0]=1'b0;
-			destinationValue0=mem_data_out_small_r;
-			unique case (step)
+			mem_is_general_access_byte_operation<=0;
+			mem_is_general_access_write<=0;
+			unique case (stepNext)
 			0:begin
-				mem_is_general_access_requesting=1;
+				mem_is_general_access_requesting<=1;
 			end
 			1:begin
-				doWriteDestinationValue0=1;
+				//doWrite    [instructionIn[3:0]]<=1'b1;
+				wv0<=mem_data_out_small;
+				wa0<=1;
 			end
 			endcase
 		end
 		9:begin
-			mem_is_general_access_requesting=1;
-			mem_is_general_access_byte_operation=0;
-			mem_is_general_access_write=1;
-			mem_target_address_general={vr2,vr1};
-			mem_target_address_general[0]=1'b0;
-			mem_data_in[0]=vr0;
+			mem_is_general_access_requesting<=1;
+			mem_is_general_access_byte_operation<=0;
+			mem_is_general_access_write<=1;
 		end
 		10:begin
-			destinationValue0=adderOutput[15:0];
-			unique case (step)
+			unique case (stepNext)
 			0:begin
 			end
 			1:begin
-				doWriteDestinationValue0=1;
+				//doWrite    [instructionIn[3:0]]<=1'b1;
+				wv0<=adderOutput[15:0];
+				wa0<=1;
 			end
 			endcase
 		end
 		11:begin
-			destinationValue4={15'h0,adderOutput[16]};
-			destinationValue0=adderOutput[15:0];
-			unique case (step)
+			unique case (stepNext)
 			0:begin
 			end
 			1:begin
-				doWriteDestinationValue0=1;
-				doWriteDestinationValue4=1;
+				//doWrite    [instructionIn[3:0]]<=1'b1;
+				//doWrite[15]<=1'b1;
+				
+				wv0<=adderOutput[15:0];
+				wv3<={15'h0,adderOutput[16]};
+				wa0<=1;
+				wa3<=1;
+				
+				wb2<=0;
+				wb3<=0;
+				wb4<=1;
 			end
 			endcase
 		end
 		12:begin
-			destinationValue0=adderOutput[15:0];
-			unique case (step)
+			unique case (stepNext)
 			0:begin
 			end
 			1:begin
-				doWriteDestinationValue0=1;
+				wv0<=adderOutput[15:0];
+				//doWrite    [instructionIn[3:0]]<=1'b1;
 			end
 			endcase
 		end
 		13:begin
-			destinationValue0={15'h0,adderOutput[16]};
-			unique case (step)
+			unique case (stepNext)
 			0:begin
 			end
 			1:begin
-				doWriteDestinationValue0=1;
+				wv0<={15'h0,adderOutput[16]};
+				wa0<=1;
+				//doWrite    [instructionIn[3:0]]<=1'b1;
 			end
 			endcase
 		end
 		14:begin
-			instruction_jump_address={vr1,vr0};
+			instruction_jump_address<={nvr1,nvr0};
 		end
 		16:begin
-			mem_is_stack_access_write=1;
-			mem_target_address_stack=stack_pointer_m2;
-			mem_stack_access_size=1;
-			mem_is_stack_access_requesting=1;
-			mem_data_in[0]=vr0;
-			destinationValue5=stack_pointer_m2;
-			if (mem_is_access_acknowledged_pulse) begin
-				doWriteDestinationValue5=1;
+			mem_is_stack_access_write<=1;
+			mem_stack_access_size<=1;
+			mem_is_stack_access_requesting<=1;
+			if (mem_will_access_be_acknowledged_pulse) begin
+				writeValue_sp<=stack_pointer_m2;
+				doWrite_sp<=1'b1;
+				
+				assert (next_stack_pointer==stack_pointer); // and that stack_pointer's instant_override is not active
 			end
 		end
 		17:begin
-			mem_is_stack_access_write=1;
-			mem_target_address_stack=stack_pointer_m4;
-			mem_stack_access_size=2;
-			mem_is_stack_access_requesting=1;
-			mem_data_in[0]=vr0;
-			mem_data_in[1]=vr1;
-			destinationValue5=stack_pointer_m4;
-			if (mem_is_access_acknowledged_pulse) begin
-				doWriteDestinationValue5=1;
+			mem_is_stack_access_write<=1;
+			mem_stack_access_size<=2;
+			mem_is_stack_access_requesting<=1;
+			if (mem_will_access_be_acknowledged_pulse) begin
+				writeValue_sp<=stack_pointer_p4;
+				doWrite_sp<=1'b1;
+				
+				assert (next_stack_pointer==stack_pointer); // and that stack_pointer's instant_override is not active
 			end
 		end
 		18:begin
-			mem_is_stack_access_write=0;
-			mem_target_address_stack=stack_pointer;
-			mem_stack_access_size=1;
-			destinationValue5=stack_pointer_p2;
-			destinationValue0=mem_data_out_large_r[0];
-			unique case (step)
+			mem_is_stack_access_write<=0;
+			mem_stack_access_size<=1;
+			unique case (stepNext)
 			0:begin
-				mem_is_stack_access_requesting=1;
+				mem_is_stack_access_requesting<=1;
 			end
 			1:begin
-				doWriteDestinationValue5=1;
-				doWriteDestinationValue0=1;
+				//doWrite    [instructionIn[3:0]]<=1'b1;
+				doWrite_sp<=1'b1;
+				wv0<=mem_data_out_large[0];
+				wa0<=1;
+				writeValue_sp<=stack_pointer_p2;
+				
+				assert (next_stack_pointer==stack_pointer); // and that stack_pointer's instant_override is not active
 			end
 			endcase
 		end
 		19:begin
-			mem_is_stack_access_write=0;
-			mem_target_address_stack=stack_pointer;
-			mem_stack_access_size=2;
-			destinationValue5=stack_pointer_p4;
-			destinationValue0=mem_data_out_large_r[0];
-			destinationValue1=mem_data_out_large_r[1];
-			unique case (step)
+			mem_is_stack_access_write<=0;
+			mem_stack_access_size<=2;
+			unique case (stepNext)
 			0:begin
-				mem_is_stack_access_requesting=1;
+				mem_is_stack_access_requesting<=1;
 			end
 			1:begin
-				doWriteDestinationValue5=1;
-				doWriteDestinationValue0=1;
-				doWriteDestinationValue1=1;
+				//doWrite    [instructionIn[3:0]]<=1'b1;
+				//doWrite    [instructionIn[7:4]]<=1'b1;
+				doWrite_sp<=1'b1;
+				wv0<=mem_data_out_large[0];
+				wv1<=mem_data_out_large[1];
+				wa0<=1;
+				wa1<=1;
+				writeValue_sp<=stack_pointer_p4;
+				
+				assert (next_stack_pointer==stack_pointer); // and that stack_pointer's instant_override is not active
 			end
 			endcase
 		end
 		20:begin
-			destinationValue0=vr1;
-			doWriteDestinationValue0=1;
+			//doWrite    [instructionIn[3:0]]<=1'b1;
+			wv0<=nvr1;
+			wa0<=1;
 		end
 		21:begin
-			destinationValue0[ 7:0]=vr1[15:8];
-			destinationValue0[15:8]=vr1[ 7:0];
-			doWriteDestinationValue0=1;
+			//doWrite    [instructionIn[3:0]]<=1'b1;
+			wv0<={nvr1[ 7:0],nvr1[15:8]};
+			wa0<=1;
 		end
 		22:begin
-			destinationValue0={1'b0,vr1[15:1]};
-			doWriteDestinationValue0=1;
+			//doWrite    [instructionIn[3:0]]<=1'b1;
+			wv0<={1'b0,nvr1[15:1]};
+			wa0<=1;
 		end
 		23:begin
-			destinationValue0=mul16Temp;
-			unique case (step)
+			unique case (stepNext)
 			0:begin
 			end
 			1:begin
-				doWriteDestinationValue0=1;
+				//doWrite    [instructionIn[3:0]]<=1'b1;
+				
+				wv0<=mul16Temp;
+				wa0<=1;
 			end
 			endcase
 		end
 		24:begin
-			destinationValue2=mul32Temp[15: 0];
-			destinationValue3=mul32Temp[31:16];
-			unique case (step)
+			unique case (stepNext)
 			0:begin
 			end
 			1:begin
-				doWriteDestinationValue2=1;
-				doWriteDestinationValue3=1;
+				//doWrite[13]<=1'b1;
+				//doWrite[14]<=1'b1;
+				
+				wv2<=mul32Temp[15: 0];
+				wv3<=mul32Temp[31:16];
+				wa2<=1;
+				wa3<=1;
+				
+				wb2<=0;
+				wb3<=1;
+				wb4<=0;
 			end
 			endcase
 		end
 		25:begin
-			destinationValue0={divTemp3[15:1],divPartialResult[2]};
-			destinationValue1=divTable0[2][15:0];
-			unique case (step)
+			unique case (stepNext)
 			0:begin
 			end
 			1:begin
@@ -994,98 +1113,221 @@ always_comb begin
 			5:begin
 			end
 			6:begin
-				doWriteDestinationValue0=1;
-				doWriteDestinationValue1=1;
+				//doWrite    [instructionIn[3:0]]<=1'b1;
+				//doWrite    [instructionIn[7:4]]<=1'b1;
+				
+				wv0<={divTemp3[15:3],divPartialResult};
+				wv1<=divTable2[2][15:0];
+				wa0<=1;
+				wa1<=1;
+				
+				wb0<=0;
+				wb1<=1;
 			end
 			endcase
 		end
 		26:begin
-			destinationValue5=stack_pointer_m8;
-			destinationValue6=stack_pointer_m8;
-			mem_is_stack_access_write=1;
-			mem_target_address_stack=stack_pointer_m8;
-			mem_stack_access_size=4;
-			instruction_jump_address={vr1,vr0};
-			mem_data_in[0]={instructionAddress[15:1],1'b0};
-			mem_data_in[1]={7'b0,instructionAddress[24:16]};
-			mem_data_in[2]=user_reg[4'h1];
-			mem_data_in[3]=user_reg[4'h0];
-			unique case (step)
+			mem_is_stack_access_write<=1;
+			mem_stack_access_size<=4;
+			unique case (stepNext)
 			0:begin
-				mem_is_stack_access_requesting=1;
+				mem_is_stack_access_requesting<=1;
 			end
 			1:begin
-				doWriteDestinationValue5=1;
-				doWriteDestinationValue6=1;
+				doWrite_sp<=1'b1;
+				//doWrite[0]<=1'b1;
+				instruction_jump_address<={nvr1,nvr0};
+				writeValue_sp<=stack_pointer_m8;
+				wv2<=stack_pointer_m8;
+				wa2<=1;
+				
+				wb0<=1;
+				wb1<=0;
+				
+				assert (next_stack_pointer==stack_pointer); // and that stack_pointer's instant_override is not active
 			end
 			endcase
 		end
 		27:begin
-			mem_is_stack_access_write=0;
-			mem_target_address_stack=user_reg[4'h0]-4'h8;
-			destinationValue5=(user_reg[4'h0]-4'hA) + mem_data_out_large_r[0];
-			destinationValue6=mem_data_out_large_r[1];
-			destinationValue7=mem_data_out_large_r[2];
-			mem_stack_access_size=5;
-			instruction_jump_address={mem_data_out_large_r[3],mem_data_out_large_r[4]};
-			unique case (step)
+			mem_is_stack_access_write<=0;
+			mem_stack_access_size<=5;
+			
+			// this is able to use user_reg[4'h0] and ignore the instant_override because it is known to take more then one cycle before this value is used (so there is no override at the time this value is used)
+			unique case (stepNext)
 			0:begin
-				mem_is_stack_access_requesting=1;
+				mem_is_stack_access_requesting<=1;
 			end
 			1:begin
-				doWriteDestinationValue5=1;
-				doWriteDestinationValue6=1;
-				doWriteDestinationValue7=1;
+			end
+			2:begin
+				instruction_jump_address<={mem_data_out_large_r[3],mem_data_out_large_r[4]};
+				writeValue_sp<=(user_reg[4'h0]-4'hA) + mem_data_out_large_r[0];
+				wv2<=mem_data_out_large_r[1];
+				wv3<=mem_data_out_large_r[2];
+				wa2<=1;
+				wa3<=1;
+				
+				wb0<=1;
+				wb1<=0;
+				
+				wb2<=1;
+				wb3<=0;
+				wb4<=0;
+				
+				//doWrite[0]<=1'b1;
+				//doWrite[1]<=1'b1;
+				doWrite_sp<=1'b1;
 			end
 			endcase
 		end
 		28:begin
-			mem_is_general_access_byte_operation=1;
-			mem_is_general_access_write=0;
-			mem_target_address_general={vr1,user_reg[4'hD]};
-			destinationValue0=mem_data_out_small_r;
-			unique case (step)
+			mem_is_general_access_byte_operation<=1;
+			mem_is_general_access_write<=0;
+			unique case (stepNext)
 			0:begin
-				mem_is_general_access_requesting=1;
+				mem_is_general_access_requesting<=1;
 			end
 			1:begin
-				doWriteDestinationValue0=1;
+				//doWrite    [instructionIn[3:0]]<=1'b1;
+				wv0<=mem_data_out_small;
+				wa0<=1;
 			end
 			endcase
 		end
 		29:begin
-			mem_is_general_access_byte_operation=1;
-			mem_is_general_access_write=1;
-			mem_target_address_general={vr1,user_reg[4'hD]};
-			mem_is_general_access_requesting=1;
-			mem_data_in[0]=vr0;
+			mem_is_general_access_byte_operation<=1;
+			mem_is_general_access_write<=1;
+			mem_is_general_access_requesting<=1;
 		end
 		30:begin
-			instruction_jump_address={vr1,vr0};
+			instruction_jump_address<={nvr1,nvr0};
 		end
 		31:begin
-			destinationValue0=temporary7;
-			destinationValue5=temporary7;
-			unique case (step)
+			unique case (stepNext)
 			0:begin
 			end
 			1:begin
-				doWriteDestinationValue0=1;
-				doWriteDestinationValue5=1;
+				//doWrite    [instructionIn[3:0]]<=1'b1;
+				doWrite_sp<=1'b1;
+				
+				wv0<=temporary7;
+				wa0<=1;
+				writeValue_sp<=temporary7;
 			end
 			endcase
 		end
 		endcase
 	end
 	
-	// the one's bit of these should always be zero
-	mem_target_address_stack[0]=1'b0;
-	instruction_jump_address[0]=1'b0;
+	// the one's bit of this should always be zero
+	instruction_jump_address[0]<=1'b0;
 end
 
-always @(posedge main_clk) begin
-	mul16Temp<=vr1*vr0;
-	mul32Temp<={vr1,vr0}*{user_reg[4'hE],user_reg[4'hD]};
+
+
+always_comb begin
+	mem_target_address_stack=16'hx;
+	mem_target_address_general=32'hx;
+	mem_data_in='{16'hx,16'hx,16'hx,16'hx};
+	
+	if (doExecute) begin
+		unique case (instructionCurrentID)
+		0:begin
+		end
+		1:begin
+		end
+		2:begin
+			mem_target_address_stack=temporary1;
+		end
+		3:begin
+			mem_target_address_stack=temporary1;
+			mem_data_in[0]=vr0;
+		end
+		4:begin
+		end
+		5:begin
+		end
+		6:begin
+		end
+		7:begin
+		end
+		8:begin
+			mem_target_address_general={vr2,vr1};
+			mem_target_address_general[0]=1'b0;
+		end
+		9:begin
+			mem_target_address_general={vr2,vr1};
+			mem_target_address_general[0]=1'b0;
+			mem_data_in[0]=vr0;
+		end
+		10:begin
+		end
+		11:begin
+		end
+		12:begin
+		end
+		13:begin
+		end
+		14:begin
+		end
+		16:begin
+			mem_target_address_stack=stack_pointer_m2;
+			mem_data_in[0]=vr0;
+		end
+		17:begin
+			mem_target_address_stack=stack_pointer_m4;
+			mem_data_in[0]=vr0;
+			mem_data_in[1]=vr1;
+		end
+		18:begin
+			mem_target_address_stack=stack_pointer;
+		end
+		19:begin
+			mem_target_address_stack=stack_pointer;
+		end
+		20:begin
+		end
+		21:begin
+		end
+		22:begin
+		end
+		23:begin
+		end
+		24:begin
+		end
+		25:begin
+		end
+		26:begin
+			mem_target_address_stack=stack_pointer_m8;
+			mem_data_in[0]={instructionAddress[15:1],1'b0};
+			mem_data_in[1]={7'b0,instructionAddress[24:16]};
+			mem_data_in[2]=user_reg[4'h1];
+			mem_data_in[3]=user_reg[4'h0];
+		end
+		27:begin
+			mem_target_address_stack=user_reg[4'h0]-4'h8;
+		end
+		28:begin
+			mem_target_address_general={vr1,user_reg[4'hD]};
+		end
+		29:begin
+			mem_target_address_general={vr1,user_reg[4'hD]};
+			mem_data_in[0]=vr0;
+		end
+		30:begin
+		end
+		31:begin
+		end
+		endcase
+	end
+	
+	// the one's bit of these should always be zero
+	mem_target_address_stack[0]=1'b0;
+end
+
+always_comb begin
+	mul16Temp=vr1*vr0;
+	mul32Temp={vr1,vr0}*{user_reg[4'hE],user_reg[4'hD]};
 end
 
 
@@ -1178,6 +1420,7 @@ always_comb begin
 			endcase
 		end
 		14:begin
+		/*
 			unique case (step)
 			0:begin
 				stepNext=1;
@@ -1186,6 +1429,7 @@ always_comb begin
 				stepNext=0;
 			end
 			endcase
+		*/
 		end
 		16:begin
 		end
@@ -1278,6 +1522,9 @@ always_comb begin
 				if (mem_is_access_acknowledged_pulse) stepNext=1;
 			end
 			1:begin
+				stepNext=2;
+			end
+			2:begin
 				stepNext=0;
 			end
 			endcase
@@ -1324,7 +1571,7 @@ wire future_sig_helper2b [1:0];
 assign future_sig_helper0b=future_sig_helper;
 assign future_sig_helper1b[0]=willExecute;
 assign future_sig_helper1b[1]=mem_will_access_be_acknowledged_pulse;
-assign future_sig_helper1b[2]=!(| vr2);
+assign future_sig_helper1b[2]=!(| nvr2);
 
 lcell lc00 (.in(future_sig_helper0b[0]),.out(future_sig_helper0a[0]));
 lcell lc01 (.in(future_sig_helper0b[1]),.out(future_sig_helper0a[1]));
@@ -1455,17 +1702,19 @@ always_comb begin
 		endcase
 	end
 	14:begin
-		unique case (stepNext)
-		0:begin
-		end
-		1:begin
 			//will_instruction_finish_next_cycle_pulse=willExecute;
 			//will_jump_next_cycle=willExecute & !(instant_user_reg_override_active[instructionIn[11:8]]?instant_user_reg_wide_or[instructionIn[11:8]]:user_reg_wide_or[instructionIn[11:8]]); // if wide_or is 0 then jump is 1
 			future_sig_helper[0]=1;
 			future_sig_helper[2]=1;
 			future_sig_helper[3]=1;
+		/*
+		unique case (stepNext)
+		0:begin
+		end
+		1:begin
 		end
 		endcase
+		*/
 	end
 	16:begin
 		//will_instruction_finish_next_cycle_pulse=willExecute & mem_will_access_be_acknowledged_pulse;
@@ -1566,6 +1815,8 @@ always_comb begin
 		0:begin
 		end
 		1:begin
+		end
+		2:begin
 			//will_instruction_finish_next_cycle_pulse=willExecute;
 			//will_jump_next_cycle=willExecute;
 			future_sig_helper[0]=1;
@@ -1608,8 +1859,6 @@ always_comb begin
 end
 
 
-
-
 always @(posedge main_clk) begin
 	if (doExecute && instructionCurrentID==5'd25) begin
 		// this is only actually used for division
@@ -1617,37 +1866,33 @@ always @(posedge main_clk) begin
 		0:begin
 			divTemp0<={1'b0,~vr1}+1'b1;
 			divTemp1<=vr0;
-			divTemp2<=vr0[15:13];
-			divTemp5<=0;
+			divTemp2<=vr0[14:12];
+			divTemp5<=divTemp7;
+			divTemp3[15]<=divTemp6[16];
 		end
 		1:begin
-			divTemp2<=divTemp1[12:10];
+			divTemp2<=divTemp1[11:9];
 			divTemp5<=divTable2[2][15:0];
-			divTemp3[15:13]<=divPartialResult;
+			divTemp3[14:12]<=divPartialResult;
 		end
 		2:begin
-			divTemp2<=divTemp1[9:7];
+			divTemp2<=divTemp1[8:6];
 			divTemp5<=divTable2[2][15:0];
-			divTemp3[12:10]<=divPartialResult;
+			divTemp3[11:9]<=divPartialResult;
 		end
 		3:begin
-			divTemp2<=divTemp1[6:4];
+			divTemp2<=divTemp1[5:3];
 			divTemp5<=divTable2[2][15:0];
-			divTemp3[9:7]<=divPartialResult;
+			divTemp3[8:6]<=divPartialResult;
 		end
 		4:begin
-			divTemp2<=divTemp1[3:1];
+			divTemp2<=divTemp1[2:0];
 			divTemp5<=divTable2[2][15:0];
-			divTemp3[6:4]<=divPartialResult;
+			divTemp3[5:3]<=divPartialResult;
 		end
 		5:begin
-			divTemp2<={divTemp1[0],2'bxx};
-			divTemp5<=divTable2[2][15:0];
-			divTemp3[3:1]<=divPartialResult;
 		end
 		6:begin
-			divTemp2<=3'hx;
-			divTemp5<=16'hx;
 		end
 		endcase
 	end
@@ -2017,26 +2262,6 @@ reg [15:0] stack_pointer_p2=16'h0002;
 reg [15:0] stack_pointer_p4=16'h0004;
 
 reg [15:0] user_reg [15:0]='{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
-
-wire user_reg_wide_or [15:0];
-assign user_reg_wide_or[0]=(| user_reg[0]);
-assign user_reg_wide_or[1]=(| user_reg[1]);
-assign user_reg_wide_or[2]=(| user_reg[2]);
-assign user_reg_wide_or[3]=(| user_reg[3]);
-assign user_reg_wide_or[4]=(| user_reg[4]);
-assign user_reg_wide_or[5]=(| user_reg[5]);
-assign user_reg_wide_or[6]=(| user_reg[6]);
-assign user_reg_wide_or[7]=(| user_reg[7]);
-assign user_reg_wide_or[8]=(| user_reg[8]);
-assign user_reg_wide_or[9]=(| user_reg[9]);
-assign user_reg_wide_or[10]=(| user_reg[10]);
-assign user_reg_wide_or[11]=(| user_reg[11]);
-assign user_reg_wide_or[12]=(| user_reg[12]);
-assign user_reg_wide_or[13]=(| user_reg[13]);
-assign user_reg_wide_or[14]=(| user_reg[14]);
-assign user_reg_wide_or[15]=(| user_reg[15]);
-
-
 
 generate_hex_display_base10 generate_hex_display_inst(
 	hex_display,
@@ -2710,70 +2935,124 @@ always @(posedge main_clk) begin
 	if (is_new_instruction_entering_this_cycle_pulse_3) current_instruction_address_table[3]<=new_instruction_address_table[new_instruction_index3];
 end
 
+wire [15:0] instant_updated_core_values [16:0];
+/*
+recomb_mux recomb_mux_0(
+	instant_updated_core_values[0],
+	user_reg[0],
+	{executer3DoWrite[0] , executer2DoWrite[0] , executer1DoWrite[0] , executer0DoWrite[0]},
+	'{executer3WriteValues[0],executer2WriteValues[0],executer1WriteValues[0],executer0WriteValues[0]}
+);
+recomb_mux recomb_mux_1(
+	instant_updated_core_values[1],
+	user_reg[1],
+	{executer3DoWrite[1] , executer2DoWrite[1] , executer1DoWrite[1] , executer0DoWrite[1]},
+	'{executer3WriteValues[1],executer2WriteValues[1],executer1WriteValues[1],executer0WriteValues[1]}
+);
+recomb_mux recomb_mux_2(
+	instant_updated_core_values[2],
+	user_reg[2],
+	{executer3DoWrite[2] , executer2DoWrite[2] , executer1DoWrite[2] , executer0DoWrite[2]},
+	'{executer3WriteValues[2],executer2WriteValues[2],executer1WriteValues[2],executer0WriteValues[2]}
+);
+recomb_mux recomb_mux_3(
+	instant_updated_core_values[3],
+	user_reg[3],
+	{executer3DoWrite[3] , executer2DoWrite[3] , executer1DoWrite[3] , executer0DoWrite[3]},
+	'{executer3WriteValues[3],executer2WriteValues[3],executer1WriteValues[3],executer0WriteValues[3]}
+);
+recomb_mux recomb_mux_4(
+	instant_updated_core_values[4],
+	user_reg[4],
+	{executer3DoWrite[4] , executer2DoWrite[4] , executer1DoWrite[4] , executer0DoWrite[4]},
+	'{executer3WriteValues[4],executer2WriteValues[4],executer1WriteValues[4],executer0WriteValues[4]}
+);
+recomb_mux recomb_mux_5(
+	instant_updated_core_values[5],
+	user_reg[5],
+	{executer3DoWrite[5] , executer2DoWrite[5] , executer1DoWrite[5] , executer0DoWrite[5]},
+	'{executer3WriteValues[5],executer2WriteValues[5],executer1WriteValues[5],executer0WriteValues[5]}
+);
+recomb_mux recomb_mux_6(
+	instant_updated_core_values[6],
+	user_reg[6],
+	{executer3DoWrite[6] , executer2DoWrite[6] , executer1DoWrite[6] , executer0DoWrite[6]},
+	'{executer3WriteValues[6],executer2WriteValues[6],executer1WriteValues[6],executer0WriteValues[6]}
+);
+recomb_mux recomb_mux_7(
+	instant_updated_core_values[7],
+	user_reg[7],
+	{executer3DoWrite[7] , executer2DoWrite[7] , executer1DoWrite[7] , executer0DoWrite[7]},
+	'{executer3WriteValues[7],executer2WriteValues[7],executer1WriteValues[7],executer0WriteValues[7]}
+);
+recomb_mux recomb_mux_8(
+	instant_updated_core_values[8],
+	user_reg[8],
+	{executer3DoWrite[8] , executer2DoWrite[8] , executer1DoWrite[8] , executer0DoWrite[8]},
+	'{executer3WriteValues[8],executer2WriteValues[8],executer1WriteValues[8],executer0WriteValues[8]}
+);
+recomb_mux recomb_mux_9(
+	instant_updated_core_values[9],
+	user_reg[9],
+	{executer3DoWrite[9] , executer2DoWrite[9] , executer1DoWrite[9] , executer0DoWrite[9]},
+	'{executer3WriteValues[9],executer2WriteValues[9],executer1WriteValues[9],executer0WriteValues[9]}
+);
+recomb_mux recomb_mux_10(
+	instant_updated_core_values[10],
+	user_reg[10],
+	{executer3DoWrite[10] , executer2DoWrite[10] , executer1DoWrite[10] , executer0DoWrite[10]},
+	'{executer3WriteValues[10],executer2WriteValues[10],executer1WriteValues[10],executer0WriteValues[10]}
+);
+recomb_mux recomb_mux_11(
+	instant_updated_core_values[11],
+	user_reg[11],
+	{executer3DoWrite[11] , executer2DoWrite[11] , executer1DoWrite[11] , executer0DoWrite[11]},
+	'{executer3WriteValues[11],executer2WriteValues[11],executer1WriteValues[11],executer0WriteValues[11]}
+);
+recomb_mux recomb_mux_12(
+	instant_updated_core_values[12],
+	user_reg[12],
+	{executer3DoWrite[12] , executer2DoWrite[12] , executer1DoWrite[12] , executer0DoWrite[12]},
+	'{executer3WriteValues[12],executer2WriteValues[12],executer1WriteValues[12],executer0WriteValues[12]}
+);
+recomb_mux recomb_mux_13(
+	instant_updated_core_values[13],
+	user_reg[13],
+	{executer3DoWrite[13] , executer2DoWrite[13] , executer1DoWrite[13] , executer0DoWrite[13]},
+	'{executer3WriteValues[13],executer2WriteValues[13],executer1WriteValues[13],executer0WriteValues[13]}
+);
+recomb_mux recomb_mux_14(
+	instant_updated_core_values[14],
+	user_reg[14],
+	{executer3DoWrite[14] , executer2DoWrite[14] , executer1DoWrite[14] , executer0DoWrite[14]},
+	'{executer3WriteValues[14],executer2WriteValues[14],executer1WriteValues[14],executer0WriteValues[14]}
+);
+recomb_mux recomb_mux_15(
+	instant_updated_core_values[15],
+	user_reg[15],
+	{executer3DoWrite[15] , executer2DoWrite[15] , executer1DoWrite[15] , executer0DoWrite[15]},
+	'{executer3WriteValues[15],executer2WriteValues[15],executer1WriteValues[15],executer0WriteValues[15]}
+);
+*/
+recomb_mux_all_user_reg recomb_mux_full(
+	instant_updated_core_values[15:0],
+	user_reg,
+	'{executer3DoWrite[15:0],executer2DoWrite[15:0],executer1DoWrite[15:0],executer0DoWrite[15:0]},
+	executer0WriteValues[15:0],
+	executer1WriteValues[15:0],
+	executer2WriteValues[15:0],
+	executer3WriteValues[15:0]
+);
 
 
-reg executerDoWrite [16:0];
-reg [15:0] executerWriteValuesSelected [16:0];
-reg executerWriteWideOrSelected [15:0];
+recomb_mux recomb_mux_16(
+	instant_updated_core_values[16],
+	stack_pointer,
+	{executer3DoWrite[16] , executer2DoWrite[16] , executer1DoWrite[16] , executer0DoWrite[16]},
+	'{executer3WriteValues[16],executer2WriteValues[16],executer1WriteValues[16],executer0WriteValues[16]}
+);
 
-always_comb begin
-	executerDoWrite[0]=(executer3DoWrite[0] | executer2DoWrite[0] | executer1DoWrite[0] | executer0DoWrite[0])?1'b1:1'b0;
-	executerDoWrite[1]=(executer3DoWrite[1] | executer2DoWrite[1] | executer1DoWrite[1] | executer0DoWrite[1])?1'b1:1'b0;
-	executerDoWrite[2]=(executer3DoWrite[2] | executer2DoWrite[2] | executer1DoWrite[2] | executer0DoWrite[2])?1'b1:1'b0;
-	executerDoWrite[3]=(executer3DoWrite[3] | executer2DoWrite[3] | executer1DoWrite[3] | executer0DoWrite[3])?1'b1:1'b0;
-	executerDoWrite[4]=(executer3DoWrite[4] | executer2DoWrite[4] | executer1DoWrite[4] | executer0DoWrite[4])?1'b1:1'b0;
-	executerDoWrite[5]=(executer3DoWrite[5] | executer2DoWrite[5] | executer1DoWrite[5] | executer0DoWrite[5])?1'b1:1'b0;
-	executerDoWrite[6]=(executer3DoWrite[6] | executer2DoWrite[6] | executer1DoWrite[6] | executer0DoWrite[6])?1'b1:1'b0;
-	executerDoWrite[7]=(executer3DoWrite[7] | executer2DoWrite[7] | executer1DoWrite[7] | executer0DoWrite[7])?1'b1:1'b0;
-	executerDoWrite[8]=(executer3DoWrite[8] | executer2DoWrite[8] | executer1DoWrite[8] | executer0DoWrite[8])?1'b1:1'b0;
-	executerDoWrite[9]=(executer3DoWrite[9] | executer2DoWrite[9] | executer1DoWrite[9] | executer0DoWrite[9])?1'b1:1'b0;
-	executerDoWrite[10]=(executer3DoWrite[10] | executer2DoWrite[10] | executer1DoWrite[10] | executer0DoWrite[10])?1'b1:1'b0;
-	executerDoWrite[11]=(executer3DoWrite[11] | executer2DoWrite[11] | executer1DoWrite[11] | executer0DoWrite[11])?1'b1:1'b0;
-	executerDoWrite[12]=(executer3DoWrite[12] | executer2DoWrite[12] | executer1DoWrite[12] | executer0DoWrite[12])?1'b1:1'b0;
-	executerDoWrite[13]=(executer3DoWrite[13] | executer2DoWrite[13] | executer1DoWrite[13] | executer0DoWrite[13])?1'b1:1'b0;
-	executerDoWrite[14]=(executer3DoWrite[14] | executer2DoWrite[14] | executer1DoWrite[14] | executer0DoWrite[14])?1'b1:1'b0;
-	executerDoWrite[15]=(executer3DoWrite[15] | executer2DoWrite[15] | executer1DoWrite[15] | executer0DoWrite[15])?1'b1:1'b0;
-	executerDoWrite[16]=(executer3DoWrite[16] | executer2DoWrite[16] | executer1DoWrite[16] | executer0DoWrite[16])?1'b1:1'b0;
-end
 
-always_comb begin
-	executerWriteValuesSelected[0]=(executer0WriteValues[0] & {16{executer0DoWrite[0]}}) | (executer1WriteValues[0] & {16{executer1DoWrite[0]}}) | (executer2WriteValues[0] & {16{executer2DoWrite[0]}}) | (executer3WriteValues[0] & {16{executer3DoWrite[0]}});
-	executerWriteValuesSelected[1]=(executer0WriteValues[1] & {16{executer0DoWrite[1]}}) | (executer1WriteValues[1] & {16{executer1DoWrite[1]}}) | (executer2WriteValues[1] & {16{executer2DoWrite[1]}}) | (executer3WriteValues[1] & {16{executer3DoWrite[1]}});
-	executerWriteValuesSelected[2]=(executer0WriteValues[2] & {16{executer0DoWrite[2]}}) | (executer1WriteValues[2] & {16{executer1DoWrite[2]}}) | (executer2WriteValues[2] & {16{executer2DoWrite[2]}}) | (executer3WriteValues[2] & {16{executer3DoWrite[2]}});
-	executerWriteValuesSelected[3]=(executer0WriteValues[3] & {16{executer0DoWrite[3]}}) | (executer1WriteValues[3] & {16{executer1DoWrite[3]}}) | (executer2WriteValues[3] & {16{executer2DoWrite[3]}}) | (executer3WriteValues[3] & {16{executer3DoWrite[3]}});
-	executerWriteValuesSelected[4]=(executer0WriteValues[4] & {16{executer0DoWrite[4]}}) | (executer1WriteValues[4] & {16{executer1DoWrite[4]}}) | (executer2WriteValues[4] & {16{executer2DoWrite[4]}}) | (executer3WriteValues[4] & {16{executer3DoWrite[4]}});
-	executerWriteValuesSelected[5]=(executer0WriteValues[5] & {16{executer0DoWrite[5]}}) | (executer1WriteValues[5] & {16{executer1DoWrite[5]}}) | (executer2WriteValues[5] & {16{executer2DoWrite[5]}}) | (executer3WriteValues[5] & {16{executer3DoWrite[5]}});
-	executerWriteValuesSelected[6]=(executer0WriteValues[6] & {16{executer0DoWrite[6]}}) | (executer1WriteValues[6] & {16{executer1DoWrite[6]}}) | (executer2WriteValues[6] & {16{executer2DoWrite[6]}}) | (executer3WriteValues[6] & {16{executer3DoWrite[6]}});
-	executerWriteValuesSelected[7]=(executer0WriteValues[7] & {16{executer0DoWrite[7]}}) | (executer1WriteValues[7] & {16{executer1DoWrite[7]}}) | (executer2WriteValues[7] & {16{executer2DoWrite[7]}}) | (executer3WriteValues[7] & {16{executer3DoWrite[7]}});
-	executerWriteValuesSelected[8]=(executer0WriteValues[8] & {16{executer0DoWrite[8]}}) | (executer1WriteValues[8] & {16{executer1DoWrite[8]}}) | (executer2WriteValues[8] & {16{executer2DoWrite[8]}}) | (executer3WriteValues[8] & {16{executer3DoWrite[8]}});
-	executerWriteValuesSelected[9]=(executer0WriteValues[9] & {16{executer0DoWrite[9]}}) | (executer1WriteValues[9] & {16{executer1DoWrite[9]}}) | (executer2WriteValues[9] & {16{executer2DoWrite[9]}}) | (executer3WriteValues[9] & {16{executer3DoWrite[9]}});
-	executerWriteValuesSelected[10]=(executer0WriteValues[10] & {16{executer0DoWrite[10]}}) | (executer1WriteValues[10] & {16{executer1DoWrite[10]}}) | (executer2WriteValues[10] & {16{executer2DoWrite[10]}}) | (executer3WriteValues[10] & {16{executer3DoWrite[10]}});
-	executerWriteValuesSelected[11]=(executer0WriteValues[11] & {16{executer0DoWrite[11]}}) | (executer1WriteValues[11] & {16{executer1DoWrite[11]}}) | (executer2WriteValues[11] & {16{executer2DoWrite[11]}}) | (executer3WriteValues[11] & {16{executer3DoWrite[11]}});
-	executerWriteValuesSelected[12]=(executer0WriteValues[12] & {16{executer0DoWrite[12]}}) | (executer1WriteValues[12] & {16{executer1DoWrite[12]}}) | (executer2WriteValues[12] & {16{executer2DoWrite[12]}}) | (executer3WriteValues[12] & {16{executer3DoWrite[12]}});
-	executerWriteValuesSelected[13]=(executer0WriteValues[13] & {16{executer0DoWrite[13]}}) | (executer1WriteValues[13] & {16{executer1DoWrite[13]}}) | (executer2WriteValues[13] & {16{executer2DoWrite[13]}}) | (executer3WriteValues[13] & {16{executer3DoWrite[13]}});
-	executerWriteValuesSelected[14]=(executer0WriteValues[14] & {16{executer0DoWrite[14]}}) | (executer1WriteValues[14] & {16{executer1DoWrite[14]}}) | (executer2WriteValues[14] & {16{executer2DoWrite[14]}}) | (executer3WriteValues[14] & {16{executer3DoWrite[14]}});
-	executerWriteValuesSelected[15]=(executer0WriteValues[15] & {16{executer0DoWrite[15]}}) | (executer1WriteValues[15] & {16{executer1DoWrite[15]}}) | (executer2WriteValues[15] & {16{executer2DoWrite[15]}}) | (executer3WriteValues[15] & {16{executer3DoWrite[15]}});
-	executerWriteValuesSelected[16]=(executer0WriteValues[16] & {16{executer0DoWrite[16]}}) | (executer1WriteValues[16] & {16{executer1DoWrite[16]}}) | (executer2WriteValues[16] & {16{executer2DoWrite[16]}}) | (executer3WriteValues[16] & {16{executer3DoWrite[16]}});
-end
-
-always_comb begin
-	executerWriteWideOrSelected[0]=((|(executer0WriteValues[0])) & executer0DoWrite[0]) | ((|(executer1WriteValues[0])) & executer1DoWrite[0]) | ((|(executer2WriteValues[0])) & executer2DoWrite[0]) | ((|(executer3WriteValues[0])) & executer3DoWrite[0]);
-	executerWriteWideOrSelected[1]=((|(executer0WriteValues[1])) & executer0DoWrite[1]) | ((|(executer1WriteValues[1])) & executer1DoWrite[1]) | ((|(executer2WriteValues[1])) & executer2DoWrite[1]) | ((|(executer3WriteValues[1])) & executer3DoWrite[1]);
-	executerWriteWideOrSelected[2]=((|(executer0WriteValues[2])) & executer0DoWrite[2]) | ((|(executer1WriteValues[2])) & executer1DoWrite[2]) | ((|(executer2WriteValues[2])) & executer2DoWrite[2]) | ((|(executer3WriteValues[2])) & executer3DoWrite[2]);
-	executerWriteWideOrSelected[3]=((|(executer0WriteValues[3])) & executer0DoWrite[3]) | ((|(executer1WriteValues[3])) & executer1DoWrite[3]) | ((|(executer2WriteValues[3])) & executer2DoWrite[3]) | ((|(executer3WriteValues[3])) & executer3DoWrite[3]);
-	executerWriteWideOrSelected[4]=((|(executer0WriteValues[4])) & executer0DoWrite[4]) | ((|(executer1WriteValues[4])) & executer1DoWrite[4]) | ((|(executer2WriteValues[4])) & executer2DoWrite[4]) | ((|(executer3WriteValues[4])) & executer3DoWrite[4]);
-	executerWriteWideOrSelected[5]=((|(executer0WriteValues[5])) & executer0DoWrite[5]) | ((|(executer1WriteValues[5])) & executer1DoWrite[5]) | ((|(executer2WriteValues[5])) & executer2DoWrite[5]) | ((|(executer3WriteValues[5])) & executer3DoWrite[5]);
-	executerWriteWideOrSelected[6]=((|(executer0WriteValues[6])) & executer0DoWrite[6]) | ((|(executer1WriteValues[6])) & executer1DoWrite[6]) | ((|(executer2WriteValues[6])) & executer2DoWrite[6]) | ((|(executer3WriteValues[6])) & executer3DoWrite[6]);
-	executerWriteWideOrSelected[7]=((|(executer0WriteValues[7])) & executer0DoWrite[7]) | ((|(executer1WriteValues[7])) & executer1DoWrite[7]) | ((|(executer2WriteValues[7])) & executer2DoWrite[7]) | ((|(executer3WriteValues[7])) & executer3DoWrite[7]);
-	executerWriteWideOrSelected[8]=((|(executer0WriteValues[8])) & executer0DoWrite[8]) | ((|(executer1WriteValues[8])) & executer1DoWrite[8]) | ((|(executer2WriteValues[8])) & executer2DoWrite[8]) | ((|(executer3WriteValues[8])) & executer3DoWrite[8]);
-	executerWriteWideOrSelected[9]=((|(executer0WriteValues[9])) & executer0DoWrite[9]) | ((|(executer1WriteValues[9])) & executer1DoWrite[9]) | ((|(executer2WriteValues[9])) & executer2DoWrite[9]) | ((|(executer3WriteValues[9])) & executer3DoWrite[9]);
-	executerWriteWideOrSelected[10]=((|(executer0WriteValues[10])) & executer0DoWrite[10]) | ((|(executer1WriteValues[10])) & executer1DoWrite[10]) | ((|(executer2WriteValues[10])) & executer2DoWrite[10]) | ((|(executer3WriteValues[10])) & executer3DoWrite[10]);
-	executerWriteWideOrSelected[11]=((|(executer0WriteValues[11])) & executer0DoWrite[11]) | ((|(executer1WriteValues[11])) & executer1DoWrite[11]) | ((|(executer2WriteValues[11])) & executer2DoWrite[11]) | ((|(executer3WriteValues[11])) & executer3DoWrite[11]);
-	executerWriteWideOrSelected[12]=((|(executer0WriteValues[12])) & executer0DoWrite[12]) | ((|(executer1WriteValues[12])) & executer1DoWrite[12]) | ((|(executer2WriteValues[12])) & executer2DoWrite[12]) | ((|(executer3WriteValues[12])) & executer3DoWrite[12]);
-	executerWriteWideOrSelected[13]=((|(executer0WriteValues[13])) & executer0DoWrite[13]) | ((|(executer1WriteValues[13])) & executer1DoWrite[13]) | ((|(executer2WriteValues[13])) & executer2DoWrite[13]) | ((|(executer3WriteValues[13])) & executer3DoWrite[13]);
-	executerWriteWideOrSelected[14]=((|(executer0WriteValues[14])) & executer0DoWrite[14]) | ((|(executer1WriteValues[14])) & executer1DoWrite[14]) | ((|(executer2WriteValues[14])) & executer2DoWrite[14]) | ((|(executer3WriteValues[14])) & executer3DoWrite[14]);
-	executerWriteWideOrSelected[15]=((|(executer0WriteValues[15])) & executer0DoWrite[15]) | ((|(executer1WriteValues[15])) & executer1DoWrite[15]) | ((|(executer2WriteValues[15])) & executer2DoWrite[15]) | ((|(executer3WriteValues[15])) & executer3DoWrite[15]);
-end
 
 
 always @(posedge main_clk) begin
@@ -2787,31 +3066,14 @@ end
 
 
 always @(posedge main_clk) begin
-	if (executerDoWrite[0]) begin user_reg[0]<=executerWriteValuesSelected[0];end
-	if (executerDoWrite[1]) begin user_reg[1]<=executerWriteValuesSelected[1];end
-	if (executerDoWrite[2]) begin user_reg[2]<=executerWriteValuesSelected[2];end
-	if (executerDoWrite[3]) begin user_reg[3]<=executerWriteValuesSelected[3];end
-	if (executerDoWrite[4]) begin user_reg[4]<=executerWriteValuesSelected[4];end
-	if (executerDoWrite[5]) begin user_reg[5]<=executerWriteValuesSelected[5];end
-	if (executerDoWrite[6]) begin user_reg[6]<=executerWriteValuesSelected[6];end
-	if (executerDoWrite[7]) begin user_reg[7]<=executerWriteValuesSelected[7];end
-	if (executerDoWrite[8]) begin user_reg[8]<=executerWriteValuesSelected[8];end
-	if (executerDoWrite[9]) begin user_reg[9]<=executerWriteValuesSelected[9];end
-	if (executerDoWrite[10]) begin user_reg[10]<=executerWriteValuesSelected[10];end
-	if (executerDoWrite[11]) begin user_reg[11]<=executerWriteValuesSelected[11];end
-	if (executerDoWrite[12]) begin user_reg[12]<=executerWriteValuesSelected[12];end
-	if (executerDoWrite[13]) begin user_reg[13]<=executerWriteValuesSelected[13];end
-	if (executerDoWrite[14]) begin user_reg[14]<=executerWriteValuesSelected[14];end
-	if (executerDoWrite[15]) begin user_reg[15]<=executerWriteValuesSelected[15];end
-	if (executerDoWrite[16]) begin
-		stack_pointer   <=executerWriteValuesSelected[16];
-		stack_pointer_m2<=executerWriteValuesSelected[16]-5'd2;
-		stack_pointer_m4<=executerWriteValuesSelected[16]-5'd4;
-		stack_pointer_m6<=executerWriteValuesSelected[16]-5'd6;
-		stack_pointer_m8<=executerWriteValuesSelected[16]-5'd8;
-		stack_pointer_p2<=executerWriteValuesSelected[16]+5'd2;
-		stack_pointer_p4<=executerWriteValuesSelected[16]+5'd4;
-	end
+	user_reg<=instant_updated_core_values[15:0];
+	stack_pointer   <=instant_updated_core_values[16];
+	stack_pointer_m2<=instant_updated_core_values[16]-5'd2;
+	stack_pointer_m4<=instant_updated_core_values[16]-5'd4;
+	stack_pointer_m6<=instant_updated_core_values[16]-5'd6;
+	stack_pointer_m8<=instant_updated_core_values[16]-5'd8;
+	stack_pointer_p2<=instant_updated_core_values[16]+5'd2;
+	stack_pointer_p4<=instant_updated_core_values[16]+5'd4;
 	stack_pointer[0]   <=1'b0;
 	stack_pointer_m2[0]<=1'b0;
 	stack_pointer_m4[0]<=1'b0;
@@ -2829,12 +3091,9 @@ core_executer core_executer_inst0(
 	executerEnable[0],
 	executerWillBeEnabled[0],
 	user_reg,
-	user_reg_wide_or,
+	instant_updated_core_values[15:0],
 	
-	executerWriteValuesSelected[15:0],
-	executerWriteWideOrSelected[15:0],
-	executerDoWrite[15:0],
-	
+	instant_updated_core_values[16],
 	stack_pointer,
 	stack_pointer_m2,
 	stack_pointer_m4,
@@ -2877,12 +3136,9 @@ core_executer core_executer_inst1(
 	executerEnable[1],
 	executerWillBeEnabled[1],
 	user_reg,
-	user_reg_wide_or,
+	instant_updated_core_values[15:0],
 	
-	executerWriteValuesSelected[15:0],
-	executerWriteWideOrSelected[15:0],
-	executerDoWrite[15:0],
-	
+	instant_updated_core_values[16],
 	stack_pointer,
 	stack_pointer_m2,
 	stack_pointer_m4,
@@ -2925,12 +3181,9 @@ core_executer core_executer_inst2(
 	executerEnable[2],
 	executerWillBeEnabled[2],
 	user_reg,
-	user_reg_wide_or,
+	instant_updated_core_values[15:0],
 	
-	executerWriteValuesSelected[15:0],
-	executerWriteWideOrSelected[15:0],
-	executerDoWrite[15:0],
-	
+	instant_updated_core_values[16],
 	stack_pointer,
 	stack_pointer_m2,
 	stack_pointer_m4,
@@ -2973,12 +3226,9 @@ core_executer core_executer_inst3(
 	executerEnable[3],
 	executerWillBeEnabled[3],
 	user_reg,
-	user_reg_wide_or,
+	instant_updated_core_values[15:0],
 	
-	executerWriteValuesSelected[15:0],
-	executerWriteWideOrSelected[15:0],
-	executerDoWrite[15:0],
-	
+	instant_updated_core_values[16],
 	stack_pointer,
 	stack_pointer_m2,
 	stack_pointer_m4,
