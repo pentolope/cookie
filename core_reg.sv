@@ -755,7 +755,7 @@ always_comb begin
 end
 
 always_comb begin
-	temporary1={instructionCurrent[11:4],1'b0} + user_reg[4'h1];
+	temporary1={instructionIn[11:4],1'b0} + instant_user_reg[4'h1];
 end
 
 reg [31:0] mul32Temp;
@@ -797,41 +797,47 @@ always @(posedge main_clk) begin
 	end
 end
 
+reg wa0=0; // if r0 is being set by alternative register
+reg wa1=0; // r0
+reg wa2=0; // if r1 is being set by alternative register
+reg wa3=0; // r1
+reg wa4=0; // 0 or 13
+reg wa5=0; // 1 or 14 or 15
 
-reg wa0=0; // r0
-reg wa1=0; // r1
-reg wa2=0; // 0 or 13
-reg wa3=0; // 1 or 14 or 15
-
-reg wb0; // discern if wa2 is for 0
-reg wb1; // discern if wa2 is for 13
-reg wb2; // discern if wa3 is for 1
-reg wb3; // discern if wa3 is for 14
-reg wb4; // discern if wa3 is for 15
+reg wb0; // discern if wa4 is for 0
+reg wb1; // discern if wa4 is for 13
+reg wb2; // discern if wa5 is for 1
+reg wb3; // discern if wa5 is for 14
+reg wb4; // discern if wa5 is for 15
 
 reg [15:0] wv0;
 reg [15:0] wv1;
 reg [15:0] wv2;
 reg [15:0] wv3;
+reg [15:0] wv4;
+reg [15:0] wv5;
+
+reg [15:0] wt;
 
 always_comb begin
-	writeValues='{wv0,wv0,wv0,wv0,wv0,wv0,wv0,wv0,wv0,wv0,wv0,wv0,wv0,wv0,wv0,wv0};
-	if (wa1) writeValues[instructionCurrent[7:4]]=wv1;
-	if (wa2) writeValues[ 0]=wv2;
-	if (wa2) writeValues[13]=wv2;
-	if (wa3) writeValues[ 1]=wv3;
-	if (wa3) writeValues[14]=wv3;
-	if (wa3) writeValues[15]=wv3;
+	wt=wa0?wv1:wv0;
+	writeValues='{wt,wt,wt,wt,wt,wt,wt,wt,wt,wt,wt,wt,wt,wt,wt,wt};
+	if (wa3) writeValues[instructionCurrent[7:4]]=wa2?wv3:wv2;
+	if (wa4) writeValues[ 0]=wv4;
+	if (wa4) writeValues[13]=wv4;
+	if (wa5) writeValues[ 1]=wv5;
+	if (wa5) writeValues[14]=wv5;
+	if (wa5) writeValues[15]=wv5;
 end
 always_comb begin
 	doWrite=0;
-	if (wa0) doWrite[instructionCurrent[3:0]]=1'b1;
-	if (wa1) doWrite[instructionCurrent[7:4]]=1'b1;
-	if (wa2 & wb0) doWrite[ 0]=1'b1;
-	if (wa2 & wb1) doWrite[13]=1'b1;
-	if (wa3 & wb2) doWrite[ 1]=1'b1;
-	if (wa3 & wb3) doWrite[14]=1'b1;
-	if (wa3 & wb4) doWrite[15]=1'b1;
+	if (wa1) doWrite[instructionCurrent[3:0]]=1'b1;
+	if (wa3) doWrite[instructionCurrent[7:4]]=1'b1;
+	if (wa4 & wb0) doWrite[ 0]=1'b1;
+	if (wa4 & wb1) doWrite[13]=1'b1;
+	if (wa5 & wb2) doWrite[ 1]=1'b1;
+	if (wa5 & wb3) doWrite[14]=1'b1;
+	if (wa5 & wb4) doWrite[15]=1'b1;
 end
 
 
@@ -842,6 +848,8 @@ always @(posedge main_clk) begin
 	mem_is_general_access_write<=0;
 	mem_is_general_access_requesting<=0;
 	mem_stack_access_size<=3'hx;
+	mem_target_address_general<=32'hx;
+	mem_target_address_stack<=16'hx;
 	//doWrite<=0;
 	doWrite_sp<=0;
 	writeValue_sp<=16'hx;
@@ -849,10 +857,14 @@ always @(posedge main_clk) begin
 	wv1<=16'hx;
 	wv2<=16'hx;
 	wv3<=16'hx;
+	wv4<=16'hx;
+	wv5<=16'hx;
 	wa0<=0;
 	wa1<=0;
 	wa2<=0;
 	wa3<=0;
+	wa4<=0;
+	wa5<=0;
 	wb0<=1'bx;
 	wb1<=1'bx;
 	wb2<=1'bx;
@@ -862,25 +874,28 @@ always @(posedge main_clk) begin
 		unique case (instructionInID)
 		0:begin
 			//doWrite    [instructionIn[3:0]]<=1'b1;
-			wv0<={8'h0,instructionIn[11:4]};
 			wa0<=1;
+			wv0<={8'h0,instructionIn[11:4]};
+			wa1<=1;
 		end
 		1:begin
 			//doWrite    [instructionIn[3:0]]<=1'b1;
-			wv0<={instructionIn[11:4],nvr0[7:0]};
 			wa0<=1;
+			wv0<={instructionIn[11:4],nvr0[7:0]};
+			wa1<=1;
 		end
 		2:begin
 			mem_is_stack_access_write<=0;
 			mem_stack_access_size<=1;
+			mem_target_address_stack<=temporary1;
 			unique case (stepNext)
 			0:begin
 				mem_is_stack_access_requesting<=1;
 			end
 			1:begin
 				//doWrite    [instructionIn[3:0]]<=1'b1;
-				wv0<=mem_data_out_large[0];
-				wa0<=1;
+				wv1<=mem_data_out_large[0];
+				wa1<=1;
 			end
 			endcase
 		end
@@ -888,23 +903,25 @@ always @(posedge main_clk) begin
 			mem_is_stack_access_write<=1;
 			mem_is_stack_access_requesting<=1;
 			mem_stack_access_size<=1;
+			mem_target_address_stack<=temporary1;
 		end
 		4:begin
 			//doWrite    [instructionIn[3:0]]<=1'b1;
-			wv0<=temporary0;
-			wa0<=1;
+			wv1<=temporary0;
+			wa1<=1;
 		end
 		5:begin
 			//doWrite    [instructionIn[3:0]]<=1'b1;
-			wv0<=temporary0;
-			wa0<=1;
+			wv1<=temporary0;
+			wa1<=1;
 		end
 		6:begin
 			//doWrite    [instructionIn[3:0]]<=1'b1;
-			wv0<=temporary0;
-			wa0<=1;
+			wv1<=temporary0;
+			wa1<=1;
 		end
 		7:begin
+			wa0<=1;
 			unique case (stepNext)
 			0:begin
 			end
@@ -912,23 +929,26 @@ always @(posedge main_clk) begin
 				//doWrite    [instructionIn[3:0]]<=1'b1;
 				//doWrite    [instructionIn[7:4]]<=1'b1;
 				wv0<={15'h0,adderOutput[16]};
-				wa0<=1;
-				wv1<=adderOutput[15:0];
 				wa1<=1;
+				wv2<=adderOutput[15:0];
+				wa3<=1;
 			end
 			endcase
 		end
 		8:begin
 			mem_is_general_access_byte_operation<=0;
 			mem_is_general_access_write<=0;
+			mem_target_address_general<={nvr2,nvr1};
+			mem_target_address_general[0]<=1'b0;
+			
 			unique case (stepNext)
 			0:begin
 				mem_is_general_access_requesting<=1;
 			end
 			1:begin
 				//doWrite    [instructionIn[3:0]]<=1'b1;
-				wv0<=mem_data_out_small;
-				wa0<=1;
+				wv1<=mem_data_out_small;
+				wa1<=1;
 			end
 			endcase
 		end
@@ -936,19 +956,23 @@ always @(posedge main_clk) begin
 			mem_is_general_access_requesting<=1;
 			mem_is_general_access_byte_operation<=0;
 			mem_is_general_access_write<=1;
+			mem_target_address_general<={nvr2,nvr1};
+			mem_target_address_general[0]<=1'b0;
 		end
 		10:begin
+			wa0<=1;
 			unique case (stepNext)
 			0:begin
 			end
 			1:begin
 				//doWrite    [instructionIn[3:0]]<=1'b1;
 				wv0<=adderOutput[15:0];
-				wa0<=1;
+				wa1<=1;
 			end
 			endcase
 		end
 		11:begin
+			wa0<=1;
 			unique case (stepNext)
 			0:begin
 			end
@@ -957,9 +981,9 @@ always @(posedge main_clk) begin
 				//doWrite[15]<=1'b1;
 				
 				wv0<=adderOutput[15:0];
-				wv3<={15'h0,adderOutput[16]};
-				wa0<=1;
-				wa3<=1;
+				wv5<={15'h0,adderOutput[16]};
+				wa1<=1;
+				wa5<=1;
 				
 				wb2<=0;
 				wb3<=0;
@@ -968,22 +992,25 @@ always @(posedge main_clk) begin
 			endcase
 		end
 		12:begin
+			wa0<=1;
 			unique case (stepNext)
 			0:begin
 			end
 			1:begin
 				wv0<=adderOutput[15:0];
+				wa1<=1;
 				//doWrite    [instructionIn[3:0]]<=1'b1;
 			end
 			endcase
 		end
 		13:begin
+			wa0<=1;
 			unique case (stepNext)
 			0:begin
 			end
 			1:begin
 				wv0<={15'h0,adderOutput[16]};
-				wa0<=1;
+				wa1<=1;
 				//doWrite    [instructionIn[3:0]]<=1'b1;
 			end
 			endcase
@@ -995,6 +1022,7 @@ always @(posedge main_clk) begin
 			mem_is_stack_access_write<=1;
 			mem_stack_access_size<=1;
 			mem_is_stack_access_requesting<=1;
+			mem_target_address_stack<=next_stack_pointer-4'd2;
 			if (mem_will_access_be_acknowledged_pulse) begin
 				writeValue_sp<=stack_pointer_m2;
 				doWrite_sp<=1'b1;
@@ -1006,6 +1034,7 @@ always @(posedge main_clk) begin
 			mem_is_stack_access_write<=1;
 			mem_stack_access_size<=2;
 			mem_is_stack_access_requesting<=1;
+			mem_target_address_stack<=next_stack_pointer-4'd4;
 			if (mem_will_access_be_acknowledged_pulse) begin
 				writeValue_sp<=stack_pointer_p4;
 				doWrite_sp<=1'b1;
@@ -1016,6 +1045,7 @@ always @(posedge main_clk) begin
 		18:begin
 			mem_is_stack_access_write<=0;
 			mem_stack_access_size<=1;
+			mem_target_address_stack<=next_stack_pointer;
 			unique case (stepNext)
 			0:begin
 				mem_is_stack_access_requesting<=1;
@@ -1023,8 +1053,8 @@ always @(posedge main_clk) begin
 			1:begin
 				//doWrite    [instructionIn[3:0]]<=1'b1;
 				doWrite_sp<=1'b1;
-				wv0<=mem_data_out_large[0];
-				wa0<=1;
+				wv1<=mem_data_out_large[0];
+				wa1<=1;
 				writeValue_sp<=stack_pointer_p2;
 				
 				assert (next_stack_pointer==stack_pointer); // and that stack_pointer's instant_override is not active
@@ -1034,6 +1064,8 @@ always @(posedge main_clk) begin
 		19:begin
 			mem_is_stack_access_write<=0;
 			mem_stack_access_size<=2;
+			mem_target_address_stack<=next_stack_pointer;
+			wa2<=1;
 			unique case (stepNext)
 			0:begin
 				mem_is_stack_access_requesting<=1;
@@ -1042,10 +1074,10 @@ always @(posedge main_clk) begin
 				//doWrite    [instructionIn[3:0]]<=1'b1;
 				//doWrite    [instructionIn[7:4]]<=1'b1;
 				doWrite_sp<=1'b1;
-				wv0<=mem_data_out_large[0];
-				wv1<=mem_data_out_large[1];
-				wa0<=1;
+				wv1<=mem_data_out_large[0];
+				wv3<=mem_data_out_large[1];
 				wa1<=1;
+				wa3<=1;
 				writeValue_sp<=stack_pointer_p4;
 				
 				assert (next_stack_pointer==stack_pointer); // and that stack_pointer's instant_override is not active
@@ -1054,18 +1086,18 @@ always @(posedge main_clk) begin
 		end
 		20:begin
 			//doWrite    [instructionIn[3:0]]<=1'b1;
-			wv0<=nvr1;
-			wa0<=1;
+			wv1<=nvr1;
+			wa1<=1;
 		end
 		21:begin
 			//doWrite    [instructionIn[3:0]]<=1'b1;
-			wv0<={nvr1[ 7:0],nvr1[15:8]};
-			wa0<=1;
+			wv1<={nvr1[ 7:0],nvr1[15:8]};
+			wa1<=1;
 		end
 		22:begin
 			//doWrite    [instructionIn[3:0]]<=1'b1;
-			wv0<={1'b0,nvr1[15:1]};
-			wa0<=1;
+			wv1<={1'b0,nvr1[15:1]};
+			wa1<=1;
 		end
 		23:begin
 			unique case (stepNext)
@@ -1074,8 +1106,8 @@ always @(posedge main_clk) begin
 			1:begin
 				//doWrite    [instructionIn[3:0]]<=1'b1;
 				
-				wv0<=mul16Temp;
-				wa0<=1;
+				wv1<=mul16Temp;
+				wa1<=1;
 			end
 			endcase
 		end
@@ -1087,10 +1119,10 @@ always @(posedge main_clk) begin
 				//doWrite[13]<=1'b1;
 				//doWrite[14]<=1'b1;
 				
-				wv2<=mul32Temp[15: 0];
-				wv3<=mul32Temp[31:16];
-				wa2<=1;
-				wa3<=1;
+				wv4<=mul32Temp[15: 0];
+				wv5<=mul32Temp[31:16];
+				wa4<=1;
+				wa5<=1;
 				
 				wb2<=0;
 				wb3<=1;
@@ -1099,6 +1131,7 @@ always @(posedge main_clk) begin
 			endcase
 		end
 		25:begin
+			wa0<=1;
 			unique case (stepNext)
 			0:begin
 			end
@@ -1117,9 +1150,9 @@ always @(posedge main_clk) begin
 				//doWrite    [instructionIn[7:4]]<=1'b1;
 				
 				wv0<={divTemp3[15:3],divPartialResult};
-				wv1<=divTable2[2][15:0];
-				wa0<=1;
+				wv2<=divTable2[2][15:0];
 				wa1<=1;
+				wa3<=1;
 				
 				wb0<=0;
 				wb1<=1;
@@ -1129,6 +1162,7 @@ always @(posedge main_clk) begin
 		26:begin
 			mem_is_stack_access_write<=1;
 			mem_stack_access_size<=4;
+			mem_target_address_stack<=next_stack_pointer-4'd8;
 			unique case (stepNext)
 			0:begin
 				mem_is_stack_access_requesting<=1;
@@ -1138,8 +1172,8 @@ always @(posedge main_clk) begin
 				//doWrite[0]<=1'b1;
 				instruction_jump_address<={nvr1,nvr0};
 				writeValue_sp<=stack_pointer_m8;
-				wv2<=stack_pointer_m8;
-				wa2<=1;
+				wv4<=stack_pointer_m8;
+				wa4<=1;
 				
 				wb0<=1;
 				wb1<=0;
@@ -1151,6 +1185,7 @@ always @(posedge main_clk) begin
 		27:begin
 			mem_is_stack_access_write<=0;
 			mem_stack_access_size<=5;
+			mem_target_address_stack<=instant_user_reg[4'h0]-4'h8;
 			
 			// this is able to use user_reg[4'h0] and ignore the instant_override because it is known to take more then one cycle before this value is used (so there is no override at the time this value is used)
 			unique case (stepNext)
@@ -1162,10 +1197,10 @@ always @(posedge main_clk) begin
 			2:begin
 				instruction_jump_address<={mem_data_out_large_r[3],mem_data_out_large_r[4]};
 				writeValue_sp<=(user_reg[4'h0]-4'hA) + mem_data_out_large_r[0];
-				wv2<=mem_data_out_large_r[1];
-				wv3<=mem_data_out_large_r[2];
-				wa2<=1;
-				wa3<=1;
+				wv4<=mem_data_out_large_r[1];
+				wv5<=mem_data_out_large_r[2];
+				wa4<=1;
+				wa5<=1;
 				
 				wb0<=1;
 				wb1<=0;
@@ -1183,14 +1218,16 @@ always @(posedge main_clk) begin
 		28:begin
 			mem_is_general_access_byte_operation<=1;
 			mem_is_general_access_write<=0;
+			mem_target_address_general<={nvr1,instant_user_reg[4'hD]};
+			
 			unique case (stepNext)
 			0:begin
 				mem_is_general_access_requesting<=1;
 			end
 			1:begin
 				//doWrite    [instructionIn[3:0]]<=1'b1;
-				wv0<=mem_data_out_small;
-				wa0<=1;
+				wv1<=mem_data_out_small;
+				wa1<=1;
 			end
 			endcase
 		end
@@ -1198,11 +1235,14 @@ always @(posedge main_clk) begin
 			mem_is_general_access_byte_operation<=1;
 			mem_is_general_access_write<=1;
 			mem_is_general_access_requesting<=1;
+			
+			mem_target_address_general<={nvr1,instant_user_reg[4'hD]};
 		end
 		30:begin
 			instruction_jump_address<={nvr1,nvr0};
 		end
 		31:begin
+			wa0<=1;
 			unique case (stepNext)
 			0:begin
 			end
@@ -1211,7 +1251,7 @@ always @(posedge main_clk) begin
 				doWrite_sp<=1'b1;
 				
 				wv0<=temporary7;
-				wa0<=1;
+				wa1<=1;
 				writeValue_sp<=temporary7;
 			end
 			endcase
@@ -1221,13 +1261,12 @@ always @(posedge main_clk) begin
 	
 	// the one's bit of this should always be zero
 	instruction_jump_address[0]<=1'b0;
+	mem_target_address_stack[0]<=1'b0;
 end
 
 
 
 always_comb begin
-	mem_target_address_stack=16'hx;
-	mem_target_address_general=32'hx;
 	mem_data_in='{16'hx,16'hx,16'hx,16'hx};
 	
 	if (doExecute) begin
@@ -1237,10 +1276,8 @@ always_comb begin
 		1:begin
 		end
 		2:begin
-			mem_target_address_stack=temporary1;
 		end
 		3:begin
-			mem_target_address_stack=temporary1;
 			mem_data_in[0]=vr0;
 		end
 		4:begin
@@ -1252,12 +1289,8 @@ always_comb begin
 		7:begin
 		end
 		8:begin
-			mem_target_address_general={vr2,vr1};
-			mem_target_address_general[0]=1'b0;
 		end
 		9:begin
-			mem_target_address_general={vr2,vr1};
-			mem_target_address_general[0]=1'b0;
 			mem_data_in[0]=vr0;
 		end
 		10:begin
@@ -1271,19 +1304,15 @@ always_comb begin
 		14:begin
 		end
 		16:begin
-			mem_target_address_stack=stack_pointer_m2;
 			mem_data_in[0]=vr0;
 		end
 		17:begin
-			mem_target_address_stack=stack_pointer_m4;
 			mem_data_in[0]=vr0;
 			mem_data_in[1]=vr1;
 		end
 		18:begin
-			mem_target_address_stack=stack_pointer;
 		end
 		19:begin
-			mem_target_address_stack=stack_pointer;
 		end
 		20:begin
 		end
@@ -1298,20 +1327,16 @@ always_comb begin
 		25:begin
 		end
 		26:begin
-			mem_target_address_stack=stack_pointer_m8;
 			mem_data_in[0]={instructionAddress[15:1],1'b0};
 			mem_data_in[1]={7'b0,instructionAddress[24:16]};
 			mem_data_in[2]=user_reg[4'h1];
 			mem_data_in[3]=user_reg[4'h0];
 		end
 		27:begin
-			mem_target_address_stack=user_reg[4'h0]-4'h8;
 		end
 		28:begin
-			mem_target_address_general={vr1,user_reg[4'hD]};
 		end
 		29:begin
-			mem_target_address_general={vr1,user_reg[4'hD]};
 			mem_data_in[0]=vr0;
 		end
 		30:begin
@@ -1320,9 +1345,6 @@ always_comb begin
 		end
 		endcase
 	end
-	
-	// the one's bit of these should always be zero
-	mem_target_address_stack[0]=1'b0;
 end
 
 always_comb begin
@@ -2428,6 +2450,7 @@ fifo_instruction_cache_data[3:0]     is used for scheduler
 reg [4:0] fifo_instruction_cache_size=0;
 reg [4:0] fifo_instruction_cache_size_after_read;
 reg [2:0] fifo_instruction_cache_consume_count;
+wire[2:0] fifo_instruction_cache_consume_count_p1=1'b1+fifo_instruction_cache_consume_count;
 reg [2:0] fifo_instruction_cache_size_converted;
 
 
@@ -2496,6 +2519,646 @@ reg [31:0] hyper_jump_guess_address_saved;
 reg [4:0] hyper_instruction_fetch_size;
 
 
+
+wire [25:0] instruction_fetch_address_added [7:0];
+assign instruction_fetch_address_added[0]=instruction_fetch_address+5'h0;
+assign instruction_fetch_address_added[1]=instruction_fetch_address+5'h2;
+assign instruction_fetch_address_added[2]=instruction_fetch_address+5'h4;
+assign instruction_fetch_address_added[3]=instruction_fetch_address+5'h6;
+assign instruction_fetch_address_added[4]=instruction_fetch_address+5'h8;
+assign instruction_fetch_address_added[5]=instruction_fetch_address+5'hA;
+assign instruction_fetch_address_added[6]=instruction_fetch_address+5'hC;
+assign instruction_fetch_address_added[7]=instruction_fetch_address+5'hE;
+
+wire [25:0] hyper_jump_guess_address_added [15:0];
+assign hyper_jump_guess_address_added[ 0]=hyper_jump_guess_address_saved[25:0]+5'h00;
+assign hyper_jump_guess_address_added[ 1]=hyper_jump_guess_address_saved[25:0]+5'h02;
+assign hyper_jump_guess_address_added[ 2]=hyper_jump_guess_address_saved[25:0]+5'h04;
+assign hyper_jump_guess_address_added[ 3]=hyper_jump_guess_address_saved[25:0]+5'h06;
+assign hyper_jump_guess_address_added[ 4]=hyper_jump_guess_address_saved[25:0]+5'h08;
+assign hyper_jump_guess_address_added[ 5]=hyper_jump_guess_address_saved[25:0]+5'h0A;
+assign hyper_jump_guess_address_added[ 6]=hyper_jump_guess_address_saved[25:0]+5'h0C;
+assign hyper_jump_guess_address_added[ 7]=hyper_jump_guess_address_saved[25:0]+5'h0E;
+assign hyper_jump_guess_address_added[ 8]=hyper_jump_guess_address_saved[25:0]+5'h10;
+assign hyper_jump_guess_address_added[ 9]=hyper_jump_guess_address_saved[25:0]+5'h12;
+assign hyper_jump_guess_address_added[10]=hyper_jump_guess_address_saved[25:0]+5'h14;
+assign hyper_jump_guess_address_added[11]=hyper_jump_guess_address_saved[25:0]+5'h16;
+assign hyper_jump_guess_address_added[12]=hyper_jump_guess_address_saved[25:0]+5'h18;
+assign hyper_jump_guess_address_added[13]=hyper_jump_guess_address_saved[25:0]+5'h1A;
+assign hyper_jump_guess_address_added[14]=hyper_jump_guess_address_saved[25:0]+5'h1C;
+assign hyper_jump_guess_address_added[15]=hyper_jump_guess_address_saved[25:0]+5'h1E;
+
+reg [4:0] fifo_instruction_cache_indexes_future [15:0];
+
+wire [15:0] fifo_instruction_cache_data_future_0 [13:0];
+wire [15:0] fifo_instruction_cache_data_future_1 [13:0];
+wire [15:0] fifo_instruction_cache_data_future_2 [13:0];
+wire [15:0] fifo_instruction_cache_data_future_3 [13:0];
+wire [15:0] fifo_instruction_cache_data_future_4 [13:0];
+wire [15:0] fifo_instruction_cache_data_future_5 [13:0];
+wire [15:0] fifo_instruction_cache_data_future_6 [13:0];
+wire [15:0] fifo_instruction_cache_data_future_7 [13:0];
+wire [15:0] fifo_instruction_cache_data_future_8 [13:0];
+wire [15:0] fifo_instruction_cache_data_future_9 [13:0];
+wire [15:0] fifo_instruction_cache_data_future_A [13:0];
+wire [15:0] fifo_instruction_cache_data_future_B [13:0];
+wire [15:0] fifo_instruction_cache_data_future_C [13:0];
+wire [15:0] fifo_instruction_cache_data_future_D [13:0];
+wire [15:0] fifo_instruction_cache_data_future_E [13:0];
+wire [15:0] fifo_instruction_cache_data_future_F [13:0];
+
+wire [25:0] fifo_instruction_cache_addresses_future_0 [13:0];
+wire [25:0] fifo_instruction_cache_addresses_future_1 [13:0];
+wire [25:0] fifo_instruction_cache_addresses_future_2 [13:0];
+wire [25:0] fifo_instruction_cache_addresses_future_3 [13:0];
+wire [25:0] fifo_instruction_cache_addresses_future_4 [13:0];
+wire [25:0] fifo_instruction_cache_addresses_future_5 [13:0];
+wire [25:0] fifo_instruction_cache_addresses_future_6 [13:0];
+wire [25:0] fifo_instruction_cache_addresses_future_7 [13:0];
+wire [25:0] fifo_instruction_cache_addresses_future_8 [13:0];
+wire [25:0] fifo_instruction_cache_addresses_future_9 [13:0];
+wire [25:0] fifo_instruction_cache_addresses_future_A [13:0];
+wire [25:0] fifo_instruction_cache_addresses_future_B [13:0];
+wire [25:0] fifo_instruction_cache_addresses_future_C [13:0];
+wire [25:0] fifo_instruction_cache_addresses_future_D [13:0];
+wire [25:0] fifo_instruction_cache_addresses_future_E [13:0];
+wire [25:0] fifo_instruction_cache_addresses_future_F [13:0];
+
+
+assign fifo_instruction_cache_addresses_future_0[0]=hyper_jump_guess_address_added[0];
+assign fifo_instruction_cache_addresses_future_0[1]=fifo_instruction_cache_addresses[0];
+assign fifo_instruction_cache_addresses_future_0[2]=fifo_instruction_cache_addresses[1];
+assign fifo_instruction_cache_addresses_future_0[3]=fifo_instruction_cache_addresses[2];
+assign fifo_instruction_cache_addresses_future_0[4]=fifo_instruction_cache_addresses[3];
+assign fifo_instruction_cache_addresses_future_0[5]=fifo_instruction_cache_addresses[4];
+assign fifo_instruction_cache_addresses_future_0[6]=instruction_fetch_address_added[0];
+assign fifo_instruction_cache_addresses_future_0[7]=16'hx;
+assign fifo_instruction_cache_addresses_future_0[8]=16'hx;
+assign fifo_instruction_cache_addresses_future_0[9]=16'hx;
+assign fifo_instruction_cache_addresses_future_0[10]=16'hx;
+assign fifo_instruction_cache_addresses_future_0[11]=16'hx;
+assign fifo_instruction_cache_addresses_future_0[12]=16'hx;
+assign fifo_instruction_cache_addresses_future_0[13]=16'hx;
+
+assign fifo_instruction_cache_addresses_future_1[0]=hyper_jump_guess_address_added[1];
+assign fifo_instruction_cache_addresses_future_1[1]=fifo_instruction_cache_addresses[1];
+assign fifo_instruction_cache_addresses_future_1[2]=fifo_instruction_cache_addresses[2];
+assign fifo_instruction_cache_addresses_future_1[3]=fifo_instruction_cache_addresses[3];
+assign fifo_instruction_cache_addresses_future_1[4]=fifo_instruction_cache_addresses[4];
+assign fifo_instruction_cache_addresses_future_1[5]=fifo_instruction_cache_addresses[5];
+assign fifo_instruction_cache_addresses_future_1[6]=instruction_fetch_address_added[0];
+assign fifo_instruction_cache_addresses_future_1[7]=instruction_fetch_address_added[1];
+assign fifo_instruction_cache_addresses_future_1[8]=16'hx;
+assign fifo_instruction_cache_addresses_future_1[9]=16'hx;
+assign fifo_instruction_cache_addresses_future_1[10]=16'hx;
+assign fifo_instruction_cache_addresses_future_1[11]=16'hx;
+assign fifo_instruction_cache_addresses_future_1[12]=16'hx;
+assign fifo_instruction_cache_addresses_future_1[13]=16'hx;
+
+assign fifo_instruction_cache_addresses_future_2[0]=hyper_jump_guess_address_added[2];
+assign fifo_instruction_cache_addresses_future_2[1]=fifo_instruction_cache_addresses[2];
+assign fifo_instruction_cache_addresses_future_2[2]=fifo_instruction_cache_addresses[3];
+assign fifo_instruction_cache_addresses_future_2[3]=fifo_instruction_cache_addresses[4];
+assign fifo_instruction_cache_addresses_future_2[4]=fifo_instruction_cache_addresses[5];
+assign fifo_instruction_cache_addresses_future_2[5]=fifo_instruction_cache_addresses[6];
+assign fifo_instruction_cache_addresses_future_2[6]=instruction_fetch_address_added[0];
+assign fifo_instruction_cache_addresses_future_2[7]=instruction_fetch_address_added[1];
+assign fifo_instruction_cache_addresses_future_2[8]=instruction_fetch_address_added[2];
+assign fifo_instruction_cache_addresses_future_2[9]=16'hx;
+assign fifo_instruction_cache_addresses_future_2[10]=16'hx;
+assign fifo_instruction_cache_addresses_future_2[11]=16'hx;
+assign fifo_instruction_cache_addresses_future_2[12]=16'hx;
+assign fifo_instruction_cache_addresses_future_2[13]=16'hx;
+
+assign fifo_instruction_cache_addresses_future_3[0]=hyper_jump_guess_address_added[3];
+assign fifo_instruction_cache_addresses_future_3[1]=fifo_instruction_cache_addresses[3];
+assign fifo_instruction_cache_addresses_future_3[2]=fifo_instruction_cache_addresses[4];
+assign fifo_instruction_cache_addresses_future_3[3]=fifo_instruction_cache_addresses[5];
+assign fifo_instruction_cache_addresses_future_3[4]=fifo_instruction_cache_addresses[6];
+assign fifo_instruction_cache_addresses_future_3[5]=fifo_instruction_cache_addresses[7];
+assign fifo_instruction_cache_addresses_future_3[6]=instruction_fetch_address_added[0];
+assign fifo_instruction_cache_addresses_future_3[7]=instruction_fetch_address_added[1];
+assign fifo_instruction_cache_addresses_future_3[8]=instruction_fetch_address_added[2];
+assign fifo_instruction_cache_addresses_future_3[9]=instruction_fetch_address_added[3];
+assign fifo_instruction_cache_addresses_future_3[10]=16'hx;
+assign fifo_instruction_cache_addresses_future_3[11]=16'hx;
+assign fifo_instruction_cache_addresses_future_3[12]=16'hx;
+assign fifo_instruction_cache_addresses_future_3[13]=16'hx;
+
+assign fifo_instruction_cache_addresses_future_4[0]=hyper_jump_guess_address_added[4];
+assign fifo_instruction_cache_addresses_future_4[1]=fifo_instruction_cache_addresses[4];
+assign fifo_instruction_cache_addresses_future_4[2]=fifo_instruction_cache_addresses[5];
+assign fifo_instruction_cache_addresses_future_4[3]=fifo_instruction_cache_addresses[6];
+assign fifo_instruction_cache_addresses_future_4[4]=fifo_instruction_cache_addresses[7];
+assign fifo_instruction_cache_addresses_future_4[5]=fifo_instruction_cache_addresses[8];
+assign fifo_instruction_cache_addresses_future_4[6]=instruction_fetch_address_added[0];
+assign fifo_instruction_cache_addresses_future_4[7]=instruction_fetch_address_added[1];
+assign fifo_instruction_cache_addresses_future_4[8]=instruction_fetch_address_added[2];
+assign fifo_instruction_cache_addresses_future_4[9]=instruction_fetch_address_added[3];
+assign fifo_instruction_cache_addresses_future_4[10]=instruction_fetch_address_added[4];
+assign fifo_instruction_cache_addresses_future_4[11]=16'hx;
+assign fifo_instruction_cache_addresses_future_4[12]=16'hx;
+assign fifo_instruction_cache_addresses_future_4[13]=16'hx;
+
+assign fifo_instruction_cache_addresses_future_5[0]=hyper_jump_guess_address_added[5];
+assign fifo_instruction_cache_addresses_future_5[1]=fifo_instruction_cache_addresses[5];
+assign fifo_instruction_cache_addresses_future_5[2]=fifo_instruction_cache_addresses[6];
+assign fifo_instruction_cache_addresses_future_5[3]=fifo_instruction_cache_addresses[7];
+assign fifo_instruction_cache_addresses_future_5[4]=fifo_instruction_cache_addresses[8];
+assign fifo_instruction_cache_addresses_future_5[5]=fifo_instruction_cache_addresses[9];
+assign fifo_instruction_cache_addresses_future_5[6]=instruction_fetch_address_added[0];
+assign fifo_instruction_cache_addresses_future_5[7]=instruction_fetch_address_added[1];
+assign fifo_instruction_cache_addresses_future_5[8]=instruction_fetch_address_added[2];
+assign fifo_instruction_cache_addresses_future_5[9]=instruction_fetch_address_added[3];
+assign fifo_instruction_cache_addresses_future_5[10]=instruction_fetch_address_added[4];
+assign fifo_instruction_cache_addresses_future_5[11]=instruction_fetch_address_added[5];
+assign fifo_instruction_cache_addresses_future_5[12]=16'hx;
+assign fifo_instruction_cache_addresses_future_5[13]=16'hx;
+
+assign fifo_instruction_cache_addresses_future_6[0]=hyper_jump_guess_address_added[6];
+assign fifo_instruction_cache_addresses_future_6[1]=fifo_instruction_cache_addresses[6];
+assign fifo_instruction_cache_addresses_future_6[2]=fifo_instruction_cache_addresses[7];
+assign fifo_instruction_cache_addresses_future_6[3]=fifo_instruction_cache_addresses[8];
+assign fifo_instruction_cache_addresses_future_6[4]=fifo_instruction_cache_addresses[9];
+assign fifo_instruction_cache_addresses_future_6[5]=fifo_instruction_cache_addresses[10];
+assign fifo_instruction_cache_addresses_future_6[6]=instruction_fetch_address_added[0];
+assign fifo_instruction_cache_addresses_future_6[7]=instruction_fetch_address_added[1];
+assign fifo_instruction_cache_addresses_future_6[8]=instruction_fetch_address_added[2];
+assign fifo_instruction_cache_addresses_future_6[9]=instruction_fetch_address_added[3];
+assign fifo_instruction_cache_addresses_future_6[10]=instruction_fetch_address_added[4];
+assign fifo_instruction_cache_addresses_future_6[11]=instruction_fetch_address_added[5];
+assign fifo_instruction_cache_addresses_future_6[12]=instruction_fetch_address_added[6];
+assign fifo_instruction_cache_addresses_future_6[13]=16'hx;
+
+assign fifo_instruction_cache_addresses_future_7[0]=hyper_jump_guess_address_added[7];
+assign fifo_instruction_cache_addresses_future_7[1]=fifo_instruction_cache_addresses[7];
+assign fifo_instruction_cache_addresses_future_7[2]=fifo_instruction_cache_addresses[8];
+assign fifo_instruction_cache_addresses_future_7[3]=fifo_instruction_cache_addresses[9];
+assign fifo_instruction_cache_addresses_future_7[4]=fifo_instruction_cache_addresses[10];
+assign fifo_instruction_cache_addresses_future_7[5]=fifo_instruction_cache_addresses[11];
+assign fifo_instruction_cache_addresses_future_7[6]=instruction_fetch_address_added[0];
+assign fifo_instruction_cache_addresses_future_7[7]=instruction_fetch_address_added[1];
+assign fifo_instruction_cache_addresses_future_7[8]=instruction_fetch_address_added[2];
+assign fifo_instruction_cache_addresses_future_7[9]=instruction_fetch_address_added[3];
+assign fifo_instruction_cache_addresses_future_7[10]=instruction_fetch_address_added[4];
+assign fifo_instruction_cache_addresses_future_7[11]=instruction_fetch_address_added[5];
+assign fifo_instruction_cache_addresses_future_7[12]=instruction_fetch_address_added[6];
+assign fifo_instruction_cache_addresses_future_7[13]=instruction_fetch_address_added[7];
+
+assign fifo_instruction_cache_addresses_future_8[0]=hyper_jump_guess_address_added[8];
+assign fifo_instruction_cache_addresses_future_8[1]=fifo_instruction_cache_addresses[8];
+assign fifo_instruction_cache_addresses_future_8[2]=fifo_instruction_cache_addresses[9];
+assign fifo_instruction_cache_addresses_future_8[3]=fifo_instruction_cache_addresses[10];
+assign fifo_instruction_cache_addresses_future_8[4]=fifo_instruction_cache_addresses[11];
+assign fifo_instruction_cache_addresses_future_8[5]=fifo_instruction_cache_addresses[12];
+assign fifo_instruction_cache_addresses_future_8[6]=instruction_fetch_address_added[0];
+assign fifo_instruction_cache_addresses_future_8[7]=instruction_fetch_address_added[1];
+assign fifo_instruction_cache_addresses_future_8[8]=instruction_fetch_address_added[2];
+assign fifo_instruction_cache_addresses_future_8[9]=instruction_fetch_address_added[3];
+assign fifo_instruction_cache_addresses_future_8[10]=instruction_fetch_address_added[4];
+assign fifo_instruction_cache_addresses_future_8[11]=instruction_fetch_address_added[5];
+assign fifo_instruction_cache_addresses_future_8[12]=instruction_fetch_address_added[6];
+assign fifo_instruction_cache_addresses_future_8[13]=instruction_fetch_address_added[7];
+
+assign fifo_instruction_cache_addresses_future_9[0]=hyper_jump_guess_address_added[9];
+assign fifo_instruction_cache_addresses_future_9[1]=fifo_instruction_cache_addresses[9];
+assign fifo_instruction_cache_addresses_future_9[2]=fifo_instruction_cache_addresses[10];
+assign fifo_instruction_cache_addresses_future_9[3]=fifo_instruction_cache_addresses[11];
+assign fifo_instruction_cache_addresses_future_9[4]=fifo_instruction_cache_addresses[12];
+assign fifo_instruction_cache_addresses_future_9[5]=fifo_instruction_cache_addresses[13];
+assign fifo_instruction_cache_addresses_future_9[6]=16'hx;
+assign fifo_instruction_cache_addresses_future_9[7]=instruction_fetch_address_added[1];
+assign fifo_instruction_cache_addresses_future_9[8]=instruction_fetch_address_added[2];
+assign fifo_instruction_cache_addresses_future_9[9]=instruction_fetch_address_added[3];
+assign fifo_instruction_cache_addresses_future_9[10]=instruction_fetch_address_added[4];
+assign fifo_instruction_cache_addresses_future_9[11]=instruction_fetch_address_added[5];
+assign fifo_instruction_cache_addresses_future_9[12]=instruction_fetch_address_added[6];
+assign fifo_instruction_cache_addresses_future_9[13]=instruction_fetch_address_added[7];
+
+assign fifo_instruction_cache_addresses_future_A[0]=hyper_jump_guess_address_added[10];
+assign fifo_instruction_cache_addresses_future_A[1]=fifo_instruction_cache_addresses[10];
+assign fifo_instruction_cache_addresses_future_A[2]=fifo_instruction_cache_addresses[11];
+assign fifo_instruction_cache_addresses_future_A[3]=fifo_instruction_cache_addresses[12];
+assign fifo_instruction_cache_addresses_future_A[4]=fifo_instruction_cache_addresses[13];
+assign fifo_instruction_cache_addresses_future_A[5]=fifo_instruction_cache_addresses[14];
+assign fifo_instruction_cache_addresses_future_A[6]=16'hx;
+assign fifo_instruction_cache_addresses_future_A[7]=16'hx;
+assign fifo_instruction_cache_addresses_future_A[8]=instruction_fetch_address_added[2];
+assign fifo_instruction_cache_addresses_future_A[9]=instruction_fetch_address_added[3];
+assign fifo_instruction_cache_addresses_future_A[10]=instruction_fetch_address_added[4];
+assign fifo_instruction_cache_addresses_future_A[11]=instruction_fetch_address_added[5];
+assign fifo_instruction_cache_addresses_future_A[12]=instruction_fetch_address_added[6];
+assign fifo_instruction_cache_addresses_future_A[13]=instruction_fetch_address_added[7];
+
+assign fifo_instruction_cache_addresses_future_B[0]=hyper_jump_guess_address_added[11];
+assign fifo_instruction_cache_addresses_future_B[1]=fifo_instruction_cache_addresses[11];
+assign fifo_instruction_cache_addresses_future_B[2]=fifo_instruction_cache_addresses[12];
+assign fifo_instruction_cache_addresses_future_B[3]=fifo_instruction_cache_addresses[13];
+assign fifo_instruction_cache_addresses_future_B[4]=fifo_instruction_cache_addresses[14];
+assign fifo_instruction_cache_addresses_future_B[5]=fifo_instruction_cache_addresses[15];
+assign fifo_instruction_cache_addresses_future_B[6]=16'hx;
+assign fifo_instruction_cache_addresses_future_B[7]=16'hx;
+assign fifo_instruction_cache_addresses_future_B[8]=16'hx;
+assign fifo_instruction_cache_addresses_future_B[9]=instruction_fetch_address_added[3];
+assign fifo_instruction_cache_addresses_future_B[10]=instruction_fetch_address_added[4];
+assign fifo_instruction_cache_addresses_future_B[11]=instruction_fetch_address_added[5];
+assign fifo_instruction_cache_addresses_future_B[12]=instruction_fetch_address_added[6];
+assign fifo_instruction_cache_addresses_future_B[13]=instruction_fetch_address_added[7];
+
+assign fifo_instruction_cache_addresses_future_C[0]=hyper_jump_guess_address_added[12];
+assign fifo_instruction_cache_addresses_future_C[1]=fifo_instruction_cache_addresses[12];
+assign fifo_instruction_cache_addresses_future_C[2]=fifo_instruction_cache_addresses[13];
+assign fifo_instruction_cache_addresses_future_C[3]=fifo_instruction_cache_addresses[14];
+assign fifo_instruction_cache_addresses_future_C[4]=fifo_instruction_cache_addresses[15];
+assign fifo_instruction_cache_addresses_future_C[5]=16'hx;
+assign fifo_instruction_cache_addresses_future_C[6]=16'hx;
+assign fifo_instruction_cache_addresses_future_C[7]=16'hx;
+assign fifo_instruction_cache_addresses_future_C[8]=16'hx;
+assign fifo_instruction_cache_addresses_future_C[9]=16'hx;
+assign fifo_instruction_cache_addresses_future_C[10]=instruction_fetch_address_added[4];
+assign fifo_instruction_cache_addresses_future_C[11]=instruction_fetch_address_added[5];
+assign fifo_instruction_cache_addresses_future_C[12]=instruction_fetch_address_added[6];
+assign fifo_instruction_cache_addresses_future_C[13]=instruction_fetch_address_added[7];
+
+assign fifo_instruction_cache_addresses_future_D[0]=hyper_jump_guess_address_added[13];
+assign fifo_instruction_cache_addresses_future_D[1]=fifo_instruction_cache_addresses[13];
+assign fifo_instruction_cache_addresses_future_D[2]=fifo_instruction_cache_addresses[14];
+assign fifo_instruction_cache_addresses_future_D[3]=fifo_instruction_cache_addresses[15];
+assign fifo_instruction_cache_addresses_future_D[4]=16'hx;
+assign fifo_instruction_cache_addresses_future_D[5]=16'hx;
+assign fifo_instruction_cache_addresses_future_D[6]=16'hx;
+assign fifo_instruction_cache_addresses_future_D[7]=16'hx;
+assign fifo_instruction_cache_addresses_future_D[8]=16'hx;
+assign fifo_instruction_cache_addresses_future_D[9]=16'hx;
+assign fifo_instruction_cache_addresses_future_D[10]=16'hx;
+assign fifo_instruction_cache_addresses_future_D[11]=instruction_fetch_address_added[5];
+assign fifo_instruction_cache_addresses_future_D[12]=instruction_fetch_address_added[6];
+assign fifo_instruction_cache_addresses_future_D[13]=instruction_fetch_address_added[7];
+
+assign fifo_instruction_cache_addresses_future_E[0]=hyper_jump_guess_address_added[14];
+assign fifo_instruction_cache_addresses_future_E[1]=fifo_instruction_cache_addresses[14];
+assign fifo_instruction_cache_addresses_future_E[2]=fifo_instruction_cache_addresses[15];
+assign fifo_instruction_cache_addresses_future_E[3]=16'hx;
+assign fifo_instruction_cache_addresses_future_E[4]=16'hx;
+assign fifo_instruction_cache_addresses_future_E[5]=16'hx;
+assign fifo_instruction_cache_addresses_future_E[6]=16'hx;
+assign fifo_instruction_cache_addresses_future_E[7]=16'hx;
+assign fifo_instruction_cache_addresses_future_E[8]=16'hx;
+assign fifo_instruction_cache_addresses_future_E[9]=16'hx;
+assign fifo_instruction_cache_addresses_future_E[10]=16'hx;
+assign fifo_instruction_cache_addresses_future_E[11]=16'hx;
+assign fifo_instruction_cache_addresses_future_E[12]=instruction_fetch_address_added[6];
+assign fifo_instruction_cache_addresses_future_E[13]=instruction_fetch_address_added[7];
+
+assign fifo_instruction_cache_addresses_future_F[0]=hyper_jump_guess_address_added[15];
+assign fifo_instruction_cache_addresses_future_F[1]=fifo_instruction_cache_addresses[15];
+assign fifo_instruction_cache_addresses_future_F[2]=16'hx;
+assign fifo_instruction_cache_addresses_future_F[3]=16'hx;
+assign fifo_instruction_cache_addresses_future_F[4]=16'hx;
+assign fifo_instruction_cache_addresses_future_F[5]=16'hx;
+assign fifo_instruction_cache_addresses_future_F[6]=16'hx;
+assign fifo_instruction_cache_addresses_future_F[7]=16'hx;
+assign fifo_instruction_cache_addresses_future_F[8]=16'hx;
+assign fifo_instruction_cache_addresses_future_F[9]=16'hx;
+assign fifo_instruction_cache_addresses_future_F[10]=16'hx;
+assign fifo_instruction_cache_addresses_future_F[11]=16'hx;
+assign fifo_instruction_cache_addresses_future_F[12]=16'hx;
+assign fifo_instruction_cache_addresses_future_F[13]=instruction_fetch_address_added[7];
+
+///////
+
+assign fifo_instruction_cache_data_future_0[0]=hyper_instruction_fetch_storage[0];
+assign fifo_instruction_cache_data_future_0[1]=fifo_instruction_cache_data[0];
+assign fifo_instruction_cache_data_future_0[2]=fifo_instruction_cache_data[1];
+assign fifo_instruction_cache_data_future_0[3]=fifo_instruction_cache_data[2];
+assign fifo_instruction_cache_data_future_0[4]=fifo_instruction_cache_data[3];
+assign fifo_instruction_cache_data_future_0[5]=fifo_instruction_cache_data[4];
+assign fifo_instruction_cache_data_future_0[6]=mem_data_out_type_0[0];
+assign fifo_instruction_cache_data_future_0[7]=16'hx;
+assign fifo_instruction_cache_data_future_0[8]=16'hx;
+assign fifo_instruction_cache_data_future_0[9]=16'hx;
+assign fifo_instruction_cache_data_future_0[10]=16'hx;
+assign fifo_instruction_cache_data_future_0[11]=16'hx;
+assign fifo_instruction_cache_data_future_0[12]=16'hx;
+assign fifo_instruction_cache_data_future_0[13]=16'hx;
+
+assign fifo_instruction_cache_data_future_1[0]=hyper_instruction_fetch_storage[1];
+assign fifo_instruction_cache_data_future_1[1]=fifo_instruction_cache_data[1];
+assign fifo_instruction_cache_data_future_1[2]=fifo_instruction_cache_data[2];
+assign fifo_instruction_cache_data_future_1[3]=fifo_instruction_cache_data[3];
+assign fifo_instruction_cache_data_future_1[4]=fifo_instruction_cache_data[4];
+assign fifo_instruction_cache_data_future_1[5]=fifo_instruction_cache_data[5];
+assign fifo_instruction_cache_data_future_1[6]=mem_data_out_type_0[0];
+assign fifo_instruction_cache_data_future_1[7]=mem_data_out_type_0[1];
+assign fifo_instruction_cache_data_future_1[8]=16'hx;
+assign fifo_instruction_cache_data_future_1[9]=16'hx;
+assign fifo_instruction_cache_data_future_1[10]=16'hx;
+assign fifo_instruction_cache_data_future_1[11]=16'hx;
+assign fifo_instruction_cache_data_future_1[12]=16'hx;
+assign fifo_instruction_cache_data_future_1[13]=16'hx;
+
+assign fifo_instruction_cache_data_future_2[0]=hyper_instruction_fetch_storage[2];
+assign fifo_instruction_cache_data_future_2[1]=fifo_instruction_cache_data[2];
+assign fifo_instruction_cache_data_future_2[2]=fifo_instruction_cache_data[3];
+assign fifo_instruction_cache_data_future_2[3]=fifo_instruction_cache_data[4];
+assign fifo_instruction_cache_data_future_2[4]=fifo_instruction_cache_data[5];
+assign fifo_instruction_cache_data_future_2[5]=fifo_instruction_cache_data[6];
+assign fifo_instruction_cache_data_future_2[6]=mem_data_out_type_0[0];
+assign fifo_instruction_cache_data_future_2[7]=mem_data_out_type_0[1];
+assign fifo_instruction_cache_data_future_2[8]=mem_data_out_type_0[2];
+assign fifo_instruction_cache_data_future_2[9]=16'hx;
+assign fifo_instruction_cache_data_future_2[10]=16'hx;
+assign fifo_instruction_cache_data_future_2[11]=16'hx;
+assign fifo_instruction_cache_data_future_2[12]=16'hx;
+assign fifo_instruction_cache_data_future_2[13]=16'hx;
+
+assign fifo_instruction_cache_data_future_3[0]=hyper_instruction_fetch_storage[3];
+assign fifo_instruction_cache_data_future_3[1]=fifo_instruction_cache_data[3];
+assign fifo_instruction_cache_data_future_3[2]=fifo_instruction_cache_data[4];
+assign fifo_instruction_cache_data_future_3[3]=fifo_instruction_cache_data[5];
+assign fifo_instruction_cache_data_future_3[4]=fifo_instruction_cache_data[6];
+assign fifo_instruction_cache_data_future_3[5]=fifo_instruction_cache_data[7];
+assign fifo_instruction_cache_data_future_3[6]=mem_data_out_type_0[0];
+assign fifo_instruction_cache_data_future_3[7]=mem_data_out_type_0[1];
+assign fifo_instruction_cache_data_future_3[8]=mem_data_out_type_0[2];
+assign fifo_instruction_cache_data_future_3[9]=mem_data_out_type_0[3];
+assign fifo_instruction_cache_data_future_3[10]=16'hx;
+assign fifo_instruction_cache_data_future_3[11]=16'hx;
+assign fifo_instruction_cache_data_future_3[12]=16'hx;
+assign fifo_instruction_cache_data_future_3[13]=16'hx;
+
+assign fifo_instruction_cache_data_future_4[0]=hyper_instruction_fetch_storage[4];
+assign fifo_instruction_cache_data_future_4[1]=fifo_instruction_cache_data[4];
+assign fifo_instruction_cache_data_future_4[2]=fifo_instruction_cache_data[5];
+assign fifo_instruction_cache_data_future_4[3]=fifo_instruction_cache_data[6];
+assign fifo_instruction_cache_data_future_4[4]=fifo_instruction_cache_data[7];
+assign fifo_instruction_cache_data_future_4[5]=fifo_instruction_cache_data[8];
+assign fifo_instruction_cache_data_future_4[6]=mem_data_out_type_0[0];
+assign fifo_instruction_cache_data_future_4[7]=mem_data_out_type_0[1];
+assign fifo_instruction_cache_data_future_4[8]=mem_data_out_type_0[2];
+assign fifo_instruction_cache_data_future_4[9]=mem_data_out_type_0[3];
+assign fifo_instruction_cache_data_future_4[10]=mem_data_out_type_0[4];
+assign fifo_instruction_cache_data_future_4[11]=16'hx;
+assign fifo_instruction_cache_data_future_4[12]=16'hx;
+assign fifo_instruction_cache_data_future_4[13]=16'hx;
+
+assign fifo_instruction_cache_data_future_5[0]=hyper_instruction_fetch_storage[5];
+assign fifo_instruction_cache_data_future_5[1]=fifo_instruction_cache_data[5];
+assign fifo_instruction_cache_data_future_5[2]=fifo_instruction_cache_data[6];
+assign fifo_instruction_cache_data_future_5[3]=fifo_instruction_cache_data[7];
+assign fifo_instruction_cache_data_future_5[4]=fifo_instruction_cache_data[8];
+assign fifo_instruction_cache_data_future_5[5]=fifo_instruction_cache_data[9];
+assign fifo_instruction_cache_data_future_5[6]=mem_data_out_type_0[0];
+assign fifo_instruction_cache_data_future_5[7]=mem_data_out_type_0[1];
+assign fifo_instruction_cache_data_future_5[8]=mem_data_out_type_0[2];
+assign fifo_instruction_cache_data_future_5[9]=mem_data_out_type_0[3];
+assign fifo_instruction_cache_data_future_5[10]=mem_data_out_type_0[4];
+assign fifo_instruction_cache_data_future_5[11]=mem_data_out_type_0[5];
+assign fifo_instruction_cache_data_future_5[12]=16'hx;
+assign fifo_instruction_cache_data_future_5[13]=16'hx;
+
+assign fifo_instruction_cache_data_future_6[0]=hyper_instruction_fetch_storage[6];
+assign fifo_instruction_cache_data_future_6[1]=fifo_instruction_cache_data[6];
+assign fifo_instruction_cache_data_future_6[2]=fifo_instruction_cache_data[7];
+assign fifo_instruction_cache_data_future_6[3]=fifo_instruction_cache_data[8];
+assign fifo_instruction_cache_data_future_6[4]=fifo_instruction_cache_data[9];
+assign fifo_instruction_cache_data_future_6[5]=fifo_instruction_cache_data[10];
+assign fifo_instruction_cache_data_future_6[6]=mem_data_out_type_0[0];
+assign fifo_instruction_cache_data_future_6[7]=mem_data_out_type_0[1];
+assign fifo_instruction_cache_data_future_6[8]=mem_data_out_type_0[2];
+assign fifo_instruction_cache_data_future_6[9]=mem_data_out_type_0[3];
+assign fifo_instruction_cache_data_future_6[10]=mem_data_out_type_0[4];
+assign fifo_instruction_cache_data_future_6[11]=mem_data_out_type_0[5];
+assign fifo_instruction_cache_data_future_6[12]=mem_data_out_type_0[6];
+assign fifo_instruction_cache_data_future_6[13]=16'hx;
+
+assign fifo_instruction_cache_data_future_7[0]=hyper_instruction_fetch_storage[7];
+assign fifo_instruction_cache_data_future_7[1]=fifo_instruction_cache_data[7];
+assign fifo_instruction_cache_data_future_7[2]=fifo_instruction_cache_data[8];
+assign fifo_instruction_cache_data_future_7[3]=fifo_instruction_cache_data[9];
+assign fifo_instruction_cache_data_future_7[4]=fifo_instruction_cache_data[10];
+assign fifo_instruction_cache_data_future_7[5]=fifo_instruction_cache_data[11];
+assign fifo_instruction_cache_data_future_7[6]=mem_data_out_type_0[0];
+assign fifo_instruction_cache_data_future_7[7]=mem_data_out_type_0[1];
+assign fifo_instruction_cache_data_future_7[8]=mem_data_out_type_0[2];
+assign fifo_instruction_cache_data_future_7[9]=mem_data_out_type_0[3];
+assign fifo_instruction_cache_data_future_7[10]=mem_data_out_type_0[4];
+assign fifo_instruction_cache_data_future_7[11]=mem_data_out_type_0[5];
+assign fifo_instruction_cache_data_future_7[12]=mem_data_out_type_0[6];
+assign fifo_instruction_cache_data_future_7[13]=mem_data_out_type_0[7];
+
+assign fifo_instruction_cache_data_future_8[0]=hyper_instruction_fetch_storage[8];
+assign fifo_instruction_cache_data_future_8[1]=fifo_instruction_cache_data[8];
+assign fifo_instruction_cache_data_future_8[2]=fifo_instruction_cache_data[9];
+assign fifo_instruction_cache_data_future_8[3]=fifo_instruction_cache_data[10];
+assign fifo_instruction_cache_data_future_8[4]=fifo_instruction_cache_data[11];
+assign fifo_instruction_cache_data_future_8[5]=fifo_instruction_cache_data[12];
+assign fifo_instruction_cache_data_future_8[6]=mem_data_out_type_0[0];
+assign fifo_instruction_cache_data_future_8[7]=mem_data_out_type_0[1];
+assign fifo_instruction_cache_data_future_8[8]=mem_data_out_type_0[2];
+assign fifo_instruction_cache_data_future_8[9]=mem_data_out_type_0[3];
+assign fifo_instruction_cache_data_future_8[10]=mem_data_out_type_0[4];
+assign fifo_instruction_cache_data_future_8[11]=mem_data_out_type_0[5];
+assign fifo_instruction_cache_data_future_8[12]=mem_data_out_type_0[6];
+assign fifo_instruction_cache_data_future_8[13]=mem_data_out_type_0[7];
+
+assign fifo_instruction_cache_data_future_9[0]=hyper_instruction_fetch_storage[9];
+assign fifo_instruction_cache_data_future_9[1]=fifo_instruction_cache_data[9];
+assign fifo_instruction_cache_data_future_9[2]=fifo_instruction_cache_data[10];
+assign fifo_instruction_cache_data_future_9[3]=fifo_instruction_cache_data[11];
+assign fifo_instruction_cache_data_future_9[4]=fifo_instruction_cache_data[12];
+assign fifo_instruction_cache_data_future_9[5]=fifo_instruction_cache_data[13];
+assign fifo_instruction_cache_data_future_9[6]=16'hx;
+assign fifo_instruction_cache_data_future_9[7]=mem_data_out_type_0[1];
+assign fifo_instruction_cache_data_future_9[8]=mem_data_out_type_0[2];
+assign fifo_instruction_cache_data_future_9[9]=mem_data_out_type_0[3];
+assign fifo_instruction_cache_data_future_9[10]=mem_data_out_type_0[4];
+assign fifo_instruction_cache_data_future_9[11]=mem_data_out_type_0[5];
+assign fifo_instruction_cache_data_future_9[12]=mem_data_out_type_0[6];
+assign fifo_instruction_cache_data_future_9[13]=mem_data_out_type_0[7];
+
+assign fifo_instruction_cache_data_future_A[0]=hyper_instruction_fetch_storage[10];
+assign fifo_instruction_cache_data_future_A[1]=fifo_instruction_cache_data[10];
+assign fifo_instruction_cache_data_future_A[2]=fifo_instruction_cache_data[11];
+assign fifo_instruction_cache_data_future_A[3]=fifo_instruction_cache_data[12];
+assign fifo_instruction_cache_data_future_A[4]=fifo_instruction_cache_data[13];
+assign fifo_instruction_cache_data_future_A[5]=fifo_instruction_cache_data[14];
+assign fifo_instruction_cache_data_future_A[6]=16'hx;
+assign fifo_instruction_cache_data_future_A[7]=16'hx;
+assign fifo_instruction_cache_data_future_A[8]=mem_data_out_type_0[2];
+assign fifo_instruction_cache_data_future_A[9]=mem_data_out_type_0[3];
+assign fifo_instruction_cache_data_future_A[10]=mem_data_out_type_0[4];
+assign fifo_instruction_cache_data_future_A[11]=mem_data_out_type_0[5];
+assign fifo_instruction_cache_data_future_A[12]=mem_data_out_type_0[6];
+assign fifo_instruction_cache_data_future_A[13]=mem_data_out_type_0[7];
+
+assign fifo_instruction_cache_data_future_B[0]=hyper_instruction_fetch_storage[11];
+assign fifo_instruction_cache_data_future_B[1]=fifo_instruction_cache_data[11];
+assign fifo_instruction_cache_data_future_B[2]=fifo_instruction_cache_data[12];
+assign fifo_instruction_cache_data_future_B[3]=fifo_instruction_cache_data[13];
+assign fifo_instruction_cache_data_future_B[4]=fifo_instruction_cache_data[14];
+assign fifo_instruction_cache_data_future_B[5]=fifo_instruction_cache_data[15];
+assign fifo_instruction_cache_data_future_B[6]=16'hx;
+assign fifo_instruction_cache_data_future_B[7]=16'hx;
+assign fifo_instruction_cache_data_future_B[8]=16'hx;
+assign fifo_instruction_cache_data_future_B[9]=mem_data_out_type_0[3];
+assign fifo_instruction_cache_data_future_B[10]=mem_data_out_type_0[4];
+assign fifo_instruction_cache_data_future_B[11]=mem_data_out_type_0[5];
+assign fifo_instruction_cache_data_future_B[12]=mem_data_out_type_0[6];
+assign fifo_instruction_cache_data_future_B[13]=mem_data_out_type_0[7];
+
+assign fifo_instruction_cache_data_future_C[0]=hyper_instruction_fetch_storage[12];
+assign fifo_instruction_cache_data_future_C[1]=fifo_instruction_cache_data[12];
+assign fifo_instruction_cache_data_future_C[2]=fifo_instruction_cache_data[13];
+assign fifo_instruction_cache_data_future_C[3]=fifo_instruction_cache_data[14];
+assign fifo_instruction_cache_data_future_C[4]=fifo_instruction_cache_data[15];
+assign fifo_instruction_cache_data_future_C[5]=16'hx;
+assign fifo_instruction_cache_data_future_C[6]=16'hx;
+assign fifo_instruction_cache_data_future_C[7]=16'hx;
+assign fifo_instruction_cache_data_future_C[8]=16'hx;
+assign fifo_instruction_cache_data_future_C[9]=16'hx;
+assign fifo_instruction_cache_data_future_C[10]=mem_data_out_type_0[4];
+assign fifo_instruction_cache_data_future_C[11]=mem_data_out_type_0[5];
+assign fifo_instruction_cache_data_future_C[12]=mem_data_out_type_0[6];
+assign fifo_instruction_cache_data_future_C[13]=mem_data_out_type_0[7];
+
+assign fifo_instruction_cache_data_future_D[0]=hyper_instruction_fetch_storage[13];
+assign fifo_instruction_cache_data_future_D[1]=fifo_instruction_cache_data[13];
+assign fifo_instruction_cache_data_future_D[2]=fifo_instruction_cache_data[14];
+assign fifo_instruction_cache_data_future_D[3]=fifo_instruction_cache_data[15];
+assign fifo_instruction_cache_data_future_D[4]=16'hx;
+assign fifo_instruction_cache_data_future_D[5]=16'hx;
+assign fifo_instruction_cache_data_future_D[6]=16'hx;
+assign fifo_instruction_cache_data_future_D[7]=16'hx;
+assign fifo_instruction_cache_data_future_D[8]=16'hx;
+assign fifo_instruction_cache_data_future_D[9]=16'hx;
+assign fifo_instruction_cache_data_future_D[10]=16'hx;
+assign fifo_instruction_cache_data_future_D[11]=mem_data_out_type_0[5];
+assign fifo_instruction_cache_data_future_D[12]=mem_data_out_type_0[6];
+assign fifo_instruction_cache_data_future_D[13]=mem_data_out_type_0[7];
+
+assign fifo_instruction_cache_data_future_E[0]=hyper_instruction_fetch_storage[14];
+assign fifo_instruction_cache_data_future_E[1]=fifo_instruction_cache_data[14];
+assign fifo_instruction_cache_data_future_E[2]=fifo_instruction_cache_data[15];
+assign fifo_instruction_cache_data_future_E[3]=16'hx;
+assign fifo_instruction_cache_data_future_E[4]=16'hx;
+assign fifo_instruction_cache_data_future_E[5]=16'hx;
+assign fifo_instruction_cache_data_future_E[6]=16'hx;
+assign fifo_instruction_cache_data_future_E[7]=16'hx;
+assign fifo_instruction_cache_data_future_E[8]=16'hx;
+assign fifo_instruction_cache_data_future_E[9]=16'hx;
+assign fifo_instruction_cache_data_future_E[10]=16'hx;
+assign fifo_instruction_cache_data_future_E[11]=16'hx;
+assign fifo_instruction_cache_data_future_E[12]=mem_data_out_type_0[6];
+assign fifo_instruction_cache_data_future_E[13]=mem_data_out_type_0[7];
+
+assign fifo_instruction_cache_data_future_F[0]=hyper_instruction_fetch_storage[15];
+assign fifo_instruction_cache_data_future_F[1]=fifo_instruction_cache_data[15];
+assign fifo_instruction_cache_data_future_F[2]=16'hx;
+assign fifo_instruction_cache_data_future_F[3]=16'hx;
+assign fifo_instruction_cache_data_future_F[4]=16'hx;
+assign fifo_instruction_cache_data_future_F[5]=16'hx;
+assign fifo_instruction_cache_data_future_F[6]=16'hx;
+assign fifo_instruction_cache_data_future_F[7]=16'hx;
+assign fifo_instruction_cache_data_future_F[8]=16'hx;
+assign fifo_instruction_cache_data_future_F[9]=16'hx;
+assign fifo_instruction_cache_data_future_F[10]=16'hx;
+assign fifo_instruction_cache_data_future_F[11]=16'hx;
+assign fifo_instruction_cache_data_future_F[12]=16'hx;
+assign fifo_instruction_cache_data_future_F[13]=mem_data_out_type_0[7];
+
+
+always_comb begin
+	fifo_instruction_cache_indexes_future[4'h0]=(fifo_instruction_cache_size_after_read>5'h0)?fifo_instruction_cache_consume_count_p1:(4'd6-(fifo_instruction_cache_size_after_read-4'h0));
+	fifo_instruction_cache_indexes_future[4'h1]=(fifo_instruction_cache_size_after_read>5'h1)?fifo_instruction_cache_consume_count_p1:(4'd6-(fifo_instruction_cache_size_after_read-4'h1));
+	fifo_instruction_cache_indexes_future[4'h2]=(fifo_instruction_cache_size_after_read>5'h2)?fifo_instruction_cache_consume_count_p1:(4'd6-(fifo_instruction_cache_size_after_read-4'h2));
+	fifo_instruction_cache_indexes_future[4'h3]=(fifo_instruction_cache_size_after_read>5'h3)?fifo_instruction_cache_consume_count_p1:(4'd6-(fifo_instruction_cache_size_after_read-4'h3));
+	fifo_instruction_cache_indexes_future[4'h4]=(fifo_instruction_cache_size_after_read>5'h4)?fifo_instruction_cache_consume_count_p1:(4'd6-(fifo_instruction_cache_size_after_read-4'h4));
+	fifo_instruction_cache_indexes_future[4'h5]=(fifo_instruction_cache_size_after_read>5'h5)?fifo_instruction_cache_consume_count_p1:(4'd6-(fifo_instruction_cache_size_after_read-4'h5));
+	fifo_instruction_cache_indexes_future[4'h6]=(fifo_instruction_cache_size_after_read>5'h6)?fifo_instruction_cache_consume_count_p1:(4'd6-(fifo_instruction_cache_size_after_read-4'h6));
+	fifo_instruction_cache_indexes_future[4'h7]=(fifo_instruction_cache_size_after_read>5'h7)?fifo_instruction_cache_consume_count_p1:(4'd6-(fifo_instruction_cache_size_after_read-4'h7));
+	fifo_instruction_cache_indexes_future[4'h8]=(fifo_instruction_cache_size_after_read>5'h8)?fifo_instruction_cache_consume_count_p1:(4'd6-(fifo_instruction_cache_size_after_read-4'h8));
+	fifo_instruction_cache_indexes_future[4'h9]=(fifo_instruction_cache_size_after_read>5'h9)?fifo_instruction_cache_consume_count_p1:(4'd6-(fifo_instruction_cache_size_after_read-4'h9));
+	fifo_instruction_cache_indexes_future[4'hA]=(fifo_instruction_cache_size_after_read>5'hA)?fifo_instruction_cache_consume_count_p1:(4'd6-(fifo_instruction_cache_size_after_read-4'hA));
+	fifo_instruction_cache_indexes_future[4'hB]=(fifo_instruction_cache_size_after_read>5'hB)?fifo_instruction_cache_consume_count_p1:(4'd6-(fifo_instruction_cache_size_after_read-4'hB));
+	fifo_instruction_cache_indexes_future[4'hC]=(fifo_instruction_cache_size_after_read>5'hC)?fifo_instruction_cache_consume_count_p1:(4'd6-(fifo_instruction_cache_size_after_read-4'hC));
+	fifo_instruction_cache_indexes_future[4'hD]=(fifo_instruction_cache_size_after_read>5'hD)?fifo_instruction_cache_consume_count_p1:(4'd6-(fifo_instruction_cache_size_after_read-4'hD));
+	fifo_instruction_cache_indexes_future[4'hE]=(fifo_instruction_cache_size_after_read>5'hE)?fifo_instruction_cache_consume_count_p1:(4'd6-(fifo_instruction_cache_size_after_read-4'hE));
+	fifo_instruction_cache_indexes_future[4'hF]=(fifo_instruction_cache_size_after_read>5'hF)?fifo_instruction_cache_consume_count_p1:(4'd6-(fifo_instruction_cache_size_after_read-4'hF));
+	
+	if (!is_instruction_cache_requesting && is_performing_jump && hyper_jump_potentially_valid_type0 && !mem_is_hyper_instruction_fetch_0_requesting) begin
+		// this doesn't bother to check if the hyper jump address is identical because that doesn't need to matter for if the hyper jump data is inserted into the instruction cache (there is nothing important there anyway)
+		fifo_instruction_cache_indexes_future[4'h0]=0;
+		fifo_instruction_cache_indexes_future[4'h1]=0;
+		fifo_instruction_cache_indexes_future[4'h2]=0;
+		fifo_instruction_cache_indexes_future[4'h3]=0;
+		fifo_instruction_cache_indexes_future[4'h4]=0;
+		fifo_instruction_cache_indexes_future[4'h5]=0;
+		fifo_instruction_cache_indexes_future[4'h6]=0;
+		fifo_instruction_cache_indexes_future[4'h7]=0;
+		fifo_instruction_cache_indexes_future[4'h8]=0;
+		fifo_instruction_cache_indexes_future[4'h9]=0;
+		fifo_instruction_cache_indexes_future[4'hA]=0;
+		fifo_instruction_cache_indexes_future[4'hB]=0;
+		fifo_instruction_cache_indexes_future[4'hC]=0;
+		fifo_instruction_cache_indexes_future[4'hD]=0;
+		fifo_instruction_cache_indexes_future[4'hE]=0;
+		fifo_instruction_cache_indexes_future[4'hF]=0;
+	end
+end
+always @(posedge main_clk) begin
+	fifo_instruction_cache_data[4'h0]<=fifo_instruction_cache_data_future_0[fifo_instruction_cache_indexes_future[4'h0]];
+	fifo_instruction_cache_data[4'h1]<=fifo_instruction_cache_data_future_1[fifo_instruction_cache_indexes_future[4'h1]];
+	fifo_instruction_cache_data[4'h2]<=fifo_instruction_cache_data_future_2[fifo_instruction_cache_indexes_future[4'h2]];
+	fifo_instruction_cache_data[4'h3]<=fifo_instruction_cache_data_future_3[fifo_instruction_cache_indexes_future[4'h3]];
+	fifo_instruction_cache_data[4'h4]<=fifo_instruction_cache_data_future_4[fifo_instruction_cache_indexes_future[4'h4]];
+	fifo_instruction_cache_data[4'h5]<=fifo_instruction_cache_data_future_5[fifo_instruction_cache_indexes_future[4'h5]];
+	fifo_instruction_cache_data[4'h6]<=fifo_instruction_cache_data_future_6[fifo_instruction_cache_indexes_future[4'h6]];
+	fifo_instruction_cache_data[4'h7]<=fifo_instruction_cache_data_future_7[fifo_instruction_cache_indexes_future[4'h7]];
+	fifo_instruction_cache_data[4'h8]<=fifo_instruction_cache_data_future_8[fifo_instruction_cache_indexes_future[4'h8]];
+	fifo_instruction_cache_data[4'h9]<=fifo_instruction_cache_data_future_9[fifo_instruction_cache_indexes_future[4'h9]];
+	fifo_instruction_cache_data[4'hA]<=fifo_instruction_cache_data_future_A[fifo_instruction_cache_indexes_future[4'hA]];
+	fifo_instruction_cache_data[4'hB]<=fifo_instruction_cache_data_future_B[fifo_instruction_cache_indexes_future[4'hB]];
+	fifo_instruction_cache_data[4'hC]<=fifo_instruction_cache_data_future_C[fifo_instruction_cache_indexes_future[4'hC]];
+	fifo_instruction_cache_data[4'hD]<=fifo_instruction_cache_data_future_D[fifo_instruction_cache_indexes_future[4'hD]];
+	fifo_instruction_cache_data[4'hE]<=fifo_instruction_cache_data_future_E[fifo_instruction_cache_indexes_future[4'hE]];
+	fifo_instruction_cache_data[4'hF]<=fifo_instruction_cache_data_future_F[fifo_instruction_cache_indexes_future[4'hF]];
+	
+	fifo_instruction_cache_addresses[4'h0]<=fifo_instruction_cache_addresses_future_0[fifo_instruction_cache_indexes_future[4'h0]];
+	fifo_instruction_cache_addresses[4'h1]<=fifo_instruction_cache_addresses_future_1[fifo_instruction_cache_indexes_future[4'h1]];
+	fifo_instruction_cache_addresses[4'h2]<=fifo_instruction_cache_addresses_future_2[fifo_instruction_cache_indexes_future[4'h2]];
+	fifo_instruction_cache_addresses[4'h3]<=fifo_instruction_cache_addresses_future_3[fifo_instruction_cache_indexes_future[4'h3]];
+	fifo_instruction_cache_addresses[4'h4]<=fifo_instruction_cache_addresses_future_4[fifo_instruction_cache_indexes_future[4'h4]];
+	fifo_instruction_cache_addresses[4'h5]<=fifo_instruction_cache_addresses_future_5[fifo_instruction_cache_indexes_future[4'h5]];
+	fifo_instruction_cache_addresses[4'h6]<=fifo_instruction_cache_addresses_future_6[fifo_instruction_cache_indexes_future[4'h6]];
+	fifo_instruction_cache_addresses[4'h7]<=fifo_instruction_cache_addresses_future_7[fifo_instruction_cache_indexes_future[4'h7]];
+	fifo_instruction_cache_addresses[4'h8]<=fifo_instruction_cache_addresses_future_8[fifo_instruction_cache_indexes_future[4'h8]];
+	fifo_instruction_cache_addresses[4'h9]<=fifo_instruction_cache_addresses_future_9[fifo_instruction_cache_indexes_future[4'h9]];
+	fifo_instruction_cache_addresses[4'hA]<=fifo_instruction_cache_addresses_future_A[fifo_instruction_cache_indexes_future[4'hA]];
+	fifo_instruction_cache_addresses[4'hB]<=fifo_instruction_cache_addresses_future_B[fifo_instruction_cache_indexes_future[4'hB]];
+	fifo_instruction_cache_addresses[4'hC]<=fifo_instruction_cache_addresses_future_C[fifo_instruction_cache_indexes_future[4'hC]];
+	fifo_instruction_cache_addresses[4'hD]<=fifo_instruction_cache_addresses_future_D[fifo_instruction_cache_indexes_future[4'hD]];
+	fifo_instruction_cache_addresses[4'hE]<=fifo_instruction_cache_addresses_future_E[fifo_instruction_cache_indexes_future[4'hE]];
+	fifo_instruction_cache_addresses[4'hF]<=fifo_instruction_cache_addresses_future_F[fifo_instruction_cache_indexes_future[4'hF]];
+	
+	fifo_instruction_cache_addresses[0][0]<=1'b0;
+	fifo_instruction_cache_addresses[1][0]<=1'b0;
+	fifo_instruction_cache_addresses[2][0]<=1'b0;
+	fifo_instruction_cache_addresses[3][0]<=1'b0;
+	fifo_instruction_cache_addresses[4][0]<=1'b0;
+	fifo_instruction_cache_addresses[5][0]<=1'b0;
+	fifo_instruction_cache_addresses[6][0]<=1'b0;
+	fifo_instruction_cache_addresses[7][0]<=1'b0;
+	fifo_instruction_cache_addresses[8][0]<=1'b0;
+	fifo_instruction_cache_addresses[9][0]<=1'b0;
+	fifo_instruction_cache_addresses[10][0]<=1'b0;
+	fifo_instruction_cache_addresses[11][0]<=1'b0;
+	fifo_instruction_cache_addresses[12][0]<=1'b0;
+	fifo_instruction_cache_addresses[13][0]<=1'b0;
+	fifo_instruction_cache_addresses[14][0]<=1'b0;
+	fifo_instruction_cache_addresses[15][0]<=1'b0;
+end
+
 always @(posedge main_clk) begin
 	instruction_jump_address_saved<=instruction_jump_address;
 	instruction_jump_address_saved[0]<=1'b0;
@@ -2543,25 +3206,25 @@ always @(posedge main_clk) begin
 	1:begin
 		fifo_instruction_cache_data_old[2:0]<=fifo_instruction_cache_data_old[3:1];
 		fifo_instruction_cache_data_old[3]<=fifo_instruction_cache_data[0];
-		fifo_instruction_cache_data[14:0]<=fifo_instruction_cache_data[15:1];
-		fifo_instruction_cache_addresses[14:0]<=fifo_instruction_cache_addresses[15:1];
+		//fifo_instruction_cache_data[14:0]<=fifo_instruction_cache_data[15:1];
+		//fifo_instruction_cache_addresses[14:0]<=fifo_instruction_cache_addresses[15:1];
 	end
 	2:begin
 		fifo_instruction_cache_data_old[1:0]<=fifo_instruction_cache_data_old[3:2];
 		fifo_instruction_cache_data_old[3:2]<=fifo_instruction_cache_data[1:0];
-		fifo_instruction_cache_data[13:0]<=fifo_instruction_cache_data[15:2];
-		fifo_instruction_cache_addresses[13:0]<=fifo_instruction_cache_addresses[15:2];
+		//fifo_instruction_cache_data[13:0]<=fifo_instruction_cache_data[15:2];
+		//fifo_instruction_cache_addresses[13:0]<=fifo_instruction_cache_addresses[15:2];
 	end
 	3:begin
 		fifo_instruction_cache_data_old[0]<=fifo_instruction_cache_data_old[3];
 		fifo_instruction_cache_data_old[3:1]<=fifo_instruction_cache_data[2:0];
-		fifo_instruction_cache_data[12:0]<=fifo_instruction_cache_data[15:3];
-		fifo_instruction_cache_addresses[12:0]<=fifo_instruction_cache_addresses[15:3];
+		//fifo_instruction_cache_data[12:0]<=fifo_instruction_cache_data[15:3];
+		//fifo_instruction_cache_addresses[12:0]<=fifo_instruction_cache_addresses[15:3];
 	end
 	4:begin
 		fifo_instruction_cache_data_old[3:0]<=fifo_instruction_cache_data[3:0];
-		fifo_instruction_cache_data[11:0]<=fifo_instruction_cache_data[15:4];
-		fifo_instruction_cache_addresses[11:0]<=fifo_instruction_cache_addresses[15:4];
+		//fifo_instruction_cache_data[11:0]<=fifo_instruction_cache_data[15:4];
+		//fifo_instruction_cache_addresses[11:0]<=fifo_instruction_cache_addresses[15:4];
 	end
 	endcase
 	
@@ -2612,8 +3275,8 @@ always @(posedge main_clk) begin
 				hyper_jump_guess_source_single<=8'hx;
 				
 				if (mem_instruction_fetch_returning_word_count>3'd6) begin
-					fifo_instruction_cache_data[fifo_instruction_cache_size_after_read+4'h7]<=mem_data_out_type_0[7];
-					fifo_instruction_cache_addresses[fifo_instruction_cache_size_after_read+4'h7]<=instruction_fetch_address+6'hE;
+					//fifo_instruction_cache_data[fifo_instruction_cache_size_after_read+4'h7]<=mem_data_out_type_0[7];
+					//fifo_instruction_cache_addresses[fifo_instruction_cache_size_after_read+4'h7]<=instruction_fetch_address+6'hE;
 					if (mem_data_out_type_0[7][15:11]==5'h1F && (mem_data_out_type_0[7][10:8]==3'b010 || mem_data_out_type_0[7][10:8]==3'b011 || mem_data_out_type_0[7][10:8]==3'b110)) begin
 						isWaitingForJump<=1;
 						if (mem_data_out_type_0[7][10:8]!=3'b011) begin
@@ -2630,8 +3293,8 @@ always @(posedge main_clk) begin
 					end
 				end
 				if (mem_instruction_fetch_returning_word_count>3'd5) begin
-					fifo_instruction_cache_data[fifo_instruction_cache_size_after_read+4'h6]<=mem_data_out_type_0[6];
-					fifo_instruction_cache_addresses[fifo_instruction_cache_size_after_read+4'h6]<=instruction_fetch_address+6'hC;
+					//fifo_instruction_cache_data[fifo_instruction_cache_size_after_read+4'h6]<=mem_data_out_type_0[6];
+					//fifo_instruction_cache_addresses[fifo_instruction_cache_size_after_read+4'h6]<=instruction_fetch_address+6'hC;
 					if (mem_data_out_type_0[6][15:11]==5'h1F && (mem_data_out_type_0[6][10:8]==3'b010 || mem_data_out_type_0[6][10:8]==3'b011 || mem_data_out_type_0[6][10:8]==3'b110)) begin
 						isWaitingForJump<=1;
 						if (mem_data_out_type_0[6][10:8]!=3'b011) begin
@@ -2648,8 +3311,8 @@ always @(posedge main_clk) begin
 					end
 				end
 				if (mem_instruction_fetch_returning_word_count>3'd4) begin
-					fifo_instruction_cache_data[fifo_instruction_cache_size_after_read+4'h5]<=mem_data_out_type_0[5];
-					fifo_instruction_cache_addresses[fifo_instruction_cache_size_after_read+4'h5]<=instruction_fetch_address+6'hA;
+					//fifo_instruction_cache_data[fifo_instruction_cache_size_after_read+4'h5]<=mem_data_out_type_0[5];
+					//fifo_instruction_cache_addresses[fifo_instruction_cache_size_after_read+4'h5]<=instruction_fetch_address+6'hA;
 					if (mem_data_out_type_0[5][15:11]==5'h1F && (mem_data_out_type_0[5][10:8]==3'b010 || mem_data_out_type_0[5][10:8]==3'b011 || mem_data_out_type_0[5][10:8]==3'b110)) begin
 						isWaitingForJump<=1;
 						if (mem_data_out_type_0[5][10:8]!=3'b011) begin
@@ -2666,8 +3329,8 @@ always @(posedge main_clk) begin
 					end
 				end
 				if (mem_instruction_fetch_returning_word_count>3'd3) begin
-					fifo_instruction_cache_data[fifo_instruction_cache_size_after_read+4'h4]<=mem_data_out_type_0[4];
-					fifo_instruction_cache_addresses[fifo_instruction_cache_size_after_read+4'h4]<=instruction_fetch_address+6'h8;
+					//fifo_instruction_cache_data[fifo_instruction_cache_size_after_read+4'h4]<=mem_data_out_type_0[4];
+					//fifo_instruction_cache_addresses[fifo_instruction_cache_size_after_read+4'h4]<=instruction_fetch_address+6'h8;
 					if (mem_data_out_type_0[4][15:11]==5'h1F && (mem_data_out_type_0[4][10:8]==3'b010 || mem_data_out_type_0[4][10:8]==3'b011 || mem_data_out_type_0[4][10:8]==3'b110)) begin
 						isWaitingForJump<=1;
 						if (mem_data_out_type_0[4][10:8]!=3'b011) begin
@@ -2684,8 +3347,8 @@ always @(posedge main_clk) begin
 					end
 				end
 				if (mem_instruction_fetch_returning_word_count>3'd2) begin
-					fifo_instruction_cache_data[fifo_instruction_cache_size_after_read+4'h3]<=mem_data_out_type_0[3];
-					fifo_instruction_cache_addresses[fifo_instruction_cache_size_after_read+4'h3]<=instruction_fetch_address+6'h6;
+					//fifo_instruction_cache_data[fifo_instruction_cache_size_after_read+4'h3]<=mem_data_out_type_0[3];
+					//fifo_instruction_cache_addresses[fifo_instruction_cache_size_after_read+4'h3]<=instruction_fetch_address+6'h6;
 					if (mem_data_out_type_0[3][15:11]==5'h1F && (mem_data_out_type_0[3][10:8]==3'b010 || mem_data_out_type_0[3][10:8]==3'b011 || mem_data_out_type_0[3][10:8]==3'b110)) begin
 						isWaitingForJump<=1;
 						if (mem_data_out_type_0[3][10:8]!=3'b011) begin
@@ -2702,8 +3365,8 @@ always @(posedge main_clk) begin
 					end
 				end
 				if (mem_instruction_fetch_returning_word_count>3'd1) begin
-					fifo_instruction_cache_data[fifo_instruction_cache_size_after_read+4'h2]<=mem_data_out_type_0[2];
-					fifo_instruction_cache_addresses[fifo_instruction_cache_size_after_read+4'h2]<=instruction_fetch_address+6'h4;
+					//fifo_instruction_cache_data[fifo_instruction_cache_size_after_read+4'h2]<=mem_data_out_type_0[2];
+					//fifo_instruction_cache_addresses[fifo_instruction_cache_size_after_read+4'h2]<=instruction_fetch_address+6'h4;
 					if (mem_data_out_type_0[2][15:11]==5'h1F && (mem_data_out_type_0[2][10:8]==3'b010 || mem_data_out_type_0[2][10:8]==3'b011 || mem_data_out_type_0[2][10:8]==3'b110)) begin
 						isWaitingForJump<=1;
 						if (mem_data_out_type_0[2][10:8]!=3'b011) begin
@@ -2720,8 +3383,8 @@ always @(posedge main_clk) begin
 					end
 				end
 				if (mem_instruction_fetch_returning_word_count>3'd0) begin
-					fifo_instruction_cache_data[fifo_instruction_cache_size_after_read+4'h1]<=mem_data_out_type_0[1];
-					fifo_instruction_cache_addresses[fifo_instruction_cache_size_after_read+4'h1]<=instruction_fetch_address+6'h2;
+					//fifo_instruction_cache_data[fifo_instruction_cache_size_after_read+4'h1]<=mem_data_out_type_0[1];
+					//fifo_instruction_cache_addresses[fifo_instruction_cache_size_after_read+4'h1]<=instruction_fetch_address+6'h2;
 					if (mem_data_out_type_0[1][15:11]==5'h1F && (mem_data_out_type_0[1][10:8]==3'b010 || mem_data_out_type_0[1][10:8]==3'b011 || mem_data_out_type_0[1][10:8]==3'b110)) begin
 						isWaitingForJump<=1;
 						if (mem_data_out_type_0[1][10:8]!=3'b011) begin
@@ -2737,8 +3400,8 @@ always @(posedge main_clk) begin
 						end
 					end
 				end
-					fifo_instruction_cache_data[fifo_instruction_cache_size_after_read+4'h0]<=mem_data_out_type_0[0];
-					fifo_instruction_cache_addresses[fifo_instruction_cache_size_after_read+4'h0]<=instruction_fetch_address+6'h0;
+					//fifo_instruction_cache_data[fifo_instruction_cache_size_after_read+4'h0]<=mem_data_out_type_0[0];
+					//fifo_instruction_cache_addresses[fifo_instruction_cache_size_after_read+4'h0]<=instruction_fetch_address+6'h0;
 					if (mem_data_out_type_0[0][15:11]==5'h1F && (mem_data_out_type_0[0][10:8]==3'b010 || mem_data_out_type_0[0][10:8]==3'b011 || mem_data_out_type_0[0][10:8]==3'b110)) begin
 						isWaitingForJump<=1;
 						if (mem_data_out_type_0[0][10:8]!=3'b011) begin
@@ -2774,6 +3437,7 @@ always @(posedge main_clk) begin
 			if (hyper_jump_potentially_valid_type0 && !mem_is_hyper_instruction_fetch_0_requesting && instruction_jump_address[25:1]==hyper_jump_guess_address_saved[25:1]) begin
 				instruction_fetch_address<={hyper_jump_guess_address_saved[25:1]+hyper_instruction_fetch_size,1'b0};
 				fifo_instruction_cache_size<=hyper_instruction_fetch_size;
+				/*
 				fifo_instruction_cache_addresses[0]<=hyper_jump_guess_address_saved[25:0]+{4'h0,1'b0};
 				fifo_instruction_cache_addresses[1]<=hyper_jump_guess_address_saved[25:0]+{4'h1,1'b0};
 				fifo_instruction_cache_addresses[2]<=hyper_jump_guess_address_saved[25:0]+{4'h2,1'b0};
@@ -2792,6 +3456,7 @@ always @(posedge main_clk) begin
 				fifo_instruction_cache_addresses[15]<=hyper_jump_guess_address_saved[25:0]+{4'hF,1'b0};
 				
 				fifo_instruction_cache_data[15:0]<=hyper_instruction_fetch_storage[15:0]; // todo: do jump analysis on this data
+				*/
 			end else begin
 				instruction_fetch_address<=instruction_jump_address;
 				is_instruction_cache_requesting<=1;
@@ -2804,22 +3469,6 @@ always @(posedge main_clk) begin
 	hyper_jump_guess_address_saved[0]<=1'b0;
 	mem_target_address_hyper_instruction_fetch_0[0]<=1'b0;
 	mem_target_address_hyper_instruction_fetch_1[0]<=1'b0;
-	fifo_instruction_cache_addresses[0][0]<=1'b0;
-	fifo_instruction_cache_addresses[1][0]<=1'b0;
-	fifo_instruction_cache_addresses[2][0]<=1'b0;
-	fifo_instruction_cache_addresses[3][0]<=1'b0;
-	fifo_instruction_cache_addresses[4][0]<=1'b0;
-	fifo_instruction_cache_addresses[5][0]<=1'b0;
-	fifo_instruction_cache_addresses[6][0]<=1'b0;
-	fifo_instruction_cache_addresses[7][0]<=1'b0;
-	fifo_instruction_cache_addresses[8][0]<=1'b0;
-	fifo_instruction_cache_addresses[9][0]<=1'b0;
-	fifo_instruction_cache_addresses[10][0]<=1'b0;
-	fifo_instruction_cache_addresses[11][0]<=1'b0;
-	fifo_instruction_cache_addresses[12][0]<=1'b0;
-	fifo_instruction_cache_addresses[13][0]<=1'b0;
-	fifo_instruction_cache_addresses[14][0]<=1'b0;
-	fifo_instruction_cache_addresses[15][0]<=1'b0;
 end
 
 reg [4:0] instructionCurrentID_scheduler_0;
@@ -2936,104 +3585,7 @@ always @(posedge main_clk) begin
 end
 
 wire [15:0] instant_updated_core_values [16:0];
-/*
-recomb_mux recomb_mux_0(
-	instant_updated_core_values[0],
-	user_reg[0],
-	{executer3DoWrite[0] , executer2DoWrite[0] , executer1DoWrite[0] , executer0DoWrite[0]},
-	'{executer3WriteValues[0],executer2WriteValues[0],executer1WriteValues[0],executer0WriteValues[0]}
-);
-recomb_mux recomb_mux_1(
-	instant_updated_core_values[1],
-	user_reg[1],
-	{executer3DoWrite[1] , executer2DoWrite[1] , executer1DoWrite[1] , executer0DoWrite[1]},
-	'{executer3WriteValues[1],executer2WriteValues[1],executer1WriteValues[1],executer0WriteValues[1]}
-);
-recomb_mux recomb_mux_2(
-	instant_updated_core_values[2],
-	user_reg[2],
-	{executer3DoWrite[2] , executer2DoWrite[2] , executer1DoWrite[2] , executer0DoWrite[2]},
-	'{executer3WriteValues[2],executer2WriteValues[2],executer1WriteValues[2],executer0WriteValues[2]}
-);
-recomb_mux recomb_mux_3(
-	instant_updated_core_values[3],
-	user_reg[3],
-	{executer3DoWrite[3] , executer2DoWrite[3] , executer1DoWrite[3] , executer0DoWrite[3]},
-	'{executer3WriteValues[3],executer2WriteValues[3],executer1WriteValues[3],executer0WriteValues[3]}
-);
-recomb_mux recomb_mux_4(
-	instant_updated_core_values[4],
-	user_reg[4],
-	{executer3DoWrite[4] , executer2DoWrite[4] , executer1DoWrite[4] , executer0DoWrite[4]},
-	'{executer3WriteValues[4],executer2WriteValues[4],executer1WriteValues[4],executer0WriteValues[4]}
-);
-recomb_mux recomb_mux_5(
-	instant_updated_core_values[5],
-	user_reg[5],
-	{executer3DoWrite[5] , executer2DoWrite[5] , executer1DoWrite[5] , executer0DoWrite[5]},
-	'{executer3WriteValues[5],executer2WriteValues[5],executer1WriteValues[5],executer0WriteValues[5]}
-);
-recomb_mux recomb_mux_6(
-	instant_updated_core_values[6],
-	user_reg[6],
-	{executer3DoWrite[6] , executer2DoWrite[6] , executer1DoWrite[6] , executer0DoWrite[6]},
-	'{executer3WriteValues[6],executer2WriteValues[6],executer1WriteValues[6],executer0WriteValues[6]}
-);
-recomb_mux recomb_mux_7(
-	instant_updated_core_values[7],
-	user_reg[7],
-	{executer3DoWrite[7] , executer2DoWrite[7] , executer1DoWrite[7] , executer0DoWrite[7]},
-	'{executer3WriteValues[7],executer2WriteValues[7],executer1WriteValues[7],executer0WriteValues[7]}
-);
-recomb_mux recomb_mux_8(
-	instant_updated_core_values[8],
-	user_reg[8],
-	{executer3DoWrite[8] , executer2DoWrite[8] , executer1DoWrite[8] , executer0DoWrite[8]},
-	'{executer3WriteValues[8],executer2WriteValues[8],executer1WriteValues[8],executer0WriteValues[8]}
-);
-recomb_mux recomb_mux_9(
-	instant_updated_core_values[9],
-	user_reg[9],
-	{executer3DoWrite[9] , executer2DoWrite[9] , executer1DoWrite[9] , executer0DoWrite[9]},
-	'{executer3WriteValues[9],executer2WriteValues[9],executer1WriteValues[9],executer0WriteValues[9]}
-);
-recomb_mux recomb_mux_10(
-	instant_updated_core_values[10],
-	user_reg[10],
-	{executer3DoWrite[10] , executer2DoWrite[10] , executer1DoWrite[10] , executer0DoWrite[10]},
-	'{executer3WriteValues[10],executer2WriteValues[10],executer1WriteValues[10],executer0WriteValues[10]}
-);
-recomb_mux recomb_mux_11(
-	instant_updated_core_values[11],
-	user_reg[11],
-	{executer3DoWrite[11] , executer2DoWrite[11] , executer1DoWrite[11] , executer0DoWrite[11]},
-	'{executer3WriteValues[11],executer2WriteValues[11],executer1WriteValues[11],executer0WriteValues[11]}
-);
-recomb_mux recomb_mux_12(
-	instant_updated_core_values[12],
-	user_reg[12],
-	{executer3DoWrite[12] , executer2DoWrite[12] , executer1DoWrite[12] , executer0DoWrite[12]},
-	'{executer3WriteValues[12],executer2WriteValues[12],executer1WriteValues[12],executer0WriteValues[12]}
-);
-recomb_mux recomb_mux_13(
-	instant_updated_core_values[13],
-	user_reg[13],
-	{executer3DoWrite[13] , executer2DoWrite[13] , executer1DoWrite[13] , executer0DoWrite[13]},
-	'{executer3WriteValues[13],executer2WriteValues[13],executer1WriteValues[13],executer0WriteValues[13]}
-);
-recomb_mux recomb_mux_14(
-	instant_updated_core_values[14],
-	user_reg[14],
-	{executer3DoWrite[14] , executer2DoWrite[14] , executer1DoWrite[14] , executer0DoWrite[14]},
-	'{executer3WriteValues[14],executer2WriteValues[14],executer1WriteValues[14],executer0WriteValues[14]}
-);
-recomb_mux recomb_mux_15(
-	instant_updated_core_values[15],
-	user_reg[15],
-	{executer3DoWrite[15] , executer2DoWrite[15] , executer1DoWrite[15] , executer0DoWrite[15]},
-	'{executer3WriteValues[15],executer2WriteValues[15],executer1WriteValues[15],executer0WriteValues[15]}
-);
-*/
+
 recomb_mux_all_user_reg recomb_mux_full(
 	instant_updated_core_values[15:0],
 	user_reg,
@@ -3043,16 +3595,12 @@ recomb_mux_all_user_reg recomb_mux_full(
 	executer2WriteValues[15:0],
 	executer3WriteValues[15:0]
 );
-
-
 recomb_mux recomb_mux_16(
 	instant_updated_core_values[16],
 	stack_pointer,
 	{executer3DoWrite[16] , executer2DoWrite[16] , executer1DoWrite[16] , executer0DoWrite[16]},
 	'{executer3WriteValues[16],executer2WriteValues[16],executer1WriteValues[16],executer0WriteValues[16]}
 );
-
-
 
 
 always @(posedge main_clk) begin
