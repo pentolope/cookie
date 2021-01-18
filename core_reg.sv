@@ -164,9 +164,7 @@ assign hex_display_lut[4'hf] = 7'b_1110001;
  lb	   rb
  |	    |
  ---b --d
-
 hex={d,m,lt,lb,b,rb,rt,t}  (I think...)
-
 hex display is active low, but the lut is coded as active high
 */
 wire [7:0] hex_display_pre_inv [5:0];
@@ -231,9 +229,7 @@ assign hex_display_lut[4'hf] = 7'b_1110001;
  lb	   rb
  |	    |
  ---b --d
-
 hex={d,m,lt,lb,b,rb,rt,t}  (I think...)
-
 hex display is active low, but the lut is coded as active high
 */
 wire [7:0] hex_display_pre_inv [5:0];
@@ -266,7 +262,6 @@ endmodule
 
 /*
 This is some temporary notes for figuring out how the hex display worked:
-
 		4'h0: oSEG = 0 1 1 1 1 1 1;
 		4'h1: oSEG = 0 0 0 0 1 1 0;	
 		4'h2: oSEG = 1 0 1 1 0 1 1; 	
@@ -293,10 +288,8 @@ This is some temporary notes for figuring out how the hex display worked:
  lb	   rb
  |	    |
  ---b---d
-
 		
 		hex={d,m,lt,lb,b,rb,rt,t}
-
 */
 
 module recomb_mux_slice(
@@ -570,7 +563,9 @@ reg [15:0] temporary4;
 reg [15:0] temporary5;
 wire [17:0]temporary6;
 reg [15:0] temporary7;
-
+wire [18:0]temporary8;
+wire [18:0]temporary9;
+wire [18:0]temporaryA;
 
 reg [16:0] adderOutput;
 
@@ -703,8 +698,11 @@ always @(posedge main_clk) adderControl1_r<=adderControl1_lut[instructionIn[15:1
 always @(posedge main_clk) adderControl2_r<=adderControl2_lut[instructionIn[15:12]];
 always @(posedge main_clk) step<=stepNext;
 
-assign temporary2=(adderControl1_r +({2'b0,temporary3,1'b1}+{2'b0,temporary4,1'b0}))+{2'b0,temporary5,1'b0};
-assign temporary6=temporary2[18:1];
+lcell_19 lc_add0 (temporary8,{2'b0,temporary5,1'b1}+adderControl1_r);
+lcell_19 lc_add1 (temporary9,{2'b0,temporary4,1'b0}+{2'b0,temporary3,1'b0});
+lcell_19 lc_add2 (temporaryA,temporary8+temporary9);
+
+assign temporary6=temporaryA[18:1];
 
 always @(posedge main_clk) begin
 	vr0<=nvr0;
@@ -3125,8 +3123,6 @@ always @(posedge main_clk) begin
 				mem_is_hyper_instruction_fetch_1_requesting<=0;
 				mem_void_hyper_instruction_fetch<=1;
 				hyper_jump_look_index<=3'hx;
-				hyper_jump_guess_address_single<=32'hx;
-				hyper_jump_guess_source_single<=8'hx;
 				
 				if (mem_instruction_fetch_returning_word_count>3'd6) begin
 					if (mem_data_out_type_0[7][15:11]==5'h1F && (mem_data_out_type_0[7][10:8]==3'b010 || mem_data_out_type_0[7][10:8]==3'b011 || mem_data_out_type_0[7][10:8]==3'b110)) begin
@@ -3138,8 +3134,6 @@ always @(posedge main_clk) begin
 								hyper_jump_potentially_valid_type2<=1;
 							end
 							hyper_jump_look_index<=7;
-							hyper_jump_guess_address_single<={mem_data_out_type_0[6][11:4],mem_data_out_type_0[5][11:4],mem_data_out_type_0[4][11:4],mem_data_out_type_0[3][11:4]};
-							hyper_jump_guess_source_single<=mem_data_out_type_0[7][7:0];
 							hyper_jump_potentially_valid_type1<=1;
 						end
 					end
@@ -3154,8 +3148,6 @@ always @(posedge main_clk) begin
 								hyper_jump_potentially_valid_type2<=1;
 							end
 							hyper_jump_look_index<=6;
-							hyper_jump_guess_address_single<={mem_data_out_type_0[5][11:4],mem_data_out_type_0[4][11:4],mem_data_out_type_0[3][11:4],mem_data_out_type_0[2][11:4]};
-							hyper_jump_guess_source_single<=mem_data_out_type_0[6][7:0];
 							hyper_jump_potentially_valid_type1<=1;
 						end
 					end
@@ -3170,8 +3162,6 @@ always @(posedge main_clk) begin
 								hyper_jump_potentially_valid_type2<=1;
 							end
 							hyper_jump_look_index<=5;
-							hyper_jump_guess_address_single<={mem_data_out_type_0[4][11:4],mem_data_out_type_0[3][11:4],mem_data_out_type_0[2][11:4],mem_data_out_type_0[1][11:4]};
-							hyper_jump_guess_source_single<=mem_data_out_type_0[5][7:0];
 							hyper_jump_potentially_valid_type1<=1;
 						end
 					end
@@ -3186,8 +3176,6 @@ always @(posedge main_clk) begin
 								hyper_jump_potentially_valid_type2<=1;
 							end
 							hyper_jump_look_index<=4;
-							hyper_jump_guess_address_single<={mem_data_out_type_0[3][11:4],mem_data_out_type_0[2][11:4],mem_data_out_type_0[1][11:4],mem_data_out_type_0[0][11:4]};
-							hyper_jump_guess_source_single<=mem_data_out_type_0[4][7:0];
 							hyper_jump_potentially_valid_type1<=1;
 						end
 					end
@@ -3202,8 +3190,6 @@ always @(posedge main_clk) begin
 								hyper_jump_potentially_valid_type2<=1;
 							end
 							hyper_jump_look_index<=3;
-							hyper_jump_guess_address_single<={mem_data_out_type_0[2][11:4],mem_data_out_type_0[1][11:4],mem_data_out_type_0[0][11:4],fifo_instruction_cache_data_at_write_addr_m1[11:4]};
-							hyper_jump_guess_source_single<=mem_data_out_type_0[3][7:0];
 							hyper_jump_potentially_valid_type1<=1;
 						end
 					end
@@ -3218,8 +3204,6 @@ always @(posedge main_clk) begin
 								hyper_jump_potentially_valid_type2<=1;
 							end
 							hyper_jump_look_index<=2;
-							hyper_jump_guess_address_single<={mem_data_out_type_0[1][11:4],mem_data_out_type_0[0][11:4],fifo_instruction_cache_data_at_write_addr_m1[11:4],fifo_instruction_cache_data_at_write_addr_m2[11:4]};
-							hyper_jump_guess_source_single<=mem_data_out_type_0[2][7:0];
 							hyper_jump_potentially_valid_type1<=1;
 						end
 					end
@@ -3234,8 +3218,6 @@ always @(posedge main_clk) begin
 								hyper_jump_potentially_valid_type2<=1;
 							end
 							hyper_jump_look_index<=1;
-							hyper_jump_guess_address_single<={mem_data_out_type_0[0][11:4],fifo_instruction_cache_data_at_write_addr_m1[11:4],fifo_instruction_cache_data_at_write_addr_m2[11:4],fifo_instruction_cache_data_at_write_addr_m3[11:4]};
-							hyper_jump_guess_source_single<=mem_data_out_type_0[1][7:0];
 							hyper_jump_potentially_valid_type1<=1;
 						end
 					end
@@ -3249,8 +3231,6 @@ always @(posedge main_clk) begin
 								hyper_jump_potentially_valid_type2<=1;
 							end
 							hyper_jump_look_index<=0;
-							hyper_jump_guess_address_single<={fifo_instruction_cache_data_at_write_addr_m1[11:4],fifo_instruction_cache_data_at_write_addr_m2[11:4],fifo_instruction_cache_data_at_write_addr_m3[11:4],fifo_instruction_cache_data_at_write_addr_m4[11:4]};
-							hyper_jump_guess_source_single<=mem_data_out_type_0[0][7:0];
 							hyper_jump_potentially_valid_type1<=1;
 						end
 					end
@@ -4091,8 +4071,3 @@ assign debug_user_reg=user_reg;
 
 
 endmodule
-
-
-
-
-
