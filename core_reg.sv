@@ -298,6 +298,7 @@ This is some temporary notes for figuring out how the hex display worked:
 		hex={d,m,lt,lb,b,rb,rt,t}
 
 */
+
 module recomb_mux_slice(
 	output o, // output
 	input b, // before
@@ -850,7 +851,6 @@ always @(posedge main_clk) begin
 	mem_stack_access_size<=3'hx;
 	mem_target_address_general<=32'hx;
 	mem_target_address_stack<=16'hx;
-	//doWrite<=0;
 	doWrite_sp<=0;
 	writeValue_sp<=16'hx;
 	wv0<=16'hx;
@@ -873,13 +873,11 @@ always @(posedge main_clk) begin
 	if (willExecute) begin
 		unique case (instructionInID)
 		0:begin
-			//doWrite    [instructionIn[3:0]]<=1'b1;
 			wa0<=1;
 			wv0<={8'h0,instructionIn[11:4]};
 			wa1<=1;
 		end
 		1:begin
-			//doWrite    [instructionIn[3:0]]<=1'b1;
 			wa0<=1;
 			wv0<={instructionIn[11:4],nvr0[7:0]};
 			wa1<=1;
@@ -893,7 +891,6 @@ always @(posedge main_clk) begin
 				mem_is_stack_access_requesting<=1;
 			end
 			1:begin
-				//doWrite    [instructionIn[3:0]]<=1'b1;
 				wv1<=mem_data_out_large[0];
 				wa1<=1;
 			end
@@ -906,17 +903,14 @@ always @(posedge main_clk) begin
 			mem_target_address_stack<=temporary1;
 		end
 		4:begin
-			//doWrite    [instructionIn[3:0]]<=1'b1;
 			wv1<=temporary0;
 			wa1<=1;
 		end
 		5:begin
-			//doWrite    [instructionIn[3:0]]<=1'b1;
 			wv1<=temporary0;
 			wa1<=1;
 		end
 		6:begin
-			//doWrite    [instructionIn[3:0]]<=1'b1;
 			wv1<=temporary0;
 			wa1<=1;
 		end
@@ -926,8 +920,6 @@ always @(posedge main_clk) begin
 			0:begin
 			end
 			1:begin
-				//doWrite    [instructionIn[3:0]]<=1'b1;
-				//doWrite    [instructionIn[7:4]]<=1'b1;
 				wv0<={15'h0,adderOutput[16]};
 				wa1<=1;
 				wv2<=adderOutput[15:0];
@@ -940,13 +932,11 @@ always @(posedge main_clk) begin
 			mem_is_general_access_write<=0;
 			mem_target_address_general<={nvr2,nvr1};
 			mem_target_address_general[0]<=1'b0;
-			
 			unique case (stepNext)
 			0:begin
 				mem_is_general_access_requesting<=1;
 			end
 			1:begin
-				//doWrite    [instructionIn[3:0]]<=1'b1;
 				wv1<=mem_data_out_small;
 				wa1<=1;
 			end
@@ -965,7 +955,6 @@ always @(posedge main_clk) begin
 			0:begin
 			end
 			1:begin
-				//doWrite    [instructionIn[3:0]]<=1'b1;
 				wv0<=adderOutput[15:0];
 				wa1<=1;
 			end
@@ -977,14 +966,10 @@ always @(posedge main_clk) begin
 			0:begin
 			end
 			1:begin
-				//doWrite    [instructionIn[3:0]]<=1'b1;
-				//doWrite[15]<=1'b1;
-				
 				wv0<=adderOutput[15:0];
 				wv5<={15'h0,adderOutput[16]};
 				wa1<=1;
 				wa5<=1;
-				
 				wb2<=0;
 				wb3<=0;
 				wb4<=1;
@@ -999,7 +984,6 @@ always @(posedge main_clk) begin
 			1:begin
 				wv0<=adderOutput[15:0];
 				wa1<=1;
-				//doWrite    [instructionIn[3:0]]<=1'b1;
 			end
 			endcase
 		end
@@ -1011,7 +995,6 @@ always @(posedge main_clk) begin
 			1:begin
 				wv0<={15'h0,adderOutput[16]};
 				wa1<=1;
-				//doWrite    [instructionIn[3:0]]<=1'b1;
 			end
 			endcase
 		end
@@ -1051,7 +1034,6 @@ always @(posedge main_clk) begin
 				mem_is_stack_access_requesting<=1;
 			end
 			1:begin
-				//doWrite    [instructionIn[3:0]]<=1'b1;
 				doWrite_sp<=1'b1;
 				wv1<=mem_data_out_large[0];
 				wa1<=1;
@@ -1071,8 +1053,6 @@ always @(posedge main_clk) begin
 				mem_is_stack_access_requesting<=1;
 			end
 			1:begin
-				//doWrite    [instructionIn[3:0]]<=1'b1;
-				//doWrite    [instructionIn[7:4]]<=1'b1;
 				doWrite_sp<=1'b1;
 				wv1<=mem_data_out_large[0];
 				wv3<=mem_data_out_large[1];
@@ -1085,17 +1065,14 @@ always @(posedge main_clk) begin
 			endcase
 		end
 		20:begin
-			//doWrite    [instructionIn[3:0]]<=1'b1;
 			wv1<=nvr1;
 			wa1<=1;
 		end
 		21:begin
-			//doWrite    [instructionIn[3:0]]<=1'b1;
 			wv1<={nvr1[ 7:0],nvr1[15:8]};
 			wa1<=1;
 		end
 		22:begin
-			//doWrite    [instructionIn[3:0]]<=1'b1;
 			wv1<={1'b0,nvr1[15:1]};
 			wa1<=1;
 		end
@@ -1104,8 +1081,6 @@ always @(posedge main_clk) begin
 			0:begin
 			end
 			1:begin
-				//doWrite    [instructionIn[3:0]]<=1'b1;
-				
 				wv1<=mul16Temp;
 				wa1<=1;
 			end
@@ -1116,9 +1091,6 @@ always @(posedge main_clk) begin
 			0:begin
 			end
 			1:begin
-				//doWrite[13]<=1'b1;
-				//doWrite[14]<=1'b1;
-				
 				wv4<=mul32Temp[15: 0];
 				wv5<=mul32Temp[31:16];
 				wa4<=1;
@@ -1146,9 +1118,6 @@ always @(posedge main_clk) begin
 			5:begin
 			end
 			6:begin
-				//doWrite    [instructionIn[3:0]]<=1'b1;
-				//doWrite    [instructionIn[7:4]]<=1'b1;
-				
 				wv0<={divTemp3[15:3],divPartialResult};
 				wv2<=divTable2[2][15:0];
 				wa1<=1;
@@ -1169,12 +1138,10 @@ always @(posedge main_clk) begin
 			end
 			1:begin
 				doWrite_sp<=1'b1;
-				//doWrite[0]<=1'b1;
 				instruction_jump_address<={nvr1,nvr0};
 				writeValue_sp<=stack_pointer_m8;
 				wv4<=stack_pointer_m8;
 				wa4<=1;
-				
 				wb0<=1;
 				wb1<=0;
 				
@@ -1196,22 +1163,17 @@ always @(posedge main_clk) begin
 			end
 			2:begin
 				instruction_jump_address<={mem_data_out_large_r[3],mem_data_out_large_r[4]};
+				doWrite_sp<=1'b1;
 				writeValue_sp<=(user_reg[4'h0]-4'hA) + mem_data_out_large_r[0];
 				wv4<=mem_data_out_large_r[1];
 				wv5<=mem_data_out_large_r[2];
 				wa4<=1;
 				wa5<=1;
-				
 				wb0<=1;
 				wb1<=0;
-				
 				wb2<=1;
 				wb3<=0;
 				wb4<=0;
-				
-				//doWrite[0]<=1'b1;
-				//doWrite[1]<=1'b1;
-				doWrite_sp<=1'b1;
 			end
 			endcase
 		end
@@ -1219,13 +1181,11 @@ always @(posedge main_clk) begin
 			mem_is_general_access_byte_operation<=1;
 			mem_is_general_access_write<=0;
 			mem_target_address_general<={nvr1,instant_user_reg[4'hD]};
-			
 			unique case (stepNext)
 			0:begin
 				mem_is_general_access_requesting<=1;
 			end
 			1:begin
-				//doWrite    [instructionIn[3:0]]<=1'b1;
 				wv1<=mem_data_out_small;
 				wa1<=1;
 			end
@@ -1235,7 +1195,6 @@ always @(posedge main_clk) begin
 			mem_is_general_access_byte_operation<=1;
 			mem_is_general_access_write<=1;
 			mem_is_general_access_requesting<=1;
-			
 			mem_target_address_general<={nvr1,instant_user_reg[4'hD]};
 		end
 		30:begin
@@ -1247,12 +1206,10 @@ always @(posedge main_clk) begin
 			0:begin
 			end
 			1:begin
-				//doWrite    [instructionIn[3:0]]<=1'b1;
 				doWrite_sp<=1'b1;
-				
+				writeValue_sp<=temporary7;
 				wv0<=temporary7;
 				wa1<=1;
-				writeValue_sp<=temporary7;
 			end
 			endcase
 		end
@@ -1442,16 +1399,6 @@ always_comb begin
 			endcase
 		end
 		14:begin
-		/*
-			unique case (step)
-			0:begin
-				stepNext=1;
-			end
-			1:begin
-				stepNext=0;
-			end
-			endcase
-		*/
 		end
 		16:begin
 		end
@@ -1614,21 +1561,13 @@ assign will_instruction_finish_next_cycle_pulse=future_sig_helper2a[0];
 assign will_jump_next_cycle=future_sig_helper2a[1];
 
 
-//assign will_instruction_finish_next_cycle_pulse=(future_sig_helper[0] | future_sig_helper[1]) & (future_sig_helper[0]?willExecute:1'b1) & (future_sig_helper[1]?mem_will_access_be_acknowledged_pulse:1'b1);
-//assign will_jump_next_cycle=(future_sig_helper[2] | future_sig_helper[3]) & (future_sig_helper[2]?willExecute:1'b1) & (future_sig_helper[3]?(!(instant_user_reg_override_active[instructionIn[11:8]]?instant_user_reg_wide_or[instructionIn[11:8]]:user_reg_wide_or[instructionIn[11:8]])):1'b1);
-
-
 always_comb begin
 	future_sig_helper='{0,0,0,0};
-	//will_jump_next_cycle=0;
-	//will_instruction_finish_next_cycle_pulse=0;
 	unique case (instructionInID)
 	0:begin
-		//will_instruction_finish_next_cycle_pulse=willExecute;
 		future_sig_helper[0]=1;
 	end
 	1:begin
-		//will_instruction_finish_next_cycle_pulse=willExecute;
 		future_sig_helper[0]=1;
 	end
 	2:begin
@@ -1636,26 +1575,21 @@ always_comb begin
 		0:begin
 		end
 		1:begin
-			//will_instruction_finish_next_cycle_pulse=willExecute;
 			future_sig_helper[0]=1;
 		end
 		endcase
 	end
 	3:begin
-		//will_instruction_finish_next_cycle_pulse=willExecute & mem_will_access_be_acknowledged_pulse;
 		future_sig_helper[0]=1;
 		future_sig_helper[1]=1;
 	end
 	4:begin
-		//will_instruction_finish_next_cycle_pulse=willExecute;
 		future_sig_helper[0]=1;
 	end
 	5:begin
-		//will_instruction_finish_next_cycle_pulse=willExecute;
 		future_sig_helper[0]=1;
 	end
 	6:begin
-		//will_instruction_finish_next_cycle_pulse=willExecute;
 		future_sig_helper[0]=1;
 	end
 	7:begin
@@ -1663,7 +1597,6 @@ always_comb begin
 		0:begin
 		end
 		1:begin
-			//will_instruction_finish_next_cycle_pulse=willExecute;
 			future_sig_helper[0]=1;
 		end
 		endcase
@@ -1673,13 +1606,11 @@ always_comb begin
 		0:begin
 		end
 		1:begin
-			//will_instruction_finish_next_cycle_pulse=willExecute;
 			future_sig_helper[0]=1;
 		end
 		endcase
 	end
 	9:begin
-		//will_instruction_finish_next_cycle_pulse=willExecute & mem_will_access_be_acknowledged_pulse;
 		future_sig_helper[0]=1;
 		future_sig_helper[1]=1;
 	end
@@ -1688,7 +1619,6 @@ always_comb begin
 		0:begin
 		end
 		1:begin
-			//will_instruction_finish_next_cycle_pulse=willExecute;
 			future_sig_helper[0]=1;
 		end
 		endcase
@@ -1698,7 +1628,6 @@ always_comb begin
 		0:begin
 		end
 		1:begin
-			//will_instruction_finish_next_cycle_pulse=willExecute;
 			future_sig_helper[0]=1;
 		end
 		endcase
@@ -1708,7 +1637,6 @@ always_comb begin
 		0:begin
 		end
 		1:begin
-			//will_instruction_finish_next_cycle_pulse=willExecute;
 			future_sig_helper[0]=1;
 		end
 		endcase
@@ -1718,33 +1646,20 @@ always_comb begin
 		0:begin
 		end
 		1:begin
-			//will_instruction_finish_next_cycle_pulse=willExecute;
 			future_sig_helper[0]=1;
 		end
 		endcase
 	end
 	14:begin
-			//will_instruction_finish_next_cycle_pulse=willExecute;
-			//will_jump_next_cycle=willExecute & !(instant_user_reg_override_active[instructionIn[11:8]]?instant_user_reg_wide_or[instructionIn[11:8]]:user_reg_wide_or[instructionIn[11:8]]); // if wide_or is 0 then jump is 1
 			future_sig_helper[0]=1;
 			future_sig_helper[2]=1;
 			future_sig_helper[3]=1;
-		/*
-		unique case (stepNext)
-		0:begin
-		end
-		1:begin
-		end
-		endcase
-		*/
 	end
 	16:begin
-		//will_instruction_finish_next_cycle_pulse=willExecute & mem_will_access_be_acknowledged_pulse;
 		future_sig_helper[0]=1;
 		future_sig_helper[1]=1;
 	end
 	17:begin
-		//will_instruction_finish_next_cycle_pulse=willExecute & mem_will_access_be_acknowledged_pulse;
 		future_sig_helper[0]=1;
 		future_sig_helper[1]=1;
 	end
@@ -1753,7 +1668,6 @@ always_comb begin
 		0:begin
 		end
 		1:begin
-			//will_instruction_finish_next_cycle_pulse=willExecute;
 			future_sig_helper[0]=1;
 		end
 		endcase
@@ -1763,21 +1677,17 @@ always_comb begin
 		0:begin
 		end
 		1:begin
-			//will_instruction_finish_next_cycle_pulse=willExecute;
 			future_sig_helper[0]=1;
 		end
 		endcase
 	end
 	20:begin
-		//will_instruction_finish_next_cycle_pulse=willExecute;
 		future_sig_helper[0]=1;
 	end
 	21:begin
-		//will_instruction_finish_next_cycle_pulse=willExecute;
 		future_sig_helper[0]=1;
 	end
 	22:begin
-		//will_instruction_finish_next_cycle_pulse=willExecute;
 		future_sig_helper[0]=1;
 	end
 	23:begin
@@ -1785,7 +1695,6 @@ always_comb begin
 		0:begin
 		end
 		1:begin
-			//will_instruction_finish_next_cycle_pulse=willExecute;
 			future_sig_helper[0]=1;
 		end
 		endcase
@@ -1795,7 +1704,6 @@ always_comb begin
 		0:begin
 		end
 		1:begin
-			//will_instruction_finish_next_cycle_pulse=willExecute;
 			future_sig_helper[0]=1;
 		end
 		endcase
@@ -1815,7 +1723,6 @@ always_comb begin
 		5:begin
 		end
 		6:begin
-			//will_instruction_finish_next_cycle_pulse=willExecute;
 			future_sig_helper[0]=1;
 		end
 		endcase
@@ -1825,8 +1732,6 @@ always_comb begin
 		0:begin
 		end
 		1:begin
-			//will_instruction_finish_next_cycle_pulse=willExecute;
-			//will_jump_next_cycle=willExecute;
 			future_sig_helper[0]=1;
 			future_sig_helper[2]=1;
 		end
@@ -1839,8 +1744,6 @@ always_comb begin
 		1:begin
 		end
 		2:begin
-			//will_instruction_finish_next_cycle_pulse=willExecute;
-			//will_jump_next_cycle=willExecute;
 			future_sig_helper[0]=1;
 			future_sig_helper[2]=1;
 		end
@@ -1851,19 +1754,15 @@ always_comb begin
 		0:begin
 		end
 		1:begin
-			//will_instruction_finish_next_cycle_pulse=willExecute;
 			future_sig_helper[0]=1;
 		end
 		endcase
 	end
 	29:begin
-		//will_instruction_finish_next_cycle_pulse=willExecute & mem_will_access_be_acknowledged_pulse;
 		future_sig_helper[0]=1;
 		future_sig_helper[1]=1;
 	end
 	30:begin
-		//will_instruction_finish_next_cycle_pulse=willExecute;
-		//will_jump_next_cycle=willExecute;
 		future_sig_helper[0]=1;
 		future_sig_helper[2]=1;
 	end
@@ -1872,7 +1771,6 @@ always_comb begin
 		0:begin
 		end
 		1:begin
-			//will_instruction_finish_next_cycle_pulse=willExecute;
 			future_sig_helper[0]=1;
 		end
 		endcase
@@ -2224,10 +2122,6 @@ module core_main(
 	output		          		VGA_HS,
 	output		          		VGA_VS,
 
-	output [7:0] hex_display [5:0],
-	
-	input 		     [9:0]		SW,
-
 	input vga_clk,
 	input main_clk,
 	
@@ -2285,11 +2179,6 @@ reg [15:0] stack_pointer_p4=16'h0004;
 
 reg [15:0] user_reg [15:0]='{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
 
-generate_hex_display_base10 generate_hex_display_inst(
-	hex_display,
-	user_reg[SW[3:0]]
-);
-
 reg is_new_instruction_entering_this_cycle_pulse_0; // only valid if `is_performing_jump==0`
 reg is_new_instruction_entering_this_cycle_pulse_1; // only valid if `is_performing_jump==0`
 reg is_new_instruction_entering_this_cycle_pulse_2; // only valid if `is_performing_jump==0`
@@ -2340,12 +2229,6 @@ reg isInstructionValid_scheduler_3_future2=0;
 reg isInstructionValid_scheduler_3_future3;
 reg isInstructionValid_scheduler_3_future4;
 
-
-//assign isInstructionValid_scheduler_0_future2=is_instruction_finishing_this_cycle_pulse_0?1'b0:isInstructionValid_scheduler_0;
-//assign isInstructionValid_scheduler_1_future2=is_instruction_finishing_this_cycle_pulse_1?1'b0:isInstructionValid_scheduler_1;
-//assign isInstructionValid_scheduler_2_future2=is_instruction_finishing_this_cycle_pulse_2?1'b0:isInstructionValid_scheduler_2;
-//assign isInstructionValid_scheduler_3_future2=is_instruction_finishing_this_cycle_pulse_3?1'b0:isInstructionValid_scheduler_3;
-
 always @(posedge main_clk) begin
 	isInstructionValid_scheduler_0<=isInstructionValid_scheduler_0_future4;
 	isInstructionValid_scheduler_1<=isInstructionValid_scheduler_1_future4;
@@ -2362,10 +2245,10 @@ always @(posedge main_clk) begin
 	isInstructionValid_scheduler_2_future2<=will_instruction_finish_next_cycle_pulse_2?1'b0:isInstructionValid_scheduler_2_future4;
 	isInstructionValid_scheduler_3_future2<=will_instruction_finish_next_cycle_pulse_3?1'b0:isInstructionValid_scheduler_3_future4;
 	
-	if (isInstructionValid_scheduler_0_future2 != (is_instruction_finishing_this_cycle_pulse_0?1'b0:isInstructionValid_scheduler_0)) begin $stop(); end
-	if (isInstructionValid_scheduler_1_future2 != (is_instruction_finishing_this_cycle_pulse_1?1'b0:isInstructionValid_scheduler_1)) begin $stop(); end
-	if (isInstructionValid_scheduler_2_future2 != (is_instruction_finishing_this_cycle_pulse_2?1'b0:isInstructionValid_scheduler_2)) begin $stop(); end
-	if (isInstructionValid_scheduler_3_future2 != (is_instruction_finishing_this_cycle_pulse_3?1'b0:isInstructionValid_scheduler_3)) begin $stop(); end
+	assert (isInstructionValid_scheduler_0_future2 == (is_instruction_finishing_this_cycle_pulse_0?1'b0:isInstructionValid_scheduler_0));
+	assert (isInstructionValid_scheduler_1_future2 == (is_instruction_finishing_this_cycle_pulse_1?1'b0:isInstructionValid_scheduler_1));
+	assert (isInstructionValid_scheduler_2_future2 == (is_instruction_finishing_this_cycle_pulse_2?1'b0:isInstructionValid_scheduler_2));
+	assert (isInstructionValid_scheduler_3_future2 == (is_instruction_finishing_this_cycle_pulse_3?1'b0:isInstructionValid_scheduler_3));
 end
 
 
@@ -2492,7 +2375,6 @@ wire is_performing_jump_instant_on=jump_signal_executer[0] | jump_signal_execute
 wire is_performing_jump=is_performing_jump_instant_on?1'b1:is_performing_jump_state;
 
 reg [25:0] instruction_jump_address_saved=0;
-//wire [25:0] instruction_jump_address=is_performing_jump_instant_on?(instruction_jump_address_executer[jump_executer_index][25:0]):instruction_jump_address_saved;
 wire [25:0] instruction_jump_address=is_performing_jump_instant_on?(instruction_jump_address_selected[25:0]):instruction_jump_address_saved;
 
 assign mem_is_instruction_fetch_requesting=is_instruction_cache_requesting;
@@ -2500,12 +2382,8 @@ assign mem_target_address_instruction_fetch=instruction_fetch_address;
 
 reg isWaitingForJump=0;
 
-
 reg [31:0] hyper_jump_guess_address_table [7:0];
 reg [7:0] hyper_jump_guess_source_table [7:0];
-
-reg [31:0] hyper_jump_guess_address_single;
-reg [7:0] hyper_jump_guess_source_single;
 
 reg hyper_jump_potentially_valid_type0=0; // type0 is if the hyper_jump_guess_address_saved is ready
 reg hyper_jump_potentially_valid_type1=0; // type1 is if either source_table or address_table was just filled
@@ -2513,12 +2391,8 @@ reg hyper_jump_potentially_valid_type2=0; // type2 is if source_table should be 
 reg [2:0] hyper_jump_look_index;
 wire [31:0] hyper_jump_guess_address_calc=hyper_jump_potentially_valid_type2?({user_reg[hyper_jump_guess_source_table[hyper_jump_look_index][7:4]],user_reg[hyper_jump_guess_source_table[hyper_jump_look_index][3:0]]}):(hyper_jump_guess_address_table[hyper_jump_look_index]);
 
-//wire [31:0] hyper_jump_guess_address_calc=hyper_jump_potentially_valid_type2?({user_reg[hyper_jump_guess_source_single[7:4]],user_reg[hyper_jump_guess_source_single[3:0]]}):(hyper_jump_guess_address_single);
-
 reg [31:0] hyper_jump_guess_address_saved;
 reg [4:0] hyper_instruction_fetch_size;
-
-
 
 wire [25:0] instruction_fetch_address_added [7:0];
 assign instruction_fetch_address_added[0]=instruction_fetch_address+5'h0;
@@ -3206,25 +3080,17 @@ always @(posedge main_clk) begin
 	1:begin
 		fifo_instruction_cache_data_old[2:0]<=fifo_instruction_cache_data_old[3:1];
 		fifo_instruction_cache_data_old[3]<=fifo_instruction_cache_data[0];
-		//fifo_instruction_cache_data[14:0]<=fifo_instruction_cache_data[15:1];
-		//fifo_instruction_cache_addresses[14:0]<=fifo_instruction_cache_addresses[15:1];
 	end
 	2:begin
 		fifo_instruction_cache_data_old[1:0]<=fifo_instruction_cache_data_old[3:2];
 		fifo_instruction_cache_data_old[3:2]<=fifo_instruction_cache_data[1:0];
-		//fifo_instruction_cache_data[13:0]<=fifo_instruction_cache_data[15:2];
-		//fifo_instruction_cache_addresses[13:0]<=fifo_instruction_cache_addresses[15:2];
 	end
 	3:begin
 		fifo_instruction_cache_data_old[0]<=fifo_instruction_cache_data_old[3];
 		fifo_instruction_cache_data_old[3:1]<=fifo_instruction_cache_data[2:0];
-		//fifo_instruction_cache_data[12:0]<=fifo_instruction_cache_data[15:3];
-		//fifo_instruction_cache_addresses[12:0]<=fifo_instruction_cache_addresses[15:3];
 	end
 	4:begin
 		fifo_instruction_cache_data_old[3:0]<=fifo_instruction_cache_data[3:0];
-		//fifo_instruction_cache_data[11:0]<=fifo_instruction_cache_data[15:4];
-		//fifo_instruction_cache_addresses[11:0]<=fifo_instruction_cache_addresses[15:4];
 	end
 	endcase
 	
@@ -3236,18 +3102,6 @@ always @(posedge main_clk) begin
 				instruction_fetch_address<=instruction_jump_address;
 				is_instruction_cache_requesting<=1;
 			end else begin
-				/*
-				if (
-				(                                                   mem_data_out_type_0[0][15:11]==5'h1F && (mem_data_out_type_0[0][10:8]==3'b010 || mem_data_out_type_0[0][10:8]==3'b011 || mem_data_out_type_0[0][10:8]==3'b110)) ||
-				(mem_instruction_fetch_returning_word_count>3'd0 && mem_data_out_type_0[1][15:11]==5'h1F && (mem_data_out_type_0[1][10:8]==3'b010 || mem_data_out_type_0[1][10:8]==3'b011 || mem_data_out_type_0[1][10:8]==3'b110)) ||
-				(mem_instruction_fetch_returning_word_count>3'd1 && mem_data_out_type_0[2][15:11]==5'h1F && (mem_data_out_type_0[2][10:8]==3'b010 || mem_data_out_type_0[2][10:8]==3'b011 || mem_data_out_type_0[2][10:8]==3'b110)) ||
-				(mem_instruction_fetch_returning_word_count>3'd2 && mem_data_out_type_0[3][15:11]==5'h1F && (mem_data_out_type_0[3][10:8]==3'b010 || mem_data_out_type_0[3][10:8]==3'b011 || mem_data_out_type_0[3][10:8]==3'b110)) ||
-				(mem_instruction_fetch_returning_word_count>3'd3 && mem_data_out_type_0[4][15:11]==5'h1F && (mem_data_out_type_0[4][10:8]==3'b010 || mem_data_out_type_0[4][10:8]==3'b011 || mem_data_out_type_0[4][10:8]==3'b110)) ||
-				(mem_instruction_fetch_returning_word_count>3'd4 && mem_data_out_type_0[5][15:11]==5'h1F && (mem_data_out_type_0[5][10:8]==3'b010 || mem_data_out_type_0[5][10:8]==3'b011 || mem_data_out_type_0[5][10:8]==3'b110)) ||
-				(mem_instruction_fetch_returning_word_count>3'd5 && mem_data_out_type_0[6][15:11]==5'h1F && (mem_data_out_type_0[6][10:8]==3'b010 || mem_data_out_type_0[6][10:8]==3'b011 || mem_data_out_type_0[6][10:8]==3'b110)) ||
-				(mem_instruction_fetch_returning_word_count>3'd6 && mem_data_out_type_0[7][15:11]==5'h1F && (mem_data_out_type_0[7][10:8]==3'b010 || mem_data_out_type_0[7][10:8]==3'b011 || mem_data_out_type_0[7][10:8]==3'b110))
-				) isWaitingForJump<=1;
-				*/
 				hyper_jump_guess_source_table[7]<=mem_data_out_type_0[7][7:0];
 				hyper_jump_guess_source_table[6]<=mem_data_out_type_0[6][7:0];
 				hyper_jump_guess_source_table[5]<=mem_data_out_type_0[5][7:0];
@@ -3275,8 +3129,6 @@ always @(posedge main_clk) begin
 				hyper_jump_guess_source_single<=8'hx;
 				
 				if (mem_instruction_fetch_returning_word_count>3'd6) begin
-					//fifo_instruction_cache_data[fifo_instruction_cache_size_after_read+4'h7]<=mem_data_out_type_0[7];
-					//fifo_instruction_cache_addresses[fifo_instruction_cache_size_after_read+4'h7]<=instruction_fetch_address+6'hE;
 					if (mem_data_out_type_0[7][15:11]==5'h1F && (mem_data_out_type_0[7][10:8]==3'b010 || mem_data_out_type_0[7][10:8]==3'b011 || mem_data_out_type_0[7][10:8]==3'b110)) begin
 						isWaitingForJump<=1;
 						if (mem_data_out_type_0[7][10:8]!=3'b011) begin
@@ -3293,8 +3145,6 @@ always @(posedge main_clk) begin
 					end
 				end
 				if (mem_instruction_fetch_returning_word_count>3'd5) begin
-					//fifo_instruction_cache_data[fifo_instruction_cache_size_after_read+4'h6]<=mem_data_out_type_0[6];
-					//fifo_instruction_cache_addresses[fifo_instruction_cache_size_after_read+4'h6]<=instruction_fetch_address+6'hC;
 					if (mem_data_out_type_0[6][15:11]==5'h1F && (mem_data_out_type_0[6][10:8]==3'b010 || mem_data_out_type_0[6][10:8]==3'b011 || mem_data_out_type_0[6][10:8]==3'b110)) begin
 						isWaitingForJump<=1;
 						if (mem_data_out_type_0[6][10:8]!=3'b011) begin
@@ -3311,8 +3161,6 @@ always @(posedge main_clk) begin
 					end
 				end
 				if (mem_instruction_fetch_returning_word_count>3'd4) begin
-					//fifo_instruction_cache_data[fifo_instruction_cache_size_after_read+4'h5]<=mem_data_out_type_0[5];
-					//fifo_instruction_cache_addresses[fifo_instruction_cache_size_after_read+4'h5]<=instruction_fetch_address+6'hA;
 					if (mem_data_out_type_0[5][15:11]==5'h1F && (mem_data_out_type_0[5][10:8]==3'b010 || mem_data_out_type_0[5][10:8]==3'b011 || mem_data_out_type_0[5][10:8]==3'b110)) begin
 						isWaitingForJump<=1;
 						if (mem_data_out_type_0[5][10:8]!=3'b011) begin
@@ -3329,8 +3177,6 @@ always @(posedge main_clk) begin
 					end
 				end
 				if (mem_instruction_fetch_returning_word_count>3'd3) begin
-					//fifo_instruction_cache_data[fifo_instruction_cache_size_after_read+4'h4]<=mem_data_out_type_0[4];
-					//fifo_instruction_cache_addresses[fifo_instruction_cache_size_after_read+4'h4]<=instruction_fetch_address+6'h8;
 					if (mem_data_out_type_0[4][15:11]==5'h1F && (mem_data_out_type_0[4][10:8]==3'b010 || mem_data_out_type_0[4][10:8]==3'b011 || mem_data_out_type_0[4][10:8]==3'b110)) begin
 						isWaitingForJump<=1;
 						if (mem_data_out_type_0[4][10:8]!=3'b011) begin
@@ -3347,8 +3193,6 @@ always @(posedge main_clk) begin
 					end
 				end
 				if (mem_instruction_fetch_returning_word_count>3'd2) begin
-					//fifo_instruction_cache_data[fifo_instruction_cache_size_after_read+4'h3]<=mem_data_out_type_0[3];
-					//fifo_instruction_cache_addresses[fifo_instruction_cache_size_after_read+4'h3]<=instruction_fetch_address+6'h6;
 					if (mem_data_out_type_0[3][15:11]==5'h1F && (mem_data_out_type_0[3][10:8]==3'b010 || mem_data_out_type_0[3][10:8]==3'b011 || mem_data_out_type_0[3][10:8]==3'b110)) begin
 						isWaitingForJump<=1;
 						if (mem_data_out_type_0[3][10:8]!=3'b011) begin
@@ -3365,8 +3209,6 @@ always @(posedge main_clk) begin
 					end
 				end
 				if (mem_instruction_fetch_returning_word_count>3'd1) begin
-					//fifo_instruction_cache_data[fifo_instruction_cache_size_after_read+4'h2]<=mem_data_out_type_0[2];
-					//fifo_instruction_cache_addresses[fifo_instruction_cache_size_after_read+4'h2]<=instruction_fetch_address+6'h4;
 					if (mem_data_out_type_0[2][15:11]==5'h1F && (mem_data_out_type_0[2][10:8]==3'b010 || mem_data_out_type_0[2][10:8]==3'b011 || mem_data_out_type_0[2][10:8]==3'b110)) begin
 						isWaitingForJump<=1;
 						if (mem_data_out_type_0[2][10:8]!=3'b011) begin
@@ -3383,8 +3225,6 @@ always @(posedge main_clk) begin
 					end
 				end
 				if (mem_instruction_fetch_returning_word_count>3'd0) begin
-					//fifo_instruction_cache_data[fifo_instruction_cache_size_after_read+4'h1]<=mem_data_out_type_0[1];
-					//fifo_instruction_cache_addresses[fifo_instruction_cache_size_after_read+4'h1]<=instruction_fetch_address+6'h2;
 					if (mem_data_out_type_0[1][15:11]==5'h1F && (mem_data_out_type_0[1][10:8]==3'b010 || mem_data_out_type_0[1][10:8]==3'b011 || mem_data_out_type_0[1][10:8]==3'b110)) begin
 						isWaitingForJump<=1;
 						if (mem_data_out_type_0[1][10:8]!=3'b011) begin
@@ -3400,8 +3240,6 @@ always @(posedge main_clk) begin
 						end
 					end
 				end
-					//fifo_instruction_cache_data[fifo_instruction_cache_size_after_read+4'h0]<=mem_data_out_type_0[0];
-					//fifo_instruction_cache_addresses[fifo_instruction_cache_size_after_read+4'h0]<=instruction_fetch_address+6'h0;
 					if (mem_data_out_type_0[0][15:11]==5'h1F && (mem_data_out_type_0[0][10:8]==3'b010 || mem_data_out_type_0[0][10:8]==3'b011 || mem_data_out_type_0[0][10:8]==3'b110)) begin
 						isWaitingForJump<=1;
 						if (mem_data_out_type_0[0][10:8]!=3'b011) begin
@@ -3437,26 +3275,7 @@ always @(posedge main_clk) begin
 			if (hyper_jump_potentially_valid_type0 && !mem_is_hyper_instruction_fetch_0_requesting && instruction_jump_address[25:1]==hyper_jump_guess_address_saved[25:1]) begin
 				instruction_fetch_address<={hyper_jump_guess_address_saved[25:1]+hyper_instruction_fetch_size,1'b0};
 				fifo_instruction_cache_size<=hyper_instruction_fetch_size;
-				/*
-				fifo_instruction_cache_addresses[0]<=hyper_jump_guess_address_saved[25:0]+{4'h0,1'b0};
-				fifo_instruction_cache_addresses[1]<=hyper_jump_guess_address_saved[25:0]+{4'h1,1'b0};
-				fifo_instruction_cache_addresses[2]<=hyper_jump_guess_address_saved[25:0]+{4'h2,1'b0};
-				fifo_instruction_cache_addresses[3]<=hyper_jump_guess_address_saved[25:0]+{4'h3,1'b0};
-				fifo_instruction_cache_addresses[4]<=hyper_jump_guess_address_saved[25:0]+{4'h4,1'b0};
-				fifo_instruction_cache_addresses[5]<=hyper_jump_guess_address_saved[25:0]+{4'h5,1'b0};
-				fifo_instruction_cache_addresses[6]<=hyper_jump_guess_address_saved[25:0]+{4'h6,1'b0};
-				fifo_instruction_cache_addresses[7]<=hyper_jump_guess_address_saved[25:0]+{4'h7,1'b0};
-				fifo_instruction_cache_addresses[8]<=hyper_jump_guess_address_saved[25:0]+{4'h8,1'b0};
-				fifo_instruction_cache_addresses[9]<=hyper_jump_guess_address_saved[25:0]+{4'h9,1'b0};
-				fifo_instruction_cache_addresses[10]<=hyper_jump_guess_address_saved[25:0]+{4'hA,1'b0};
-				fifo_instruction_cache_addresses[11]<=hyper_jump_guess_address_saved[25:0]+{4'hB,1'b0};
-				fifo_instruction_cache_addresses[12]<=hyper_jump_guess_address_saved[25:0]+{4'hC,1'b0};
-				fifo_instruction_cache_addresses[13]<=hyper_jump_guess_address_saved[25:0]+{4'hD,1'b0};
-				fifo_instruction_cache_addresses[14]<=hyper_jump_guess_address_saved[25:0]+{4'hE,1'b0};
-				fifo_instruction_cache_addresses[15]<=hyper_jump_guess_address_saved[25:0]+{4'hF,1'b0};
-				
-				fifo_instruction_cache_data[15:0]<=hyper_instruction_fetch_storage[15:0]; // todo: do jump analysis on this data
-				*/
+				// todo: do jump analysis on the data coming into the instruction cache
 			end else begin
 				instruction_fetch_address<=instruction_jump_address;
 				is_instruction_cache_requesting<=1;

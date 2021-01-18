@@ -171,10 +171,6 @@ core_main core__main(
 	VGA_HS,
 	VGA_VS,
 	
-	hex_display,
-	
-	SW,
-	
 	vga_clk,
 	main_clk,
 	
@@ -184,6 +180,10 @@ core_main core__main(
 	debug_scheduler
 );
 
+generate_hex_display_base10 generate_hex_display_inst(
+	hex_display,
+	debug_user_reg[SW[3:0]]
+);
 
 endmodule
 
@@ -206,15 +206,6 @@ wire		     [3:0]		VGA_G;
 wire		     [3:0]		VGA_R;
 wire		          		VGA_HS;
 wire		          		VGA_VS;
-
-wire [7:0] hex_display [5:0];
-	
-wire 		     [9:0]		SW;
-
-assign SW[0]=1'b1;
-assign SW[1]=1'b0;
-assign SW[2]=1'b1;
-assign SW[3]=1'b1;
 
 wire [15:0] debug_user_reg [15:0];
 wire [15:0] debug_stack_pointer;
@@ -276,10 +267,6 @@ core_main core__main(
 	VGA_R,
 	VGA_HS,
 	VGA_VS,
-	
-	hex_display,
-	
-	SW,
 	
 	vga_clk,
 	main_clk,
