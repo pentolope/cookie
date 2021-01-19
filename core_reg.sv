@@ -872,12 +872,12 @@ always @(posedge main_clk) begin
 		unique case (instructionInID)
 		0:begin
 			wa0<=1;
-			wv0<={8'h0,instructionIn[11:4]};
+			wv1<={8'h0,instructionIn[11:4]};
 			wa1<=1;
 		end
 		1:begin
 			wa0<=1;
-			wv0<={instructionIn[11:4],nvr0[7:0]};
+			wv1<={instructionIn[11:4],nvr0[7:0]};
 			wa1<=1;
 		end
 		2:begin
@@ -889,7 +889,7 @@ always @(posedge main_clk) begin
 				mem_is_stack_access_requesting<=1;
 			end
 			1:begin
-				wv1<=mem_data_out_large[0];
+				wv0<=mem_data_out_large[0];
 				wa1<=1;
 			end
 			endcase
@@ -901,14 +901,17 @@ always @(posedge main_clk) begin
 			mem_target_address_stack<=temporary1;
 		end
 		4:begin
+			wa0<=1;
 			wv1<=temporary0;
 			wa1<=1;
 		end
 		5:begin
+			wa0<=1;
 			wv1<=temporary0;
 			wa1<=1;
 		end
 		6:begin
+			wa0<=1;
 			wv1<=temporary0;
 			wa1<=1;
 		end
@@ -918,7 +921,7 @@ always @(posedge main_clk) begin
 			0:begin
 			end
 			1:begin
-				wv0<={15'h0,adderOutput[16]};
+				wv1<={15'h0,adderOutput[16]};
 				wa1<=1;
 				wv2<=adderOutput[15:0];
 				wa3<=1;
@@ -935,7 +938,7 @@ always @(posedge main_clk) begin
 				mem_is_general_access_requesting<=1;
 			end
 			1:begin
-				wv1<=mem_data_out_small;
+				wv0<=mem_data_out_small;
 				wa1<=1;
 			end
 			endcase
@@ -953,7 +956,7 @@ always @(posedge main_clk) begin
 			0:begin
 			end
 			1:begin
-				wv0<=adderOutput[15:0];
+				wv1<=adderOutput[15:0];
 				wa1<=1;
 			end
 			endcase
@@ -964,7 +967,7 @@ always @(posedge main_clk) begin
 			0:begin
 			end
 			1:begin
-				wv0<=adderOutput[15:0];
+				wv1<=adderOutput[15:0];
 				wv5<={15'h0,adderOutput[16]};
 				wa1<=1;
 				wa5<=1;
@@ -980,7 +983,7 @@ always @(posedge main_clk) begin
 			0:begin
 			end
 			1:begin
-				wv0<=adderOutput[15:0];
+				wv1<=adderOutput[15:0];
 				wa1<=1;
 			end
 			endcase
@@ -991,7 +994,7 @@ always @(posedge main_clk) begin
 			0:begin
 			end
 			1:begin
-				wv0<={15'h0,adderOutput[16]};
+				wv1<={15'h0,adderOutput[16]};
 				wa1<=1;
 			end
 			endcase
@@ -1033,7 +1036,7 @@ always @(posedge main_clk) begin
 			end
 			1:begin
 				doWrite_sp<=1'b1;
-				wv1<=mem_data_out_large[0];
+				wv0<=mem_data_out_large[0];
 				wa1<=1;
 				writeValue_sp<=stack_pointer_p2;
 				
@@ -1052,7 +1055,7 @@ always @(posedge main_clk) begin
 			end
 			1:begin
 				doWrite_sp<=1'b1;
-				wv1<=mem_data_out_large[0];
+				wv0<=mem_data_out_large[0];
 				wv3<=mem_data_out_large[1];
 				wa1<=1;
 				wa3<=1;
@@ -1063,15 +1066,15 @@ always @(posedge main_clk) begin
 			endcase
 		end
 		20:begin
-			wv1<=nvr1;
+			wv0<=nvr1;
 			wa1<=1;
 		end
 		21:begin
-			wv1<={nvr1[ 7:0],nvr1[15:8]};
+			wv0<={nvr1[ 7:0],nvr1[15:8]};
 			wa1<=1;
 		end
 		22:begin
-			wv1<={1'b0,nvr1[15:1]};
+			wv0<={1'b0,nvr1[15:1]};
 			wa1<=1;
 		end
 		23:begin
@@ -1079,7 +1082,7 @@ always @(posedge main_clk) begin
 			0:begin
 			end
 			1:begin
-				wv1<=mul16Temp;
+				wv0<=mul16Temp;
 				wa1<=1;
 			end
 			endcase
@@ -1116,7 +1119,7 @@ always @(posedge main_clk) begin
 			5:begin
 			end
 			6:begin
-				wv0<={divTemp3[15:3],divPartialResult};
+				wv1<={divTemp3[15:3],divPartialResult};
 				wv2<=divTable2[2][15:0];
 				wa1<=1;
 				wa3<=1;
@@ -1184,7 +1187,7 @@ always @(posedge main_clk) begin
 				mem_is_general_access_requesting<=1;
 			end
 			1:begin
-				wv1<=mem_data_out_small;
+				wv0<=mem_data_out_small;
 				wa1<=1;
 			end
 			endcase
@@ -1206,7 +1209,7 @@ always @(posedge main_clk) begin
 			1:begin
 				doWrite_sp<=1'b1;
 				writeValue_sp<=temporary7;
-				wv0<=temporary7;
+				wv1<=temporary7;
 				wa1<=1;
 			end
 			endcase
@@ -2382,12 +2385,54 @@ reg isWaitingForJump=0;
 
 reg [31:0] hyper_jump_guess_address_table [7:0];
 reg [7:0] hyper_jump_guess_source_table [7:0];
+reg [31:0] hyper_jump_guess_address_table_alt [15:0];
+reg [7:0] hyper_jump_guess_source_table_alt [15:0];
+
+always_comb begin
+	hyper_jump_guess_source_table_alt[15]=hyper_instruction_fetch_storage[15][7:0];
+	hyper_jump_guess_source_table_alt[14]=hyper_instruction_fetch_storage[14][7:0];
+	hyper_jump_guess_source_table_alt[13]=hyper_instruction_fetch_storage[13][7:0];
+	hyper_jump_guess_source_table_alt[12]=hyper_instruction_fetch_storage[12][7:0];
+	hyper_jump_guess_source_table_alt[11]=hyper_instruction_fetch_storage[11][7:0];
+	hyper_jump_guess_source_table_alt[10]=hyper_instruction_fetch_storage[10][7:0];
+	hyper_jump_guess_source_table_alt[ 9]=hyper_instruction_fetch_storage[ 9][7:0];
+	hyper_jump_guess_source_table_alt[ 8]=hyper_instruction_fetch_storage[ 8][7:0];
+	hyper_jump_guess_source_table_alt[ 7]=hyper_instruction_fetch_storage[ 7][7:0];
+	hyper_jump_guess_source_table_alt[ 6]=hyper_instruction_fetch_storage[ 6][7:0];
+	hyper_jump_guess_source_table_alt[ 5]=hyper_instruction_fetch_storage[ 5][7:0];
+	hyper_jump_guess_source_table_alt[ 4]=hyper_instruction_fetch_storage[ 4][7:0];
+	hyper_jump_guess_source_table_alt[ 3]=hyper_instruction_fetch_storage[ 3][7:0];
+	hyper_jump_guess_source_table_alt[ 2]=hyper_instruction_fetch_storage[ 2][7:0];
+	hyper_jump_guess_source_table_alt[ 1]=hyper_instruction_fetch_storage[ 1][7:0];
+	hyper_jump_guess_source_table_alt[ 0]=hyper_instruction_fetch_storage[ 0][7:0];
+	
+	hyper_jump_guess_address_table_alt[15]={hyper_instruction_fetch_storage[14][11:4],hyper_instruction_fetch_storage[13][11:4],hyper_instruction_fetch_storage[12][11:4],hyper_instruction_fetch_storage[11][11:4]};
+	hyper_jump_guess_address_table_alt[14]={hyper_instruction_fetch_storage[13][11:4],hyper_instruction_fetch_storage[12][11:4],hyper_instruction_fetch_storage[11][11:4],hyper_instruction_fetch_storage[10][11:4]};
+	hyper_jump_guess_address_table_alt[13]={hyper_instruction_fetch_storage[12][11:4],hyper_instruction_fetch_storage[11][11:4],hyper_instruction_fetch_storage[10][11:4],hyper_instruction_fetch_storage[ 9][11:4]};
+	hyper_jump_guess_address_table_alt[12]={hyper_instruction_fetch_storage[11][11:4],hyper_instruction_fetch_storage[10][11:4],hyper_instruction_fetch_storage[ 9][11:4],hyper_instruction_fetch_storage[ 8][11:4]};
+	hyper_jump_guess_address_table_alt[11]={hyper_instruction_fetch_storage[10][11:4],hyper_instruction_fetch_storage[ 9][11:4],hyper_instruction_fetch_storage[ 8][11:4],hyper_instruction_fetch_storage[ 7][11:4]};
+	hyper_jump_guess_address_table_alt[10]={hyper_instruction_fetch_storage[ 9][11:4],hyper_instruction_fetch_storage[ 8][11:4],hyper_instruction_fetch_storage[ 7][11:4],hyper_instruction_fetch_storage[ 6][11:4]};
+	hyper_jump_guess_address_table_alt[ 9]={hyper_instruction_fetch_storage[ 8][11:4],hyper_instruction_fetch_storage[ 7][11:4],hyper_instruction_fetch_storage[ 6][11:4],hyper_instruction_fetch_storage[ 5][11:4]};
+	hyper_jump_guess_address_table_alt[ 8]={hyper_instruction_fetch_storage[ 7][11:4],hyper_instruction_fetch_storage[ 6][11:4],hyper_instruction_fetch_storage[ 5][11:4],hyper_instruction_fetch_storage[ 4][11:4]};
+	hyper_jump_guess_address_table_alt[ 7]={hyper_instruction_fetch_storage[ 6][11:4],hyper_instruction_fetch_storage[ 5][11:4],hyper_instruction_fetch_storage[ 4][11:4],hyper_instruction_fetch_storage[ 3][11:4]};
+	hyper_jump_guess_address_table_alt[ 6]={hyper_instruction_fetch_storage[ 5][11:4],hyper_instruction_fetch_storage[ 4][11:4],hyper_instruction_fetch_storage[ 3][11:4],hyper_instruction_fetch_storage[ 2][11:4]};
+	hyper_jump_guess_address_table_alt[ 5]={hyper_instruction_fetch_storage[ 4][11:4],hyper_instruction_fetch_storage[ 3][11:4],hyper_instruction_fetch_storage[ 2][11:4],hyper_instruction_fetch_storage[ 1][11:4]};
+	hyper_jump_guess_address_table_alt[ 4]={hyper_instruction_fetch_storage[ 3][11:4],hyper_instruction_fetch_storage[ 2][11:4],hyper_instruction_fetch_storage[ 1][11:4],hyper_instruction_fetch_storage[ 0][11:4]};
+	hyper_jump_guess_address_table_alt[ 3]={8'hx,8'hx,8'hx,8'hx};
+	hyper_jump_guess_address_table_alt[ 2]={8'hx,8'hx,8'hx,8'hx};
+	hyper_jump_guess_address_table_alt[ 1]={8'hx,8'hx,8'hx,8'hx};
+	hyper_jump_guess_address_table_alt[ 0]={8'hx,8'hx,8'hx,8'hx};
+end
+
 
 reg hyper_jump_potentially_valid_type0=0; // type0 is if the hyper_jump_guess_address_saved is ready
 reg hyper_jump_potentially_valid_type1=0; // type1 is if either source_table or address_table was just filled
 reg hyper_jump_potentially_valid_type2=0; // type2 is if source_table should be used, otherwise address_table should be used
+reg hyper_jump_potentially_valid_type3=0; // type3 is if this hyper jump calculation is instead from the alternative version, which means this hyper jump was initiated from the hyper jump data
 reg [2:0] hyper_jump_look_index;
+reg [2:0] hyper_jump_look_index_alt;
 wire [31:0] hyper_jump_guess_address_calc=hyper_jump_potentially_valid_type2?({user_reg[hyper_jump_guess_source_table[hyper_jump_look_index][7:4]],user_reg[hyper_jump_guess_source_table[hyper_jump_look_index][3:0]]}):(hyper_jump_guess_address_table[hyper_jump_look_index]);
+wire [31:0] hyper_jump_guess_address_calc_alt=hyper_jump_potentially_valid_type2?({user_reg[hyper_jump_guess_source_table_alt[hyper_jump_look_index_alt][7:4]],user_reg[hyper_jump_guess_source_table_alt[hyper_jump_look_index_alt][3:0]]}):(hyper_jump_guess_address_table_alt[hyper_jump_look_index_alt]);
 
 reg [31:0] hyper_jump_guess_address_saved;
 reg [4:0] hyper_instruction_fetch_size;
@@ -3013,22 +3058,22 @@ always @(posedge main_clk) begin
 	fifo_instruction_cache_addresses[4'hE]<=fifo_instruction_cache_addresses_future_E[fifo_instruction_cache_indexes_future[4'hE]];
 	fifo_instruction_cache_addresses[4'hF]<=fifo_instruction_cache_addresses_future_F[fifo_instruction_cache_indexes_future[4'hF]];
 	
-	fifo_instruction_cache_addresses[0][0]<=1'b0;
-	fifo_instruction_cache_addresses[1][0]<=1'b0;
-	fifo_instruction_cache_addresses[2][0]<=1'b0;
-	fifo_instruction_cache_addresses[3][0]<=1'b0;
-	fifo_instruction_cache_addresses[4][0]<=1'b0;
-	fifo_instruction_cache_addresses[5][0]<=1'b0;
-	fifo_instruction_cache_addresses[6][0]<=1'b0;
-	fifo_instruction_cache_addresses[7][0]<=1'b0;
-	fifo_instruction_cache_addresses[8][0]<=1'b0;
-	fifo_instruction_cache_addresses[9][0]<=1'b0;
-	fifo_instruction_cache_addresses[10][0]<=1'b0;
-	fifo_instruction_cache_addresses[11][0]<=1'b0;
-	fifo_instruction_cache_addresses[12][0]<=1'b0;
-	fifo_instruction_cache_addresses[13][0]<=1'b0;
-	fifo_instruction_cache_addresses[14][0]<=1'b0;
-	fifo_instruction_cache_addresses[15][0]<=1'b0;
+	fifo_instruction_cache_addresses[4'h0]<=1'b0;
+	fifo_instruction_cache_addresses[4'h1]<=1'b0;
+	fifo_instruction_cache_addresses[4'h2]<=1'b0;
+	fifo_instruction_cache_addresses[4'h3]<=1'b0;
+	fifo_instruction_cache_addresses[4'h4]<=1'b0;
+	fifo_instruction_cache_addresses[4'h5]<=1'b0;
+	fifo_instruction_cache_addresses[4'h6]<=1'b0;
+	fifo_instruction_cache_addresses[4'h7]<=1'b0;
+	fifo_instruction_cache_addresses[4'h8]<=1'b0;
+	fifo_instruction_cache_addresses[4'h9]<=1'b0;
+	fifo_instruction_cache_addresses[4'hA]<=1'b0;
+	fifo_instruction_cache_addresses[4'hB]<=1'b0;
+	fifo_instruction_cache_addresses[4'hC]<=1'b0;
+	fifo_instruction_cache_addresses[4'hD]<=1'b0;
+	fifo_instruction_cache_addresses[4'hE]<=1'b0;
+	fifo_instruction_cache_addresses[4'hF]<=1'b0;
 end
 
 always @(posedge main_clk) begin
@@ -3043,9 +3088,15 @@ always @(posedge main_clk) begin
 	if (mem_void_hyper_instruction_fetch) mem_void_hyper_instruction_fetch<=0;
 	
 	if (hyper_jump_potentially_valid_type1) begin
-		hyper_jump_guess_address_saved<=hyper_jump_guess_address_calc;
-		mem_target_address_hyper_instruction_fetch_0<={hyper_jump_guess_address_calc[25:1],1'b0};
-		mem_target_address_hyper_instruction_fetch_1<={hyper_jump_guess_address_calc[25:4]+1'b1,4'b0};
+		if (hyper_jump_potentially_valid_type3) begin
+			hyper_jump_guess_address_saved<=hyper_jump_guess_address_calc_alt;
+			mem_target_address_hyper_instruction_fetch_0<={hyper_jump_guess_address_calc_alt[25:1],1'b0};
+			mem_target_address_hyper_instruction_fetch_1<={hyper_jump_guess_address_calc_alt[25:4]+1'b1,4'b0};
+		end else begin
+			hyper_jump_guess_address_saved<=hyper_jump_guess_address_calc;
+			mem_target_address_hyper_instruction_fetch_0<={hyper_jump_guess_address_calc[25:1],1'b0};
+			mem_target_address_hyper_instruction_fetch_1<={hyper_jump_guess_address_calc[25:4]+1'b1,4'b0};
+		end
 		hyper_jump_potentially_valid_type2<=0;
 		hyper_jump_potentially_valid_type1<=0;
 		hyper_jump_potentially_valid_type0<=1;
@@ -3116,6 +3167,7 @@ always @(posedge main_clk) begin
 				hyper_jump_guess_address_table[2]<={mem_data_out_type_0[1][11:4],mem_data_out_type_0[0][11:4],fifo_instruction_cache_data_at_write_addr_m1[11:4],fifo_instruction_cache_data_at_write_addr_m2[11:4]};
 				hyper_jump_guess_address_table[1]<={mem_data_out_type_0[0][11:4],fifo_instruction_cache_data_at_write_addr_m1[11:4],fifo_instruction_cache_data_at_write_addr_m2[11:4],fifo_instruction_cache_data_at_write_addr_m3[11:4]};
 				hyper_jump_guess_address_table[0]<={fifo_instruction_cache_data_at_write_addr_m1[11:4],fifo_instruction_cache_data_at_write_addr_m2[11:4],fifo_instruction_cache_data_at_write_addr_m3[11:4],fifo_instruction_cache_data_at_write_addr_m4[11:4]};
+				hyper_jump_potentially_valid_type3<=0;
 				hyper_jump_potentially_valid_type2<=0;
 				hyper_jump_potentially_valid_type1<=0;
 				hyper_jump_potentially_valid_type0<=0;
@@ -3247,15 +3299,226 @@ always @(posedge main_clk) begin
 			mem_is_hyper_instruction_fetch_0_requesting<=0;
 			mem_is_hyper_instruction_fetch_1_requesting<=0;
 			mem_void_hyper_instruction_fetch<=1;
+			hyper_jump_potentially_valid_type3<=1;
 			hyper_jump_potentially_valid_type2<=0;
 			hyper_jump_potentially_valid_type1<=0;
 			hyper_jump_potentially_valid_type0<=0;
 			hyper_instruction_fetch_size<=0;
+			hyper_jump_look_index_alt<=4'hx;
 			
 			if (hyper_jump_potentially_valid_type0 && !mem_is_hyper_instruction_fetch_0_requesting && instruction_jump_address[25:1]==hyper_jump_guess_address_saved[25:1]) begin
 				instruction_fetch_address<={hyper_jump_guess_address_saved[25:1]+hyper_instruction_fetch_size,1'b0};
 				fifo_instruction_cache_size<=hyper_instruction_fetch_size;
-				// todo: do jump analysis on the data coming into the instruction cache
+				is_instruction_cache_requesting<=0;
+				
+				if (hyper_instruction_fetch_size>5'd15) begin
+					if (hyper_instruction_fetch_storage[15][15:11]==5'h1F && (hyper_instruction_fetch_storage[15][10:8]==3'b010 || hyper_instruction_fetch_storage[15][10:8]==3'b011 || hyper_instruction_fetch_storage[15][10:8]==3'b110)) begin
+						isWaitingForJump<=1;
+						if (hyper_instruction_fetch_storage[15][10:8]!=3'b011) begin
+							if (hyper_instruction_fetch_storage[14][15:13]==3'h0 && hyper_instruction_fetch_storage[13][15:13]==3'h0 && hyper_instruction_fetch_storage[12][15:13]==3'h0 && hyper_instruction_fetch_storage[11][15:13]==3'h0) begin
+								hyper_jump_potentially_valid_type2<=0;
+							end else begin
+								hyper_jump_potentially_valid_type2<=1;
+							end
+							hyper_jump_look_index_alt<=15;
+							hyper_jump_potentially_valid_type1<=1;
+						end
+					end
+				end
+				if (hyper_instruction_fetch_size>5'd14) begin
+					if (hyper_instruction_fetch_storage[14][15:11]==5'h1F && (hyper_instruction_fetch_storage[14][10:8]==3'b010 || hyper_instruction_fetch_storage[14][10:8]==3'b011 || hyper_instruction_fetch_storage[14][10:8]==3'b110)) begin
+						isWaitingForJump<=1;
+						if (hyper_instruction_fetch_storage[14][10:8]!=3'b011) begin
+							if (hyper_instruction_fetch_storage[13][15:13]==3'h0 && hyper_instruction_fetch_storage[12][15:13]==3'h0 && hyper_instruction_fetch_storage[11][15:13]==3'h0 && hyper_instruction_fetch_storage[10][15:13]==3'h0) begin
+								hyper_jump_potentially_valid_type2<=0;
+							end else begin
+								hyper_jump_potentially_valid_type2<=1;
+							end
+							hyper_jump_look_index_alt<=14;
+							hyper_jump_potentially_valid_type1<=1;
+						end
+					end
+				end
+				if (hyper_instruction_fetch_size>5'd13) begin
+					if (hyper_instruction_fetch_storage[13][15:11]==5'h1F && (hyper_instruction_fetch_storage[13][10:8]==3'b010 || hyper_instruction_fetch_storage[13][10:8]==3'b011 || hyper_instruction_fetch_storage[13][10:8]==3'b110)) begin
+						isWaitingForJump<=1;
+						if (hyper_instruction_fetch_storage[13][10:8]!=3'b011) begin
+							if (hyper_instruction_fetch_storage[12][15:13]==3'h0 && hyper_instruction_fetch_storage[11][15:13]==3'h0 && hyper_instruction_fetch_storage[10][15:13]==3'h0 && hyper_instruction_fetch_storage[9][15:13]==3'h0) begin
+								hyper_jump_potentially_valid_type2<=0;
+							end else begin
+								hyper_jump_potentially_valid_type2<=1;
+							end
+							hyper_jump_look_index_alt<=13;
+							hyper_jump_potentially_valid_type1<=1;
+						end
+					end
+				end
+				if (hyper_instruction_fetch_size>5'd12) begin
+					if (hyper_instruction_fetch_storage[12][15:11]==5'h1F && (hyper_instruction_fetch_storage[12][10:8]==3'b010 || hyper_instruction_fetch_storage[12][10:8]==3'b011 || hyper_instruction_fetch_storage[12][10:8]==3'b110)) begin
+						isWaitingForJump<=1;
+						if (hyper_instruction_fetch_storage[12][10:8]!=3'b011) begin
+							if (hyper_instruction_fetch_storage[11][15:13]==3'h0 && hyper_instruction_fetch_storage[10][15:13]==3'h0 && hyper_instruction_fetch_storage[9][15:13]==3'h0 && hyper_instruction_fetch_storage[8][15:13]==3'h0) begin
+								hyper_jump_potentially_valid_type2<=0;
+							end else begin
+								hyper_jump_potentially_valid_type2<=1;
+							end
+							hyper_jump_look_index_alt<=12;
+							hyper_jump_potentially_valid_type1<=1;
+						end
+					end
+				end
+				if (hyper_instruction_fetch_size>5'd11) begin
+					if (hyper_instruction_fetch_storage[11][15:11]==5'h1F && (hyper_instruction_fetch_storage[11][10:8]==3'b010 || hyper_instruction_fetch_storage[11][10:8]==3'b011 || hyper_instruction_fetch_storage[11][10:8]==3'b110)) begin
+						isWaitingForJump<=1;
+						if (hyper_instruction_fetch_storage[11][10:8]!=3'b011) begin
+							if (hyper_instruction_fetch_storage[10][15:13]==3'h0 && hyper_instruction_fetch_storage[9][15:13]==3'h0 && hyper_instruction_fetch_storage[8][15:13]==3'h0 && hyper_instruction_fetch_storage[7][15:13]==3'h0) begin
+								hyper_jump_potentially_valid_type2<=0;
+							end else begin
+								hyper_jump_potentially_valid_type2<=1;
+							end
+							hyper_jump_look_index_alt<=11;
+							hyper_jump_potentially_valid_type1<=1;
+						end
+					end
+				end
+				if (hyper_instruction_fetch_size>5'd10) begin
+					if (hyper_instruction_fetch_storage[10][15:11]==5'h1F && (hyper_instruction_fetch_storage[10][10:8]==3'b010 || hyper_instruction_fetch_storage[10][10:8]==3'b011 || hyper_instruction_fetch_storage[10][10:8]==3'b110)) begin
+						isWaitingForJump<=1;
+						if (hyper_instruction_fetch_storage[10][10:8]!=3'b011) begin
+							if (hyper_instruction_fetch_storage[9][15:13]==3'h0 && hyper_instruction_fetch_storage[8][15:13]==3'h0 && hyper_instruction_fetch_storage[7][15:13]==3'h0 && hyper_instruction_fetch_storage[6][15:13]==3'h0) begin
+								hyper_jump_potentially_valid_type2<=0;
+							end else begin
+								hyper_jump_potentially_valid_type2<=1;
+							end
+							hyper_jump_look_index_alt<=10;
+							hyper_jump_potentially_valid_type1<=1;
+						end
+					end
+				end
+				if (hyper_instruction_fetch_size>5'd9) begin
+					if (hyper_instruction_fetch_storage[9][15:11]==5'h1F && (hyper_instruction_fetch_storage[9][10:8]==3'b010 || hyper_instruction_fetch_storage[9][10:8]==3'b011 || hyper_instruction_fetch_storage[9][10:8]==3'b110)) begin
+						isWaitingForJump<=1;
+						if (hyper_instruction_fetch_storage[9][10:8]!=3'b011) begin
+							if (hyper_instruction_fetch_storage[8][15:13]==3'h0 && hyper_instruction_fetch_storage[7][15:13]==3'h0 && hyper_instruction_fetch_storage[6][15:13]==3'h0 && hyper_instruction_fetch_storage[5][15:13]==3'h0) begin
+								hyper_jump_potentially_valid_type2<=0;
+							end else begin
+								hyper_jump_potentially_valid_type2<=1;
+							end
+							hyper_jump_look_index_alt<=9;
+							hyper_jump_potentially_valid_type1<=1;
+						end
+					end
+				end
+				if (hyper_instruction_fetch_size>5'd8) begin
+					if (hyper_instruction_fetch_storage[8][15:11]==5'h1F && (hyper_instruction_fetch_storage[8][10:8]==3'b010 || hyper_instruction_fetch_storage[8][10:8]==3'b011 || hyper_instruction_fetch_storage[8][10:8]==3'b110)) begin
+						isWaitingForJump<=1;
+						if (hyper_instruction_fetch_storage[8][10:8]!=3'b011) begin
+							if (hyper_instruction_fetch_storage[7][15:13]==3'h0 && hyper_instruction_fetch_storage[6][15:13]==3'h0 && hyper_instruction_fetch_storage[5][15:13]==3'h0 && hyper_instruction_fetch_storage[4][15:13]==3'h0) begin
+								hyper_jump_potentially_valid_type2<=0;
+							end else begin
+								hyper_jump_potentially_valid_type2<=1;
+							end
+							hyper_jump_look_index_alt<=8;
+							hyper_jump_potentially_valid_type1<=1;
+						end
+					end
+				end
+				if (hyper_instruction_fetch_size>5'd7) begin
+					if (hyper_instruction_fetch_storage[7][15:11]==5'h1F && (hyper_instruction_fetch_storage[7][10:8]==3'b010 || hyper_instruction_fetch_storage[7][10:8]==3'b011 || hyper_instruction_fetch_storage[7][10:8]==3'b110)) begin
+						isWaitingForJump<=1;
+						if (hyper_instruction_fetch_storage[7][10:8]!=3'b011) begin
+							if (hyper_instruction_fetch_storage[6][15:13]==3'h0 && hyper_instruction_fetch_storage[5][15:13]==3'h0 && hyper_instruction_fetch_storage[4][15:13]==3'h0 && hyper_instruction_fetch_storage[3][15:13]==3'h0) begin
+								hyper_jump_potentially_valid_type2<=0;
+							end else begin
+								hyper_jump_potentially_valid_type2<=1;
+							end
+							hyper_jump_look_index_alt<=7;
+							hyper_jump_potentially_valid_type1<=1;
+						end
+					end
+				end
+				if (hyper_instruction_fetch_size>5'd6) begin
+					if (hyper_instruction_fetch_storage[6][15:11]==5'h1F && (hyper_instruction_fetch_storage[6][10:8]==3'b010 || hyper_instruction_fetch_storage[6][10:8]==3'b011 || hyper_instruction_fetch_storage[6][10:8]==3'b110)) begin
+						isWaitingForJump<=1;
+						if (hyper_instruction_fetch_storage[6][10:8]!=3'b011) begin
+							if (hyper_instruction_fetch_storage[5][15:13]==3'h0 && hyper_instruction_fetch_storage[4][15:13]==3'h0 && hyper_instruction_fetch_storage[3][15:13]==3'h0 && hyper_instruction_fetch_storage[2][15:13]==3'h0) begin
+								hyper_jump_potentially_valid_type2<=0;
+							end else begin
+								hyper_jump_potentially_valid_type2<=1;
+							end
+							hyper_jump_look_index_alt<=6;
+							hyper_jump_potentially_valid_type1<=1;
+						end
+					end
+				end
+				if (hyper_instruction_fetch_size>5'd5) begin
+					if (hyper_instruction_fetch_storage[5][15:11]==5'h1F && (hyper_instruction_fetch_storage[5][10:8]==3'b010 || hyper_instruction_fetch_storage[5][10:8]==3'b011 || hyper_instruction_fetch_storage[5][10:8]==3'b110)) begin
+						isWaitingForJump<=1;
+						if (hyper_instruction_fetch_storage[5][10:8]!=3'b011) begin
+							if (hyper_instruction_fetch_storage[4][15:13]==3'h0 && hyper_instruction_fetch_storage[3][15:13]==3'h0 && hyper_instruction_fetch_storage[2][15:13]==3'h0 && hyper_instruction_fetch_storage[1][15:13]==3'h0) begin
+								hyper_jump_potentially_valid_type2<=0;
+							end else begin
+								hyper_jump_potentially_valid_type2<=1;
+							end
+							hyper_jump_look_index_alt<=5;
+							hyper_jump_potentially_valid_type1<=1;
+						end
+					end
+				end
+				if (hyper_instruction_fetch_size>5'd4) begin
+					if (hyper_instruction_fetch_storage[4][15:11]==5'h1F && (hyper_instruction_fetch_storage[4][10:8]==3'b010 || hyper_instruction_fetch_storage[4][10:8]==3'b011 || hyper_instruction_fetch_storage[4][10:8]==3'b110)) begin
+						isWaitingForJump<=1;
+						if (hyper_instruction_fetch_storage[4][10:8]!=3'b011) begin
+							if (hyper_instruction_fetch_storage[3][15:13]==3'h0 && hyper_instruction_fetch_storage[2][15:13]==3'h0 && hyper_instruction_fetch_storage[1][15:13]==3'h0 && hyper_instruction_fetch_storage[0][15:13]==3'h0) begin
+								hyper_jump_potentially_valid_type2<=0;
+							end else begin
+								hyper_jump_potentially_valid_type2<=1;
+							end
+							hyper_jump_look_index_alt<=4;
+							hyper_jump_potentially_valid_type1<=1;
+						end
+					end
+				end
+				if (hyper_instruction_fetch_size>5'd3) begin
+					if (hyper_instruction_fetch_storage[3][15:11]==5'h1F && (hyper_instruction_fetch_storage[3][10:8]==3'b010 || hyper_instruction_fetch_storage[3][10:8]==3'b011 || hyper_instruction_fetch_storage[3][10:8]==3'b110)) begin
+						isWaitingForJump<=1;
+						if (hyper_instruction_fetch_storage[3][10:8]!=3'b011) begin
+							hyper_jump_potentially_valid_type2<=1;
+							hyper_jump_look_index_alt<=3;
+							hyper_jump_potentially_valid_type1<=1;
+						end
+					end
+				end
+				if (hyper_instruction_fetch_size>5'd2) begin
+					if (hyper_instruction_fetch_storage[2][15:11]==5'h1F && (hyper_instruction_fetch_storage[2][10:8]==3'b010 || hyper_instruction_fetch_storage[2][10:8]==3'b011 || hyper_instruction_fetch_storage[2][10:8]==3'b110)) begin
+						isWaitingForJump<=1;
+						if (hyper_instruction_fetch_storage[2][10:8]!=3'b011) begin
+							hyper_jump_potentially_valid_type2<=1;
+							hyper_jump_look_index_alt<=2;
+							hyper_jump_potentially_valid_type1<=1;
+						end
+					end
+				end
+				if (hyper_instruction_fetch_size>5'd1) begin
+					if (hyper_instruction_fetch_storage[1][15:11]==5'h1F && (hyper_instruction_fetch_storage[1][10:8]==3'b010 || hyper_instruction_fetch_storage[1][10:8]==3'b011 || hyper_instruction_fetch_storage[1][10:8]==3'b110)) begin
+						isWaitingForJump<=1;
+						if (hyper_instruction_fetch_storage[1][10:8]!=3'b011) begin
+							hyper_jump_potentially_valid_type2<=1;
+							hyper_jump_look_index_alt<=1;
+							hyper_jump_potentially_valid_type1<=1;
+						end
+					end
+				end
+				if (hyper_instruction_fetch_size>5'd0) begin // hyper_instruction_fetch_size should always be greater then 0, but just to make sure
+					if (hyper_instruction_fetch_storage[0][15:11]==5'h1F && (hyper_instruction_fetch_storage[0][10:8]==3'b010 || hyper_instruction_fetch_storage[0][10:8]==3'b011 || hyper_instruction_fetch_storage[0][10:8]==3'b110)) begin
+						isWaitingForJump<=1;
+						if (hyper_instruction_fetch_storage[0][10:8]!=3'b011) begin
+							hyper_jump_potentially_valid_type2<=1;
+							hyper_jump_look_index_alt<=0;
+							hyper_jump_potentially_valid_type1<=1;
+						end
+					end
+				end
 			end else begin
 				instruction_fetch_address<=instruction_jump_address;
 				is_instruction_cache_requesting<=1;
