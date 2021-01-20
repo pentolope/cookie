@@ -19,7 +19,6 @@
 `define ENABLE_ARDUINO
 `define ENABLE_GPIO
 
-`include "internal_memory.sv"
 `include "core_reg.sv"
 
 

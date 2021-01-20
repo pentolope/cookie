@@ -4,7 +4,6 @@ fileBasePath="H:\\FPGA\\projects\\cookie\\simulation\\"
 waveAdds=[
 '/sim_enviroment/core__main/main_clk',
 '/sim_enviroment/core__main/*',
-'-radix unsigned /sim_enviroment/core__main/fifo_instruction_cache_indexes_future',
 '-radix hexadecimal /sim_enviroment/core__main/fifo_instruction_cache_data',
 '-radix hexadecimal /sim_enviroment/core__main/fifo_instruction_cache_addresses',
 '-radix hexadecimal /sim_enviroment/core__main/user_reg',
