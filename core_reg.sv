@@ -515,14 +515,14 @@ lcell_1 is7(d[ 7], i[3] &  i[2] &  i[1]);
 wire [15:0] ov0 [7:0];
 wire [15:0] ov1 [4:0];
 
-lcell_16 lc_uc0(ov0[0],i[1]?u[ 1]:u[ 0]);
-lcell_16 lc_uc1(ov0[1],i[1]?u[ 3]:u[ 2]);
-lcell_16 lc_uc2(ov0[2],i[1]?u[ 5]:u[ 4]);
-lcell_16 lc_uc3(ov0[3],i[1]?u[ 7]:u[ 6]);
-lcell_16 lc_uc4(ov0[4],i[1]?u[ 9]:u[ 8]);
-lcell_16 lc_uc5(ov0[5],i[1]?u[11]:u[10]);
-lcell_16 lc_uc6(ov0[6],i[1]?u[13]:u[12]);
-lcell_16 lc_uc7(ov0[7],i[1]?u[15]:u[14]);
+lcell_16 lc_uc0(ov0[0],i[0]?u[ 1]:u[ 0]);
+lcell_16 lc_uc1(ov0[1],i[0]?u[ 3]:u[ 2]);
+lcell_16 lc_uc2(ov0[2],i[0]?u[ 5]:u[ 4]);
+lcell_16 lc_uc3(ov0[3],i[0]?u[ 7]:u[ 6]);
+lcell_16 lc_uc4(ov0[4],i[0]?u[ 9]:u[ 8]);
+lcell_16 lc_uc5(ov0[5],i[0]?u[11]:u[10]);
+lcell_16 lc_uc6(ov0[6],i[0]?u[13]:u[12]);
+lcell_16 lc_uc7(ov0[7],i[0]?u[15]:u[14]);
 
 fast_ur_mux_slice fast_ur_mux_slice3 (
 	ov1[3],
