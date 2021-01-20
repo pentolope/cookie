@@ -446,6 +446,109 @@ recomb_mux recomb_mux_15(
 );
 endmodule
 
+module fast_ur_mux_slice(
+	output [15:0] o, // output value
+	input  [ 1:0] i, // 2 selection values
+	input  [15:0] u [1:0] // 2 instant user reg values
+);
+lcell_16 lc_ic(
+	o,
+	{
+	(i[1] & u[1][15]) | (i[0] & u[0][15]),
+	(i[1] & u[1][14]) | (i[0] & u[0][14]),
+	(i[1] & u[1][13]) | (i[0] & u[0][13]),
+	(i[1] & u[1][12]) | (i[0] & u[0][12]),
+	(i[1] & u[1][11]) | (i[0] & u[0][11]),
+	(i[1] & u[1][10]) | (i[0] & u[0][10]),
+	(i[1] & u[1][ 9]) | (i[0] & u[0][ 9]),
+	(i[1] & u[1][ 8]) | (i[0] & u[0][ 8]),
+	(i[1] & u[1][ 7]) | (i[0] & u[0][ 7]),
+	(i[1] & u[1][ 6]) | (i[0] & u[0][ 6]),
+	(i[1] & u[1][ 5]) | (i[0] & u[0][ 5]),
+	(i[1] & u[1][ 4]) | (i[0] & u[0][ 4]),
+	(i[1] & u[1][ 3]) | (i[0] & u[0][ 3]),
+	(i[1] & u[1][ 2]) | (i[0] & u[0][ 2]),
+	(i[1] & u[1][ 1]) | (i[0] & u[0][ 1]),
+	(i[1] & u[1][ 0]) | (i[0] & u[0][ 0])
+	}
+);
+endmodule
+
+module decode4(
+	output [15:0] d, // output value
+	input  [ 3:0] i  // selection value
+);
+lcell_1 is0(d[ 0],!i[3] & !i[2] & !i[1] & !i[0]);
+lcell_1 is1(d[ 1],!i[3] & !i[2] & !i[1] &  i[0]);
+lcell_1 is2(d[ 2],!i[3] & !i[2] &  i[1] & !i[0]);
+lcell_1 is3(d[ 3],!i[3] & !i[2] &  i[1] &  i[0]);
+lcell_1 is4(d[ 4],!i[3] &  i[2] & !i[1] & !i[0]);
+lcell_1 is5(d[ 5],!i[3] &  i[2] & !i[1] &  i[0]);
+lcell_1 is6(d[ 6],!i[3] &  i[2] &  i[1] & !i[0]);
+lcell_1 is7(d[ 7],!i[3] &  i[2] &  i[1] &  i[0]);
+lcell_1 is8(d[ 8], i[3] & !i[2] & !i[1] & !i[0]);
+lcell_1 is9(d[ 9], i[3] & !i[2] & !i[1] &  i[0]);
+lcell_1 isA(d[10], i[3] & !i[2] &  i[1] & !i[0]);
+lcell_1 isB(d[11], i[3] & !i[2] &  i[1] &  i[0]);
+lcell_1 isC(d[12], i[3] &  i[2] & !i[1] & !i[0]);
+lcell_1 isD(d[13], i[3] &  i[2] & !i[1] &  i[0]);
+lcell_1 isE(d[14], i[3] &  i[2] &  i[1] & !i[0]);
+lcell_1 isF(d[15], i[3] &  i[2] &  i[1] &  i[0]);
+
+endmodule
+
+module fast_ur_mux(
+	output [15:0] o, // output value
+	input  [ 3:0] i, // value from instruction
+	input  [15:0] u [15:0] // instant user reg
+);
+wire [7:0] d;
+lcell_1 is0(d[ 0],!i[3] & !i[2] & !i[1]);
+lcell_1 is1(d[ 1],!i[3] & !i[2] &  i[1]);
+lcell_1 is2(d[ 2],!i[3] &  i[2] & !i[1]);
+lcell_1 is3(d[ 3],!i[3] &  i[2] &  i[1]);
+lcell_1 is4(d[ 4], i[3] & !i[2] & !i[1]);
+lcell_1 is5(d[ 5], i[3] & !i[2] &  i[1]);
+lcell_1 is6(d[ 6], i[3] &  i[2] & !i[1]);
+lcell_1 is7(d[ 7], i[3] &  i[2] &  i[1]);
+
+wire [15:0] ov0 [7:0];
+wire [15:0] ov1 [4:0];
+
+lcell_16 lc_uc0(ov0[0],i[1]?u[ 1]:u[ 0]);
+lcell_16 lc_uc1(ov0[1],i[1]?u[ 3]:u[ 2]);
+lcell_16 lc_uc2(ov0[2],i[1]?u[ 5]:u[ 4]);
+lcell_16 lc_uc3(ov0[3],i[1]?u[ 7]:u[ 6]);
+lcell_16 lc_uc4(ov0[4],i[1]?u[ 9]:u[ 8]);
+lcell_16 lc_uc5(ov0[5],i[1]?u[11]:u[10]);
+lcell_16 lc_uc6(ov0[6],i[1]?u[13]:u[12]);
+lcell_16 lc_uc7(ov0[7],i[1]?u[15]:u[14]);
+
+fast_ur_mux_slice fast_ur_mux_slice3 (
+	ov1[3],
+	{d[ 7],d[ 6]},
+	'{ov0[ 7],ov0[ 6]}
+);
+fast_ur_mux_slice fast_ur_mux_slice2 (
+	ov1[2],
+	{d[ 5],d[ 4]},
+	'{ov0[ 5],ov0[ 4]}
+);
+fast_ur_mux_slice fast_ur_mux_slice1 (
+	ov1[1],
+	{d[ 3],d[ 2]},
+	'{ov0[ 3],ov0[ 2]}
+);
+fast_ur_mux_slice fast_ur_mux_slice0 (
+	ov1[0],
+	{d[ 1],d[ 0]},
+	'{ov0[ 1],ov0[ 0]}
+);
+
+lcell_16 lc_ic(o, ov1[3] | ov1[2] | ov1[1] | ov1[0]);
+endmodule
+
+
 
 module core_executer(
 	input [15:0] instructionIn_extern,
@@ -671,9 +774,20 @@ wire [15:0] nvr0;//=instant_user_reg[instructionIn[ 3:0]];
 wire [15:0] nvr1;//=instant_user_reg[instructionIn[ 7:4]];
 wire [15:0] nvr2;//=instant_user_reg[instructionIn[11:8]];
 
-lcell_16 lcell_nvr0(nvr0,instant_user_reg[instructionIn[ 3:0]]);
-lcell_16 lcell_nvr1(nvr1,instant_user_reg[instructionIn[ 7:4]]);
-lcell_16 lcell_nvr2(nvr2,instant_user_reg[instructionIn[11:8]]);
+//lcell_16 lcell_nvr0(nvr0,instant_user_reg[instructionIn[ 3:0]]);
+//lcell_16 lcell_nvr1(nvr1,instant_user_reg[instructionIn[ 7:4]]);
+//lcell_16 lcell_nvr2(nvr2,instant_user_reg[instructionIn[11:8]]);
+
+fast_ur_mux fast_ur_mux0(nvr0,instructionIn[ 3:0],instant_user_reg);
+fast_ur_mux fast_ur_mux1(nvr1,instructionIn[ 7:4],instant_user_reg);
+fast_ur_mux fast_ur_mux2(nvr2,instructionIn[11:8],instant_user_reg);
+
+
+always @(posedge main_clk) begin
+	assert (nvr0==instant_user_reg[instructionIn[ 3:0]]);
+	assert (nvr1==instant_user_reg[instructionIn[ 7:4]]);
+	assert (nvr2==instant_user_reg[instructionIn[11:8]]);
+end
 
 reg [15:0] vr0=16'hFFFF;
 reg [15:0] vr1=16'hFFFF;
@@ -2430,7 +2544,7 @@ reg hyper_jump_potentially_valid_type1=0; // type1 is if either source_table or 
 reg hyper_jump_potentially_valid_type2=0; // type2 is if source_table should be used, otherwise address_table should be used
 reg hyper_jump_potentially_valid_type3=0; // type3 is if this hyper jump calculation is instead from the alternative version, which means this hyper jump was initiated from the hyper jump data
 reg [2:0] hyper_jump_look_index;
-reg [2:0] hyper_jump_look_index_alt;
+reg [3:0] hyper_jump_look_index_alt;
 wire [31:0] hyper_jump_guess_address_calc=hyper_jump_potentially_valid_type2?({user_reg[hyper_jump_guess_source_table[hyper_jump_look_index][7:4]],user_reg[hyper_jump_guess_source_table[hyper_jump_look_index][3:0]]}):(hyper_jump_guess_address_table[hyper_jump_look_index]);
 wire [31:0] hyper_jump_guess_address_calc_alt=hyper_jump_potentially_valid_type2?({user_reg[hyper_jump_guess_source_table_alt[hyper_jump_look_index_alt][7:4]],user_reg[hyper_jump_guess_source_table_alt[hyper_jump_look_index_alt][3:0]]}):(hyper_jump_guess_address_table_alt[hyper_jump_look_index_alt]);
 
