@@ -1,4 +1,4 @@
-
+`timescale 1 ps / 1 ps
 
 
 module instruction_cache_mux(
@@ -8,8 +8,8 @@ module instruction_cache_mux(
 	output [15:0] fifo_instruction_cache_data_at_write_addr_m2,
 	output [15:0] fifo_instruction_cache_data_at_write_addr_m3,
 	output [15:0] fifo_instruction_cache_data_at_write_addr_m4,
-	output [15:0] fifo_instruction_cache_data_e [15:0],
-	output [25:0] fifo_instruction_cache_addresses_e [15:0],
+	output [15:0] new_instruction_table [3:0],
+	output [25:0] new_instruction_address_table [3:0],
 
 	input  [15:0] hyper_instruction_fetch_storage [15:0],
 	input  [31:0] hyper_jump_guess_address_table [7:0],
@@ -39,8 +39,9 @@ fifo_instruction_cache_data_old[3:0] is used for hyper jump
 fifo_instruction_cache_data[3:0]     is used for scheduler
 */
 
-assign fifo_instruction_cache_data_e=fifo_instruction_cache_data;
-assign fifo_instruction_cache_addresses_e=fifo_instruction_cache_addresses;
+assign new_instruction_table[3:0]=fifo_instruction_cache_data[3:0];
+assign new_instruction_address_table[3:0]=fifo_instruction_cache_addresses[3:0];
+
 
 always @(posedge main_clk) begin
 	unique case (fifo_instruction_cache_consume_count)
@@ -768,8 +769,8 @@ module instruction_cache(
 	output [25:0] mem_target_address_instruction_fetch,
 	output [25:0] mem_target_address_hyper_instruction_fetch_0,
 	output [25:0] mem_target_address_hyper_instruction_fetch_1,
-	output [15:0] fifo_instruction_cache_data [15:0],
-	output [25:0] fifo_instruction_cache_addresses [15:0],
+	output [15:0] new_instruction_table [3:0],
+	output [25:0] new_instruction_address_table [3:0],
 	
 	input  [4:0] fifo_instruction_cache_size_after_read,
 	input  [2:0] fifo_instruction_cache_consume_count,
@@ -852,8 +853,8 @@ instruction_cache_mux instruction_cache_mux_inst(
 	fifo_instruction_cache_data_at_write_addr_m2,
 	fifo_instruction_cache_data_at_write_addr_m3,
 	fifo_instruction_cache_data_at_write_addr_m4,
-	fifo_instruction_cache_data,
-	fifo_instruction_cache_addresses,
+	new_instruction_table,
+	new_instruction_address_table,
 	
 	hyper_instruction_fetch_storage,
 	hyper_jump_guess_address_table,

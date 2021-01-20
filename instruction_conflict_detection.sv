@@ -1,4 +1,4 @@
-
+`timescale 1 ps / 1 ps
 
 module instruction_categorizer(
 	output [13:0] catagory_data_extern,
