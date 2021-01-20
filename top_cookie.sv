@@ -19,7 +19,7 @@
 `define ENABLE_ARDUINO
 `define ENABLE_GPIO
 
-`include "core_reg.sv"
+`include "core_main.sv"
 
 
 module top_cookie(
