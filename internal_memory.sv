@@ -1,8 +1,5 @@
 `timescale 1 ps / 1 ps
 
-
-
-
 module dram_controller(
 	input  [12:0] addr_req_read_dram_side_dram,
 	input  [12:0] addr_req_write_dram_side_dram,
@@ -544,9 +541,6 @@ always @(posedge main_clk) begin
 	end
 	endcase
 end
-
-
-
 endmodule
 
 
@@ -1041,9 +1035,6 @@ assign out_addr_at_in_way_index=
 // [25:13]
 // [12: 4]
 
-
-
-
 ip_cache_addr_way0 ip_cache_addr_way0_inst(
 
 	main_clk,
@@ -1063,7 +1054,6 @@ ip_cache_addr_way1 ip_cache_addr_way1_inst(
 	raw_out1
 );
 
-
 ip_cache_addr_way2 ip_cache_addr_way2_inst(
 	main_clk,
 	target_address[25:13],
@@ -1072,9 +1062,6 @@ ip_cache_addr_way2 ip_cache_addr_way2_inst(
 	do_write && (in_way_index==2'd2),
 	raw_out2
 );
-
-
-
 
 ip_cache_addr_way3 ip_cache_addr_way3_inst(
 	main_clk,
@@ -1105,107 +1092,6 @@ assign match={
 assign out_way_index=way_index_lookup[{match[3],match[2],match[1]}];
 assign out_fault=!match[0] & !match[1] & !match[2] & !match[3];
 
-endmodule
-
-module lcell_1(output o,input  i);
-lcell lc0 (.in(i),.out(o));
-endmodule
-module lcell_2(output [1:0] o,input  [1:0] i);
-lcell lc0 (.in(i[0]),.out(o[0]));
-lcell lc1 (.in(i[1]),.out(o[1]));
-endmodule
-module lcell_3(output [2:0] o,input  [2:0] i);
-lcell lc0 (.in(i[0]),.out(o[0]));
-lcell lc1 (.in(i[1]),.out(o[1]));
-lcell lc2 (.in(i[2]),.out(o[2]));
-endmodule
-module lcell_4(output [3:0] o,input  [3:0] i);
-lcell lc0 (.in(i[0]),.out(o[0]));
-lcell lc1 (.in(i[1]),.out(o[1]));
-lcell lc2 (.in(i[2]),.out(o[2]));
-lcell lc3 (.in(i[3]),.out(o[3]));
-endmodule
-module lcell_5(output [4:0] o,input  [4:0] i);
-lcell lc0 (.in(i[0]),.out(o[0]));
-lcell lc1 (.in(i[1]),.out(o[1]));
-lcell lc2 (.in(i[2]),.out(o[2]));
-lcell lc3 (.in(i[3]),.out(o[3]));
-lcell lc4 (.in(i[4]),.out(o[4]));
-endmodule
-module lcell_6(output [5:0] o,input  [5:0] i);
-lcell lc0 (.in(i[0]),.out(o[0]));
-lcell lc1 (.in(i[1]),.out(o[1]));
-lcell lc2 (.in(i[2]),.out(o[2]));
-lcell lc3 (.in(i[3]),.out(o[3]));
-lcell lc4 (.in(i[4]),.out(o[4]));
-lcell lc5 (.in(i[5]),.out(o[5]));
-endmodule
-module lcell_16(output [15:0] o,input  [15:0] i);
-lcell lc0 (.in(i[0]),.out(o[0]));
-lcell lc1 (.in(i[1]),.out(o[1]));
-lcell lc2 (.in(i[2]),.out(o[2]));
-lcell lc3 (.in(i[3]),.out(o[3]));
-lcell lc4 (.in(i[4]),.out(o[4]));
-lcell lc5 (.in(i[5]),.out(o[5]));
-lcell lc6 (.in(i[6]),.out(o[6]));
-lcell lc7 (.in(i[7]),.out(o[7]));
-lcell lc8 (.in(i[8]),.out(o[8]));
-lcell lc9 (.in(i[9]),.out(o[9]));
-lcell lc10 (.in(i[10]),.out(o[10]));
-lcell lc11 (.in(i[11]),.out(o[11]));
-lcell lc12 (.in(i[12]),.out(o[12]));
-lcell lc13 (.in(i[13]),.out(o[13]));
-lcell lc14 (.in(i[14]),.out(o[14]));
-lcell lc15 (.in(i[15]),.out(o[15]));
-endmodule
-module lcell_19(output [18:0] o,input  [18:0] i);
-lcell lc0 (.in(i[0]),.out(o[0]));
-lcell lc1 (.in(i[1]),.out(o[1]));
-lcell lc2 (.in(i[2]),.out(o[2]));
-lcell lc3 (.in(i[3]),.out(o[3]));
-lcell lc4 (.in(i[4]),.out(o[4]));
-lcell lc5 (.in(i[5]),.out(o[5]));
-lcell lc6 (.in(i[6]),.out(o[6]));
-lcell lc7 (.in(i[7]),.out(o[7]));
-lcell lc8 (.in(i[8]),.out(o[8]));
-lcell lc9 (.in(i[9]),.out(o[9]));
-lcell lc10 (.in(i[10]),.out(o[10]));
-lcell lc11 (.in(i[11]),.out(o[11]));
-lcell lc12 (.in(i[12]),.out(o[12]));
-lcell lc13 (.in(i[13]),.out(o[13]));
-lcell lc14 (.in(i[14]),.out(o[14]));
-lcell lc15 (.in(i[15]),.out(o[15]));
-lcell lc16 (.in(i[16]),.out(o[16]));
-lcell lc17 (.in(i[17]),.out(o[17]));
-lcell lc18 (.in(i[18]),.out(o[18]));
-endmodule
-module lcell_26(output [25:0] o,input  [25:0] i);
-lcell lc0 (.in(i[0]),.out(o[0]));
-lcell lc1 (.in(i[1]),.out(o[1]));
-lcell lc2 (.in(i[2]),.out(o[2]));
-lcell lc3 (.in(i[3]),.out(o[3]));
-lcell lc4 (.in(i[4]),.out(o[4]));
-lcell lc5 (.in(i[5]),.out(o[5]));
-lcell lc6 (.in(i[6]),.out(o[6]));
-lcell lc7 (.in(i[7]),.out(o[7]));
-lcell lc8 (.in(i[8]),.out(o[8]));
-lcell lc9 (.in(i[9]),.out(o[9]));
-lcell lc10 (.in(i[10]),.out(o[10]));
-lcell lc11 (.in(i[11]),.out(o[11]));
-lcell lc12 (.in(i[12]),.out(o[12]));
-lcell lc13 (.in(i[13]),.out(o[13]));
-lcell lc14 (.in(i[14]),.out(o[14]));
-lcell lc15 (.in(i[15]),.out(o[15]));
-lcell lc16 (.in(i[16]),.out(o[16]));
-lcell lc17 (.in(i[17]),.out(o[17]));
-lcell lc18 (.in(i[18]),.out(o[18]));
-lcell lc19 (.in(i[19]),.out(o[19]));
-lcell lc20 (.in(i[20]),.out(o[20]));
-lcell lc21 (.in(i[21]),.out(o[21]));
-lcell lc22 (.in(i[22]),.out(o[22]));
-lcell lc23 (.in(i[23]),.out(o[23]));
-lcell lc24 (.in(i[24]),.out(o[24]));
-lcell lc25 (.in(i[25]),.out(o[25]));
 endmodule
 
 

@@ -1,59 +1,6 @@
 `timescale 1 ps / 1 ps
 
 
-module fast_ur_mux(
-	output [15:0] o, // output value
-	input  [ 3:0] i, // value from instruction
-	input  [15:0] u [15:0] // instant user reg
-);
-wire [7:0] d;
-lcell_1 is0(d[ 0],!i[3] & !i[2] & !i[1]);
-lcell_1 is1(d[ 1],!i[3] & !i[2] &  i[1]);
-lcell_1 is2(d[ 2],!i[3] &  i[2] & !i[1]);
-lcell_1 is3(d[ 3],!i[3] &  i[2] &  i[1]);
-lcell_1 is4(d[ 4], i[3] & !i[2] & !i[1]);
-lcell_1 is5(d[ 5], i[3] & !i[2] &  i[1]);
-lcell_1 is6(d[ 6], i[3] &  i[2] & !i[1]);
-lcell_1 is7(d[ 7], i[3] &  i[2] &  i[1]);
-
-wire [15:0] ov0 [7:0];
-wire [15:0] ov1 [4:0];
-
-lcell_16 lc_uc0(ov0[0],i[0]?u[ 1]:u[ 0]);
-lcell_16 lc_uc1(ov0[1],i[0]?u[ 3]:u[ 2]);
-lcell_16 lc_uc2(ov0[2],i[0]?u[ 5]:u[ 4]);
-lcell_16 lc_uc3(ov0[3],i[0]?u[ 7]:u[ 6]);
-lcell_16 lc_uc4(ov0[4],i[0]?u[ 9]:u[ 8]);
-lcell_16 lc_uc5(ov0[5],i[0]?u[11]:u[10]);
-lcell_16 lc_uc6(ov0[6],i[0]?u[13]:u[12]);
-lcell_16 lc_uc7(ov0[7],i[0]?u[15]:u[14]);
-
-fast_ur_mux_slice fast_ur_mux_slice3 (
-	ov1[3],
-	{d[ 7],d[ 6]},
-	'{ov0[ 7],ov0[ 6]}
-);
-fast_ur_mux_slice fast_ur_mux_slice2 (
-	ov1[2],
-	{d[ 5],d[ 4]},
-	'{ov0[ 5],ov0[ 4]}
-);
-fast_ur_mux_slice fast_ur_mux_slice1 (
-	ov1[1],
-	{d[ 3],d[ 2]},
-	'{ov0[ 3],ov0[ 2]}
-);
-fast_ur_mux_slice fast_ur_mux_slice0 (
-	ov1[0],
-	{d[ 1],d[ 0]},
-	'{ov0[ 1],ov0[ 0]}
-);
-
-lcell_16 lc_ic(o, ov1[3] | ov1[2] | ov1[1] | ov1[0]);
-endmodule
-
-
-
 module core_executer(
 	input [15:0] instructionIn_extern,
 	input [ 4:0] instructionInID_extern,
