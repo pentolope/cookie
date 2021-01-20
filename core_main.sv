@@ -1,8 +1,8 @@
 `timescale 1 ps / 1 ps
 
 `include "utilities.sv"
-`include "internal_memory.sv"
 `include "vga_driver.sv"
+`include "memory_system.sv"
 `include "instruction_cache.sv"
 `include "scheduler.sv"
 `include "core_executer.sv"
@@ -427,7 +427,7 @@ core_executer core_executer_inst3(
 );
 
 
-full_memory full_memory_inst(
+memory_system memory_system_inst(
 	DRAM_ADDR,
 	DRAM_BA,
 	DRAM_CAS_N,

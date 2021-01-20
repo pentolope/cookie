@@ -20,7 +20,7 @@
 `define ENABLE_GPIO
 
 `include "core_main.sv"
-
+`include "simulation.sv"
 
 module top_cookie(
 
@@ -186,105 +186,3 @@ generate_hex_display_base10 generate_hex_display_inst(
 
 endmodule
 
-
-module sim_enviroment(
-);
-
-wire 		    [12:0]		DRAM_ADDR;
-wire 		     [1:0]		DRAM_BA;
-wire 		          		DRAM_CAS_N;
-wire 		          		DRAM_CKE;
-wire 		          		DRAM_CS_N;
-wire 		    [15:0]		DRAM_DQ;
-wire 		          		DRAM_LDQM;
-wire 		          		DRAM_RAS_N;
-wire 		          		DRAM_UDQM;
-wire 		          		DRAM_WE_N;
-wire		     [3:0]		VGA_B;
-wire		     [3:0]		VGA_G;
-wire		     [3:0]		VGA_R;
-wire		          		VGA_HS;
-wire		          		VGA_VS;
-
-wire [15:0] debug_user_reg [15:0];
-wire [15:0] debug_stack_pointer;
-wire [25:0] debug_instruction_fetch_address;
-wire debug_scheduler=1'b0;
-
-reg main_clk=0;
-reg vga_clk=0;
-
-int i;
-
-initial begin
-	#10;
-	forever begin
-		main_clk=~main_clk;
-		#20;
-	end
-end
-
-initial begin
-	#12;
-	forever begin
-		vga_clk=~vga_clk;
-		#143; // approximate ratio
-	end
-end
-
-fake_dram fake__dram(
-	DRAM_ADDR,
-	DRAM_BA,
-	DRAM_CAS_N,
-	DRAM_CKE,
-	DRAM_CS_N,
-	DRAM_DQ,
-	DRAM_LDQM,
-	DRAM_RAS_N,
-	DRAM_UDQM,
-	DRAM_WE_N,
-	
-	main_clk,
-	
-	1'b0 // init_to_random
-);
-
-core_main core__main(
-	DRAM_ADDR,
-	DRAM_BA,
-	DRAM_CAS_N,
-	DRAM_CKE,
-	DRAM_CS_N,
-	DRAM_DQ,
-	DRAM_LDQM,
-	DRAM_RAS_N,
-	DRAM_UDQM,
-	DRAM_WE_N,
-	
-	VGA_B,
-	VGA_G,
-	VGA_R,
-	VGA_HS,
-	VGA_VS,
-	
-	vga_clk,
-	main_clk,
-	
-	debug_user_reg,
-	debug_stack_pointer,
-	debug_instruction_fetch_address,
-	debug_scheduler
-);
-
-
-initial begin // stopping timer
-	#10;
-	for (i=0;i<800;i=i+1) begin//131072
-		#20;
-	end
-	$display("Stopping Normally due to cutoff timer.");
-	$stop;
-end
-
-
-endmodule
