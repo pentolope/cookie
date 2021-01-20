@@ -1,3 +1,4 @@
+`timescale 1 ps / 1 ps
 
 module vga_driver(
 	output		     [3:0]		VGA_B,

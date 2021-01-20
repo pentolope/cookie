@@ -19,12 +19,6 @@ module memory_system(
 	output		          		DRAM_UDQM,
 	output		          		DRAM_WE_N,
 	
-	output		     [3:0]		VGA_B,
-	output		     [3:0]		VGA_G,
-	output		     [3:0]		VGA_R,
-	output		          		VGA_HS,
-	output		          		VGA_VS,
-	
 	// for all memory access ports, once a request has begun to be issued, it should not be changed before it is acknowledged. hyper_instruction_fetch has a void signal that allows it to change
 	
 	input  [ 2:0] stack_access_size [3:0],
@@ -72,7 +66,11 @@ module memory_system(
 	
 	output [3:0] memory_dependency_clear_extern,
 	
-	input  vga_clk,
+	input  [15:0] data_out_io,
+	output [15:0] data_in_io,
+	output [31:0] address_out_io,
+	output [1:0] control_out_io,
+	
 	input  main_clk
 );
 
@@ -99,7 +97,7 @@ wire [1:0] lru_least_used_index;
 wire [12:0] calculated_out_addr_at_in_way_index;
 wire raw_calculated_cache_fault;
 wire [1:0] calculated_cache_way;
-reg [25:0] cache_way_target_address;
+wire [25:0] cache_way_target_address;
 reg [25:0] cache_data_target_address=0;
 
 reg [5:0] upper_target_address_instant;
@@ -200,7 +198,6 @@ wire [3:0] is_stack_access_requesting;
 assign is_general_access_requesting=is_general_access_requesting_extern & ~(acknowledge_executer_r);
 assign is_stack_access_requesting=is_stack_access_requesting_extern & ~(acknowledge_executer_r);
 
-
 wire is_instruction_fetch_requesting=is_instruction_fetch_requesting_extern & ~acknowledge_instruction_fetch_r;
 wire is_hyper_instruction_fetch_0_requesting=is_hyper_instruction_fetch_0_requesting_extern & ~acknowledge_hyper_instruction_fetch_0_r;
 wire is_hyper_instruction_fetch_1_requesting=is_hyper_instruction_fetch_1_requesting_extern & ~acknowledge_hyper_instruction_fetch_1_r;
@@ -209,6 +206,13 @@ reg use_multi_access;
 reg use_multi_access_r=0;
 
 always @(posedge main_clk) use_multi_access_r<=use_multi_access;
+
+reg use_data_out_io=0;
+always @(posedge main_clk) use_data_out_io<=upper_target_address_saved!=6'd0;
+
+assign address_out_io={upper_target_address_instant,cache_way_target_address};
+assign control_out_io={do_partial_write_instant,do_byte_operation_instant};
+assign data_in_io=data_in[executer_index_instant][0];
 
 reg [15:0] data_out_type_0 [7:0];
 reg [15:0] data_out_type_1 [7:0];
@@ -219,6 +223,10 @@ always_comb begin
 		data_out_type_1=cd_multi_access_out_full_data;
 	end else begin
 		data_out_type_1=cd_single_access_out_full_data;
+	end
+	if (use_data_out_io) begin
+		data_out_type_0[0]=data_out_io;
+		data_out_type_1[0]=data_out_io;
 	end
 end
 
@@ -585,32 +593,5 @@ dram_controller dram_controller_inst(
 	main_clk
 );
 
-/*
-vga_driver vga_driver_inst(
-	VGA_B,
-	VGA_G,
-	VGA_R,
-	VGA_HS,
-	VGA_VS,
-	
-	vga_do_write,
-	vga_write_addr,
-	vga_write_data,
-	main_clk,
-	vga_clk
-);
-*/
-
-
 endmodule
-
-
-
-
-
-
-
-
-
-
 

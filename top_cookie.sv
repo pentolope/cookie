@@ -20,6 +20,7 @@
 `define ENABLE_GPIO
 
 `include "core_main.sv"
+`include "memory_io.sv"
 `include "simulation.sv"
 
 module top_cookie(
@@ -147,6 +148,11 @@ assign HEX3=hex_display[3];
 assign HEX4=hex_display[4];
 assign HEX5=hex_display[5];
 
+wire [15:0] data_out_io;
+wire [15:0] data_in_io;
+wire [31:0] address_out_io;
+wire [1:0] control_out_io;
+
 wire [15:0] debug_user_reg [15:0];
 wire [15:0] debug_stack_pointer;
 wire [25:0] debug_instruction_fetch_address;
@@ -164,13 +170,11 @@ core_main core__main(
 	DRAM_UDQM,
 	DRAM_WE_N,
 	
-	VGA_B,
-	VGA_G,
-	VGA_R,
-	VGA_HS,
-	VGA_VS,
+	data_out_io,
+	data_in_io,
+	address_out_io,
+	control_out_io,
 	
-	vga_clk,
 	main_clk,
 	
 	debug_user_reg,
@@ -182,6 +186,22 @@ core_main core__main(
 generate_hex_display_base10 generate_hex_display_inst(
 	hex_display,
 	debug_user_reg[SW[3:0]]
+);
+
+memory_io memory__io(
+	data_out_io,
+	data_in_io,
+	address_out_io,
+	control_out_io,
+	
+	VGA_B,
+	VGA_G,
+	VGA_R,
+	VGA_HS,
+	VGA_VS,
+	
+	vga_clk,
+	main_clk
 );
 
 endmodule

@@ -1,7 +1,6 @@
 `timescale 1 ps / 1 ps
 
 `include "utilities.sv"
-`include "vga_driver.sv"
 `include "memory_system.sv"
 `include "instruction_cache.sv"
 `include "scheduler.sv"
@@ -20,13 +19,11 @@ module core_main(
 	output		          		DRAM_UDQM,
 	output		          		DRAM_WE_N,
 	
-	output		     [3:0]		VGA_B,
-	output		     [3:0]		VGA_G,
-	output		     [3:0]		VGA_R,
-	output		          		VGA_HS,
-	output		          		VGA_VS,
-
-	input vga_clk,
+	input  [15:0] data_out_io,
+	output [15:0] data_in_io,
+	output [31:0] address_out_io,
+	output [1:0] control_out_io,
+	
 	input main_clk,
 	
 	output [15:0] debug_user_reg [15:0],
@@ -439,12 +436,6 @@ memory_system memory_system_inst(
 	DRAM_UDQM,
 	DRAM_WE_N,
 	
-	VGA_B,
-	VGA_G,
-	VGA_R,
-	VGA_HS,
-	VGA_VS,
-	
 	// for all memory access ports, once a request has begun to be issued, it should not be changed before it is acknowledged. hyper_instruction_fetch has a void signal that allows it to change
 	
 	mem_stack_access_size_all,
@@ -492,7 +483,11 @@ memory_system memory_system_inst(
 	
 	memory_dependency_clear,
 	
-	vga_clk,
+	data_out_io,
+	data_in_io,
+	address_out_io,
+	control_out_io,
+	
 	main_clk
 );
 

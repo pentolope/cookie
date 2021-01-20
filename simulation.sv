@@ -279,6 +279,11 @@ wire		     [3:0]		VGA_R;
 wire		          		VGA_HS;
 wire		          		VGA_VS;
 
+wire [15:0] data_out_io;
+wire [15:0] data_in_io;
+wire [31:0] address_out_io;
+wire [1:0] control_out_io;
+
 wire [15:0] debug_user_reg [15:0];
 wire [15:0] debug_stack_pointer;
 wire [25:0] debug_instruction_fetch_address;
@@ -334,13 +339,11 @@ core_main core__main(
 	DRAM_UDQM,
 	DRAM_WE_N,
 	
-	VGA_B,
-	VGA_G,
-	VGA_R,
-	VGA_HS,
-	VGA_VS,
+	data_out_io,
+	data_in_io,
+	address_out_io,
+	control_out_io,
 	
-	vga_clk,
 	main_clk,
 	
 	debug_user_reg,

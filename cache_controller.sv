@@ -175,7 +175,7 @@ always_comb begin
 			allow_new_access=1;
 			instant_acknowledge_executer[0]=1'b1;
 			controller_state_next=5'h00;
-			// todo: actually do something when I/O mapped memory is read from or written to
+			//  I/O mapped memory controlling is performed elsewhere
 		end
 	end
 	5'h05:begin // executer 1: multi lane stack access on first lane
@@ -224,7 +224,7 @@ always_comb begin
 			allow_new_access=1;
 			instant_acknowledge_executer[1]=1'b1;
 			controller_state_next=5'h00;
-			// todo: actually do something when I/O mapped memory is read from or written to
+			//  I/O mapped memory controlling is performed elsewhere
 		end
 	end
 	5'h09:begin // executer 2: multi lane stack access on first lane
@@ -273,7 +273,7 @@ always_comb begin
 			allow_new_access=1;
 			instant_acknowledge_executer[2]=1'b1;
 			controller_state_next=5'h00;
-			// todo: actually do something when I/O mapped memory is read from or written to
+			//  I/O mapped memory controlling is performed elsewhere
 		end
 	end
 	5'h0D:begin // executer 3: multi lane stack access on first lane
@@ -322,7 +322,7 @@ always_comb begin
 			allow_new_access=1;
 			instant_acknowledge_executer[3]=1'b1;
 			controller_state_next=5'h00;
-			// todo: actually do something when I/O mapped memory is read from or written to
+			//  I/O mapped memory controlling is performed elsewhere
 		end
 	end
 	5'h11:begin // instruction fetch
