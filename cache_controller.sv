@@ -59,52 +59,29 @@ reg [ 2:0] stack_access_size_instant;
 reg [ 1:0] executer_index_instant;
 reg [25:0] cache_way_target_address;
 
-
-
-lcell_5 lcell_i0 (controller_state_next_extern,controller_state_next);
-lcell_1 lcell_i1 (lru_enable_write_extern,lru_enable_write);
-lcell_1 lcell_i2 (use_multi_access_extern,use_multi_access);
-lcell_4 lcell_i3 (instant_acknowledge_executer_extern,instant_acknowledge_executer);
-lcell_1 lcell_i4 (instant_acknowledge_instruction_fetch_extern,instant_acknowledge_instruction_fetch);
-lcell_1 lcell_i5 (instant_acknowledge_hyper_instruction_fetch_0_extern,instant_acknowledge_hyper_instruction_fetch_0);
-lcell_1 lcell_i6 (instant_acknowledge_hyper_instruction_fetch_1_extern,instant_acknowledge_hyper_instruction_fetch_1);
-lcell_1 lcell_i7 (cache_no_write_override_extern,cache_no_write_override);
-lcell_4 lcell_i8 (memory_dependency_clear_extern,memory_dependency_clear);
-lcell_1 lcell_i9 (do_byte_operation_instant_extern,do_byte_operation_instant);
-lcell_1 lcell_ia (do_partial_write_instant_extern,do_partial_write_instant);
-lcell_6 lcell_ib (upper_target_address_instant_extern,upper_target_address_instant);
-lcell_3 lcell_ic (stack_access_size_instant_extern,stack_access_size_instant);
-lcell_2 lcell_id (executer_index_instant_extern,executer_index_instant);
-lcell_26 lcell_ie (cache_way_target_address_extern,cache_way_target_address);
+lcell_5 lc_i0 (controller_state_next_extern,controller_state_next);
+lcell_1 lc_i1 (lru_enable_write_extern,lru_enable_write);
+lcell_1 lc_i2 (use_multi_access_extern,use_multi_access);
+lcell_4 lc_i3 (instant_acknowledge_executer_extern,instant_acknowledge_executer);
+lcell_1 lc_i4 (instant_acknowledge_instruction_fetch_extern,instant_acknowledge_instruction_fetch);
+lcell_1 lc_i5 (instant_acknowledge_hyper_instruction_fetch_0_extern,instant_acknowledge_hyper_instruction_fetch_0);
+lcell_1 lc_i6 (instant_acknowledge_hyper_instruction_fetch_1_extern,instant_acknowledge_hyper_instruction_fetch_1);
+lcell_1 lc_i7 (cache_no_write_override_extern,cache_no_write_override);
+lcell_4 lc_i8 (memory_dependency_clear_extern,memory_dependency_clear);
+lcell_1 lc_i9 (do_byte_operation_instant_extern,do_byte_operation_instant);
+lcell_1 lc_ia (do_partial_write_instant_extern,do_partial_write_instant);
+lcell_6 lc_ib (upper_target_address_instant_extern,upper_target_address_instant);
+lcell_3 lc_ic (stack_access_size_instant_extern,stack_access_size_instant);
+lcell_2 lc_id (executer_index_instant_extern,executer_index_instant);
+lcell_26 lc_ie (cache_way_target_address_extern,cache_way_target_address);
 
 assign mask_type_extern=mask_type;
-
-
-/*
-assign controller_state_next_extern=controller_state_next;
-assign lru_enable_write_extern=lru_enable_write;
-assign use_multi_access_extern=use_multi_access;
-assign instant_acknowledge_executer_extern=instant_acknowledge_executer;
-assign instant_acknowledge_instruction_fetch_extern=instant_acknowledge_instruction_fetch;
-assign instant_acknowledge_hyper_instruction_fetch_0_extern=instant_acknowledge_hyper_instruction_fetch_0;
-assign instant_acknowledge_hyper_instruction_fetch_1_extern=instant_acknowledge_hyper_instruction_fetch_1;
-assign cache_no_write_override_extern=cache_no_write_override;
-assign mask_type_extern=mask_type;
-assign memory_dependency_clear_extern=memory_dependency_clear;
-assign do_byte_operation_instant_extern=do_byte_operation_instant;
-assign do_partial_write_instant_extern=do_partial_write_instant;
-assign upper_target_address_instant_extern=upper_target_address_instant;
-assign stack_access_size_instant_extern=stack_access_size_instant;
-assign executer_index_instant_extern=executer_index_instant;
-assign cache_way_target_address_extern=cache_way_target_address;
-*/
 
 wire [15:0] target_address_stack_added [3:0];
-lcell_16 lcell_ii0 (target_address_stack_added[0],target_address_stack[0]+{stack_access_size[0]-1'b1,1'b0});
-lcell_16 lcell_ii1 (target_address_stack_added[1],target_address_stack[1]+{stack_access_size[1]-1'b1,1'b0});
-lcell_16 lcell_ii2 (target_address_stack_added[2],target_address_stack[2]+{stack_access_size[2]-1'b1,1'b0});
-lcell_16 lcell_ii3 (target_address_stack_added[3],target_address_stack[3]+{stack_access_size[3]-1'b1,1'b0});
-
+lcell_16 lc_ia0 (target_address_stack_added[0],target_address_stack[0]+{stack_access_size[0]-1'b1,1'b0});
+lcell_16 lc_ia1 (target_address_stack_added[1],target_address_stack[1]+{stack_access_size[1]-1'b1,1'b0});
+lcell_16 lc_ia2 (target_address_stack_added[2],target_address_stack[2]+{stack_access_size[2]-1'b1,1'b0});
+lcell_16 lc_ia3 (target_address_stack_added[3],target_address_stack[3]+{stack_access_size[3]-1'b1,1'b0});
 
 wire calculated_cache_fault=raw_calculated_cache_fault && !mask_calculated_cache_fault;
 assign calculated_cache_fault_extern=calculated_cache_fault;
