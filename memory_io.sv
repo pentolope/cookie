@@ -35,16 +35,14 @@ always @(posedge main_clk) begin
 end
 
 wire [15:0] out_mux [63:0];
-assign data_out_io={({8{control_out_io_rr[0]}}),8'hFF} & out_mux[address_out_io_rr[31:26]];
+wire [15:0] nearly_data_out_io=out_mux[address_out_io_rr[31:26]];
+assign data_out_io=control_out_io_rr[0]?(address_out_io_rr[0]?{8'h0,nearly_data_out_io[15:8]}:{8'h0,nearly_data_out_io[ 7:0]}):nearly_data_out_io;
 assign out_mux[0]=16'hx;
 
 
 
 
 
-wire vga_do_write=control_out_io[1] && address_out_io[31:26]==6'd1;
-wire [15:0] vga_write_addr=address_out_io[16:1];
-wire [11:0] vga_write_data=data_in_io[11:0];
 
 vga_driver vga_driver_inst(
 	VGA_B,
@@ -52,9 +50,9 @@ vga_driver vga_driver_inst(
 	VGA_R,
 	VGA_HS,
 	VGA_VS,
-	vga_do_write,
-	vga_write_addr,
-	vga_write_data,
+	control_out_io[1] && !control_out_io[1] && address_out_io[31:26]==6'd1, // vga_do_write
+	address_out_io[16:1], // vga_write_addr
+	data_in_io[11:0], // vga_write_data
 	main_clk,
 	vga_clk
 );

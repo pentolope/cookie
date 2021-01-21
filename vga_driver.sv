@@ -143,7 +143,7 @@ mem_pixel_array mem_pixel_array_inst(
 	vga_clk,
 	write_addr_r,
 	main_clk,
-	do_write_r,
+	do_write_r && write_addr_r<16'd64000,
 	read_data
 );
 
