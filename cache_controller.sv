@@ -25,6 +25,7 @@ module split_cache_controller_segment(
 	input  [3:0] is_general_access_requesting,
 	input  [ 2:0] stack_access_size [3:0],
 	input  [15:0] target_address_stack [3:0],
+	input  [15:0] target_address_stack_added [3:0],
 	input  [31:0] target_address_general [3:0],
 	input  [25:0] target_address_hyper_instruction_fetch_0,
 	input  [25:0] target_address_hyper_instruction_fetch_1,
@@ -76,12 +77,6 @@ lcell_2 lc_id (executer_index_instant_extern,executer_index_instant);
 lcell_26 lc_ie (cache_way_target_address_extern,cache_way_target_address);
 
 assign mask_type_extern=mask_type;
-
-wire [15:0] target_address_stack_added [3:0];
-lcell_16 lc_ia0 (target_address_stack_added[0],target_address_stack[0]+{stack_access_size[0]-1'b1,1'b0});
-lcell_16 lc_ia1 (target_address_stack_added[1],target_address_stack[1]+{stack_access_size[1]-1'b1,1'b0});
-lcell_16 lc_ia2 (target_address_stack_added[2],target_address_stack[2]+{stack_access_size[2]-1'b1,1'b0});
-lcell_16 lc_ia3 (target_address_stack_added[3],target_address_stack[3]+{stack_access_size[3]-1'b1,1'b0});
 
 wire calculated_cache_fault=raw_calculated_cache_fault && !mask_calculated_cache_fault;
 assign calculated_cache_fault_extern=calculated_cache_fault;
@@ -633,6 +628,11 @@ assign executer_index_instant_extern=raw_calculated_cache_fault?executer_index_i
 assign cache_way_target_address_extern=raw_calculated_cache_fault?cache_way_target_address_1:cache_way_target_address_0;
 assign calculated_cache_fault_extern=raw_calculated_cache_fault?calculated_cache_fault_1:calculated_cache_fault_0;
 
+wire [15:0] target_address_stack_added [3:0];
+lcell_16 lc_ia0 (target_address_stack_added[0],target_address_stack[0]+{stack_access_size[0]-1'b1,1'b0});
+lcell_16 lc_ia1 (target_address_stack_added[1],target_address_stack[1]+{stack_access_size[1]-1'b1,1'b0});
+lcell_16 lc_ia2 (target_address_stack_added[2],target_address_stack[2]+{stack_access_size[2]-1'b1,1'b0});
+lcell_16 lc_ia3 (target_address_stack_added[3],target_address_stack[3]+{stack_access_size[3]-1'b1,1'b0});
 
 split_cache_controller_segment split_cache_controller_segment_0(
 	controller_state_next_0,
@@ -659,6 +659,7 @@ split_cache_controller_segment split_cache_controller_segment_0(
 	is_general_access_requesting,
 	stack_access_size,
 	target_address_stack,
+	target_address_stack_added,
 	target_address_general,
 	target_address_hyper_instruction_fetch_0,
 	target_address_hyper_instruction_fetch_1,
@@ -698,6 +699,7 @@ split_cache_controller_segment split_cache_controller_segment_1(
 	is_general_access_requesting,
 	stack_access_size,
 	target_address_stack,
+	target_address_stack_added,
 	target_address_general,
 	target_address_hyper_instruction_fetch_0,
 	target_address_hyper_instruction_fetch_1,
