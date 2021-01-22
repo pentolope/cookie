@@ -78,8 +78,8 @@ if "set_global_assignment -name SEED 1" in qsf_content:
 		f.write(qsf_content.replace("set_global_assignment -name SEED 1","set_global_assignment -name SEED "+str(seed_value)))
 		f.close()
 		subprocess.call("start /low /wait /b seed_search"+sep+"run_script_"+str(seed_value)+".bat",shell=True)
-	else:
-		print("you must set the set the seed value in the .qsf to 1 before running this script")
+else:
+	print("you must set the set the seed value in the .qsf to 1 before running this script")
 
 
 
