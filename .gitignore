@@ -6,5 +6,6 @@
 db/*
 incremental_db/*
 output_files/*
+seed_search/*
 
 simulation/modelsim/*
