@@ -28,7 +28,7 @@ Access protocol for ps2 controller:
 	This controller operates as 2 first in first out buffers, going to and from the device.
 	
 	Reading from memory location `addr[000]` will yield the first unread byte that was sent by the ps2 device.
-		Do not read `addr[000]` when `addr[010]==0`, the data returned in undefined.
+		Do not read `addr[000]` when `addr[010]==0`, the data returned is undefined.
 		
 	Writing  to  memory location `addr[000]` will indicate that the first unread byte sent from the ps2 device has now been read. The data for the write is ignored.
 		Do not write to `addr[000]` when `addr[010]==0`
@@ -39,14 +39,6 @@ Access protocol for ps2 controller:
 	Reading from memory location `addr[010]` will yield a byte that represents the number of bytes the ps2 device has sent that remain unread by the host.
 	
 	Reading from memory location `addr[011]` will yield a byte that represents the number of bytes the host has queued to send to the ps2 device.
-
-	Reading from memory location `addr[100]` will yield a 0 or 1. This represents if a device is connected to the ps2 port ( 1==connected , 0==unconnected ).
-		Performing any operation when no ps2 device is connected is silly, but still defined.
-			Queued bytes are discarded (including any new bytes that would be queued).
-			Bytes that remain unread can still be read normally.
-			Obviously, no new bytes could be recieved without a ps2 device.
-		The controller will correctly handle situations where the ps2 plug is connected or disconnected during operation.
-			However, it should be noted that technically ps2 plugs are not physically designed to be connected or disconnected during operation, so I make no promises that the device or host circuitry won't be damaged by doing such a thing.
 	
 	Reading from memory location `addr[110]` will yield a 0 or 1. This represents if a byte from the ps2 device has been dropped due to buffer overflow ( 1==yes , 0==no ).
 		The maxiumum buffer size is 255 bytes. After the buffer is full, the controller will drop any other bytes that are sent.
@@ -58,6 +50,8 @@ Access protocol for ps2 controller:
 	Writing  to  any memory location not listed here will be ignored.
 		However, I would think that code clarity and efficiency reasons would be enough to never read or write to a memory location that is not listed here.
 	
+	The ps2 interface does not provide an easy way to determine if a device is actually connected. So this controller does not provide an easy way either.
+	If a byte is queued to send to the device and it never gets sent, then there is no device present.
 	
 	A minimal procedure for reading bytes into `data` might be something like this (just make sure to handle if a byte was dropped, don't ignore it):
 		while (`addr[010]!=0`){
@@ -78,9 +72,6 @@ Access protocol for ps2 controller:
 		}
 	
 */
-
-
-// TODO: lots of things...
 
 
 reg [6:0] microsecond_counter=0;
@@ -108,7 +99,7 @@ always @(posedge main_clk) external_data_in_r<=external_data_in;
 wire has_byte_to_send_to_device;
 
 reg [7:0] read_byte=0;
-reg [7:0] write_byte=0;
+wire [7:0] write_byte;
 reg [3:0] state_device_interop=0; // this state machine is updated every microsecond and it interacts with the device
 reg [3:0] device_interop_bit_index=0;
 reg new_byte_from_device=0;
@@ -349,11 +340,89 @@ end
 /*
 device transmission state machine is above
 
-interconnect statemachine is below
+memory mapped interconnection is below
 */
 
+reg [2:0] address_mmio_r=0;
+reg is_mmio_write_r=0;
+reg [7:0] data_write_mmio_r=0;
+reg [7:0] data_read_mmio_r;
 
+assign data_read_mmio=data_read_mmio_r;
 
+reg [7:0] device_to_host_fifo_read_addr=0;
+reg [7:0] device_to_host_fifo_read_addr_next;
+reg [7:0] device_to_host_fifo_write_addr=0;
+wire [7:0] device_to_host_fifo_size=device_to_host_fifo_write_addr - device_to_host_fifo_read_addr;
 
+reg [7:0] host_to_device_fifo_write_addr=0;
+reg [7:0] host_to_device_fifo_write_addr_next;
+reg [7:0] host_to_device_fifo_read_addr=0;
+wire [7:0] host_to_device_fifo_size=host_to_device_fifo_write_addr - host_to_device_fifo_read_addr;
+reg trigger_host_to_device_fifo_write;
+
+assign has_byte_to_send_to_device=host_to_device_fifo_size!=8'd0;
+
+reg has_dropped_byte=0;
+
+wire [7:0] first_unread_byte;
+
+always_comb begin
+	device_to_host_fifo_read_addr_next=device_to_host_fifo_read_addr;
+	host_to_device_fifo_write_addr_next=host_to_device_fifo_write_addr;
+	trigger_host_to_device_fifo_write=0;
+	case ({is_mmio_write_r,address_mmio_r}) // don't make this unique because this doesn't have all possibilities
+	4'b1000:begin
+		device_to_host_fifo_read_addr_next=device_to_host_fifo_read_addr+1'b1;
+	end
+	4'b1001:begin
+		host_to_device_fifo_write_addr_next=host_to_device_fifo_write_addr+1'b1;
+		trigger_host_to_device_fifo_write=1;
+	end
+	default:begin end
+	endcase
+end
+
+always @(posedge main_clk) begin
+	address_mmio_r<=address_mmio;
+	is_mmio_write_r<=is_mmio_write;
+	data_write_mmio_r<=data_write_mmio;
+	device_to_host_fifo_read_addr<=device_to_host_fifo_read_addr_next;
+	host_to_device_fifo_write_addr<=host_to_device_fifo_write_addr_next;
+	host_to_device_fifo_read_addr<=host_to_device_fifo_read_addr+sent_a_byte_to_device;
+	if (device_to_host_fifo_size==8'd255) begin
+		if (new_byte_from_device) begin
+			has_dropped_byte<=1;
+		end
+	end else begin
+		device_to_host_fifo_write_addr<=device_to_host_fifo_write_addr+new_byte_from_device;
+	end
+	data_read_mmio_r<=8'hx;
+	case ({is_mmio_write_r,address_mmio_r}) // don't make this unique because this doesn't have all possibilities
+	4'b0000:data_read_mmio_r<=first_unread_byte;
+	4'b0010:data_read_mmio_r<=device_to_host_fifo_size;
+	4'b0011:data_read_mmio_r<=host_to_device_fifo_size;
+	4'b0110:data_read_mmio_r<=has_dropped_byte;
+	4'b1110:has_dropped_byte<=0;
+	default:begin end
+	endcase
+end
+
+ip_byte_mem ip_byte_mem_fifo_host_to_device(
+	.clock(main_clk),
+	.data(data_write_mmio_r),
+	.rdaddress(host_to_device_fifo_read_addr),
+	.wraddress(host_to_device_fifo_write_addr),
+	.wren(trigger_host_to_device_fifo_write),
+	.q(write_byte)
+);
+ip_byte_mem ip_byte_mem_fifo_device_to_host(
+	.clock(main_clk),
+	.data(read_byte),
+	.rdaddress(device_to_host_fifo_read_addr),
+	.wraddress(device_to_host_fifo_write_addr),
+	.wren(device_to_host_fifo_size!=8'd255 && new_byte_from_device),
+	.q(first_unread_byte)
+);
 
 endmodule
