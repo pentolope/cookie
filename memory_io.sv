@@ -16,6 +16,11 @@ module memory_io(
 	output		          		VGA_HS,
 	output		          		VGA_VS,
 	
+	output ps2_at0_external_clock_pulldown,
+	output ps2_at0_external_data_pulldown,
+	input ps2_at0_external_clock_in,
+	input ps2_at0_external_data_in,
+	
 	input vga_clk,
 	input main_clk
 );
@@ -98,17 +103,21 @@ sd_card_controller sd_card_controller_inst(
 	
 	.data_read_mmio(out_mux[1]),
 	.data_write_mmio(data_in_io_modified),
-	.address_mmio(address_io[2:0]),
+	.address_mmio(address_io[12:0]),
 	.is_mmio_write(control_io[1] && address_io_rr[31] && address_io[25:20]==6'd1),
+	.is_mmio_byte(control_io[0]),
 	.main_clk(main_clk)
 );
 
 ps2_controller ps2_controller_inst(
-	
+	.external_clock_pulldown(ps2_at0_external_clock_pulldown),
+	.external_data_pulldown(ps2_at0_external_data_pulldown),
+	.external_clock_in(ps2_at0_external_clock_in),
+	.external_data_in(ps2_at0_external_data_in),
 	
 	.data_read_mmio(out_mux[2][7:0]),
 	.data_write_mmio(data_in_io_modified[7:0]),
-	.address_mmio(address_io[12:0]),
+	.address_mmio(address_io[2:0]),
 	.is_mmio_write(control_io[1] && address_io_rr[31] && address_io[25:20]==6'd2),
 	.main_clk(main_clk)
 );

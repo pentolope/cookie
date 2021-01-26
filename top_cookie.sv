@@ -150,8 +150,8 @@ assign HEX5=hex_display[5];
 
 wire [15:0] data_out_io;
 wire [15:0] data_in_io;
-wire [31:0] address_out_io;
-wire [1:0] control_out_io;
+wire [31:0] address_io;
+wire [1:0] control_io;
 
 wire [15:0] debug_user_reg [15:0];
 wire [15:0] debug_stack_pointer;
@@ -172,8 +172,8 @@ core_main core__main(
 	
 	data_out_io,
 	data_in_io,
-	address_out_io,
-	control_out_io,
+	address_io,
+	control_io,
 	
 	main_clk,
 	
@@ -188,20 +188,31 @@ generate_hex_display_base10 generate_hex_display_inst(
 	debug_user_reg[SW[3:0]]
 );
 
+wire ps2_at0_external_clock_pulldown;
+wire ps2_at0_external_data_pulldown;
+wire ps2_at0_external_clock_in;
+wire ps2_at0_external_data_in;
+assign GPIO[0]=ps2_at0_external_clock_pulldown; // GPIO[0]
+assign GPIO[1]=ps2_at0_external_data_pulldown;  // GPIO[1]
+assign ps2_at0_external_clock_in=GPIO[2];       // GPIO[2]
+assign ps2_at0_external_data_in=GPIO[3];        // GPIO[3]
+
+
 memory_io memory__io(
-	data_out_io,
-	data_in_io,
-	address_out_io,
-	control_out_io,
+	.data_out_io(data_out_io),
+	.data_in_io(data_in_io),
+	.address_io(address_io),
+	.control_io(control_io),
 	
-	VGA_B,
-	VGA_G,
-	VGA_R,
-	VGA_HS,
-	VGA_VS,
+	.VGA_B(VGA_B),.VGA_G(VGA_G),.VGA_R(VGA_R),.VGA_HS(VGA_HS),.VGA_VS(VGA_VS),
 	
-	vga_clk,
-	main_clk
+	.ps2_at0_external_clock_pulldown(ps2_at0_external_clock_pulldown),
+	.ps2_at0_external_data_pulldown(ps2_at0_external_data_pulldown),
+	.ps2_at0_external_clock_in(ps2_at0_external_clock_in),
+	.ps2_at0_external_data_in(ps2_at0_external_data_in),
+	
+	.vga_clk(vga_clk),
+	.main_clk(main_clk)
 );
 
 endmodule

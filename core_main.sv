@@ -21,8 +21,8 @@ module core_main(
 	
 	input  [15:0] data_out_io,
 	output [15:0] data_in_io,
-	output [31:0] address_out_io,
-	output [1:0] control_out_io,
+	output [31:0] address_io,
+	output [1:0] control_io,
 	
 	input main_clk,
 	
@@ -485,8 +485,8 @@ memory_system memory_system_inst(
 	
 	data_out_io,
 	data_in_io,
-	address_out_io,
-	control_out_io,
+	address_io,
+	control_io,
 	
 	main_clk
 );

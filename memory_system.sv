@@ -68,8 +68,8 @@ module memory_system(
 	
 	input  [15:0] data_out_io,
 	output [15:0] data_in_io,
-	output [31:0] address_out_io,
-	output [1:0] control_out_io,
+	output [31:0] address_io,
+	output [1:0] control_io,
 	
 	input  main_clk
 );
@@ -210,8 +210,8 @@ always @(posedge main_clk) use_multi_access_r<=use_multi_access;
 reg use_data_out_io=0;
 always @(posedge main_clk) use_data_out_io<=upper_target_address_saved!=6'd0;
 
-assign address_out_io={upper_target_address_instant,cache_way_target_address};
-assign control_out_io={do_partial_write_instant,do_byte_operation_instant};
+assign address_io={upper_target_address_instant,cache_way_target_address};
+assign control_io={do_partial_write_instant,do_byte_operation_instant};
 assign data_in_io=data_in[executer_index_instant][0];
 
 reg [15:0] data_out_type_0 [7:0];
