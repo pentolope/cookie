@@ -60,8 +60,10 @@ assign lane_from_dram_to_cache_side_dram=lane_from_dram_to_cache;
 
 reg [2:0] bank_status_general [3:0]='{0,0,0,0}; // the value here is a cooldown/delay counter for when the bank can be accessed again
 
-//reg [15:0] initializer_countdown_internal=16'hFFFF;
-reg [15:0] initializer_countdown_internal=16'h8070; // this is for simulation to make it turn on faster
+reg [15:0] initializer_countdown_internal=16'hFFFF;
+
+//reg [15:0] initializer_countdown_internal=16'h8070; // this is for simulation to make it turn on faster
+
 
 
 reg [14:0] initializer_countdown=15'h3FFF;

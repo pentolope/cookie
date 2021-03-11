@@ -58,6 +58,8 @@ module sd_card_controller(
 	output chip_select_external,
 	output data_external_mosi,
 	input  data_external_miso,
+	
+	output [7:0] debug_controller_state_now,
 
 	output [15:0] data_read_mmio,
 	input  [15:0] data_write_mmio,
@@ -100,36 +102,51 @@ Access protocol for sd card controller:
 	
 	The byte at `addr[0000_000000011]` should never be written. It has no purpose.
 	
-	The byte at `addr[0000_000000100]` should never be written. It will contain 000b, 001b, 010b, 011b, 100b or 101b.
-		A 000b at this byte indicates that the controller is performing initialization. Do not modify any memory location.
-		A 001b at this byte indicates that the controller has seen that there is a new command and is in the early stages of processing it. Do not write to any memory location that is associated with the command.
-		A 010b at this byte indicates that the controller has fully read the command. Any value in `addr[0000_xxxxxxxxx]` area may be written with new values, with the exception of `addr[0000_00000001x]` and `addr[0000_00000011x]` .
+	The byte at `addr[0000_000000100]` should never be written. It will contain 000b, 001b, 010b, 011b, 100b, 101b, or 110b.
+		A 000b at this byte indicates that the controller is performing initialization. 
+			Do not modify any memory location.
+		A 001b at this byte indicates that the controller has seen that there is a new command and is in the early stages of processing it.
+			Do not write to any memory location that is associated with the command.
+		A 010b at this byte indicates that the controller has fully read the command.
+			Any value in `addr[0000_xxxxxxxxx]` area may be written with new values, with the exception of `addr[0000_00000001x]` and `addr[0000_00000011x]` .
 			Any data sections associated with the command that was already given should not be modified.
-		A 011b at this byte indicates that the controller has finished processing the command that it was given. The controller will wait until `addr[0000_000000010]==0b` , then it will set `addr[0000_000000100]==00b`
-		A 100b at this byte indicates that the controller is currently not processing a command. Nearly any memory location can be written or read when this is the case.
-		A 101b at this byte indicates that the controller could not establish communication with the sd card. There may not be a card, or the card isn't supported.
+		A 011b at this byte indicates that the controller has finished processing the command that it was given.
+			The controller will wait until `addr[0000_000000010]==0b` , then it will set `addr[0000_000000100]==100b`
+		A 100b at this byte indicates that the controller is currently not processing a command.
+			Nearly any memory location can be written or read when this is the case.
+		A 101b at this byte indicates that the controller could not establish communication with the sd card. 
+			There may not be a card, or the card isn't supported. Any pending command may not have been completed successfully. 
+			Do not modify any memory location, INCLUDING `addr[0000_000000010]`.
+		A 110b at this byte indicates that the controller performed a reset and it needs `addr[0000_000000010]` set to 0.
+			The reset was performed due to unexpected card behaviour. This may have been caused by the card being removed and another inserted.
+			The controller is waiting for acknowledgment that the pending command may not have been completed successfully.
+			Do not modify any memory location, EXCEPT `addr[0000_000000010]`.
 	
 	The byte at `addr[0000_000000101]` should never be written. It has no purpose.
 	
-	The byte at `addr[0000_000000110]` contains the error value.
-		It is written by the controller when `addr[0000_000000100]==010b` .
-		It may be read or overwritten when `addr[0000_000000100]==100b` .
-		A command that succeeds after a failing command will overwrite the error value to a 0b. Therefore, The error value should always be checked and handled after every command.
-		A 000b at this byte indicates that no error occured and the command completed successfully.
-		A 001b at this byte indicates that the command could not be executed because there is no sd card connected.
-		A 010b at this byte indicates that the command could not be executed because the sd card initialization failed.
-		A 011b at this byte indicates that an unknown error occured and it is unknown if the command succeeded.
-		A 100b at this byte indicates that the command could not execute because the target block address is out of range.
-		A 101b at this byte indicates that the command contained no data sections to read/write, so nothing would be performed by the command.
-		All other values for this byte are reserved for future use.
+	The word at `addr[0000_00000011x]` contains the error value.
+		It is written by the controller when `addr[0000_000000100]==010b` and `addr[0000_000000100]==001b` and after a full reset.
+		It may be read when `addr[0000_000000100]==100b` .
+		The error value should always be checked and handled after every command because the value is always overrwitten when a new command is being processed.
+		Note that some values of `addr[0000_000000100]` indicate that the pending command may not have completed successfully.
+		The values of `addr[0000_000000100]` take precedence over `addr[0000_00000011x]` in all cases for determining why the last command may not have succeeded.
+		If `addr[0000_000000100]` or `addr[0000_00000011x]` indicate that the last command may not have succeeded, then the last command may not have succeeded. It doesn't matter if one of them indicate success.
 		
-	The byte at `addr[0000_000000111]` should never be written. It has no purpose.
+		A 0 at this word indicates that no error occured and the command completed successfully (unless `addr[0000_000000100]` indicates otherwise).
+		All other values indicate probable failure. In the future, this word will be the value of the sd card status.
 	
 	The double word at `addr[0000_0000010xx]` contains a list of data sections that are included with the read/write command.
-		The list contains 4bit items and is 0 terminated.
-		For example, `addr[0000_000001000]==0000_0010b` would indicate an access of length 1 where data section 2 would be read or written (depending on `addr[0000_000000000]` value)
-		For example, `addr[0000_000001000]==0101_0010b` and `addr[0000_000001000]==xxxx_0001b` would indicate an access of length 3 where data sections 2,5,1 (in that order) would be read or written (depending on `addr[0000_000000000]` value)
-		Each data section should only be mentioned in the list once.
+		The list contains 4bit items and is 0 terminated. the 4 less significant bits of each byte are ordered before the 4 more significant bits.
+		For example, `addr[0000_000001000]==0000_0010b`
+			would indicate an access of length 1 where data section 2 would be read or written (depending on `addr[0000_000000000]` value)
+		For example, `addr[0000_000001000]==0101_0010b` and `addr[0000_000001010]==0000_0001b`
+			would indicate an access of length 3 where data sections 2,5,1 (in that order) would be read or written (depending on `addr[0000_000000000]` value)
+		Although each data section could be mentioned in the list more then once, it is recommanded that each is only listed once at most.
+		If the same section is listed more then once on a read command, the behaviour is undefined regarding what data is written to that section.
+		If the list of sections contains 0 as the first 4 bit item, the controller will not perform a typical operation.
+			Instead, it will check if the card responds normally to a simple check status command.
+			If the card responds normally then the command is considered to have succeeded.
+			If the card doesn't respond or responds abnormally then the command is considered to have failed, and the controller will attempt a full reset.
 	
 	The double word at `addr[0000_0000011xx]` contains the target block address to read/write.
 		The value is little endian.
@@ -146,7 +163,7 @@ wire [15:0] data_read_controller_at_mmio;
 reg  write_enable_controller_at_mmio=0;
 
 
-reg [8:0] clk_div_factor=450; // the actual division factor is twice the value stored in clk_div_factor, because the sd card's clock flips (0->1 or 1->0) when clk_counter>=clk_div_factor.
+reg [8:0] clk_div_factor=448; // the actual division factor is twice the value stored in clk_div_factor, because the sd card's clock flips (0->1 or 1->0) when clk_counter>=clk_div_factor.
 reg [8:0] clk_counter=0;
 reg data_bit_miso=0;
 reg data_bit_mosi=0;
@@ -178,15 +195,47 @@ always @(posedge main_clk) begin
 	end
 end
 
+reg is_command_write=0;
+reg [31:0] target_base_block_address=0;
+reg [31:0] transfer_section_list=0;
+
+reg [4:0] storage_write_responce;
+reg [15:0] storage_status;
+reg storage_bad_status;
+
 wire [6:0] walking_crc7_output;
 reg [6:0] walking_crc7_register=0;
 wire [15:0] walking_crc16_output;
 reg [15:0] walking_crc16_register=0;
-reg [7:0] crc_byte=0; // both crc generators use the same byte. It is also used as a temporary storage byte when receiving a block from the sd card
+reg [7:0] crc_byte=0; // both crc generators use the same byte
 
 reg is_sd_card_byte_address=0; // does the attached card use byte addresses
 reg is_sd_card_mmc_card=0; // is the attached sd card actually an mmc card
+reg is_sd_card_standard_v1=0; // is the attached sd card an sd card and does it follow standard 1 (otherwise it is either an mmc card or it is an sd card that follows standard 2+)
 reg delayed_init_check=0; // this is used once when doing an initialization check
+
+reg [127:0] card_csd_content=0;
+reg [31:0] highest_block_address=0;
+
+reg [31:0] calculated_highest_block_address_result;
+reg [40:0] calculated_highest_block_address_temp_blklen;
+reg [40:0] calculated_highest_block_address_temp_mult;
+reg [40:0] calculated_highest_block_address_temp_blknr;
+reg [40:0] calculated_highest_block_address_temp_cap_0;
+reg [40:0] calculated_highest_block_address_temp_cap_1;
+
+
+always @(posedge main_clk) begin // this doesn't need to be async because the controller isn't that fast
+	calculated_highest_block_address_temp_blklen<=0;
+	calculated_highest_block_address_temp_mult<=0;
+	calculated_highest_block_address_temp_blknr<=0;
+	calculated_highest_block_address_temp_blklen[card_csd_content[83:80]]<=1'b1;
+	calculated_highest_block_address_temp_mult[card_csd_content[49:47]+4'd2]<=1'b1;
+	calculated_highest_block_address_temp_blknr<=(card_csd_content[73:62]+40'd1)*calculated_highest_block_address_temp_mult;
+	calculated_highest_block_address_temp_cap_0<=calculated_highest_block_address_temp_blknr*calculated_highest_block_address_temp_blklen;
+	calculated_highest_block_address_temp_cap_1<=(card_csd_content[69:48]+40'd1)*40'd524288;
+	calculated_highest_block_address_result<=((is_sd_card_mmc_card || is_sd_card_standard_v1)?calculated_highest_block_address_temp_cap_0[40:9]:calculated_highest_block_address_temp_cap_1[40:9])-1'b1;
+end
 
 reg [5:0] command_id=0;
 reg [31:0] command_arg=0;
@@ -194,7 +243,9 @@ reg [31:0] command_arg=0;
 reg [7:0] general_use_counter=0;
 reg [7:0] controller_state_now=0;
 reg [7:0] controller_state_after_command_sent=0;
-reg [7:0] controller_state_after_block_transmit=0;
+
+assign debug_controller_state_now=controller_state_now;
+
 
 reg perform_controller_process=0; // pulses on once for every byte that goes to/from SPI. It is also timed in a sweet spot that allows processing on the previous byte in to effect the next byte out.
 reg chip_select_external_r=1;
@@ -235,6 +286,8 @@ always @(posedge main_clk) begin
 			general_use_counter<=0;
 			is_sd_card_byte_address<=0;
 			is_sd_card_mmc_card<=0;
+			is_sd_card_standard_v1<=0;
+			clk_div_factor<=448;
 		end
 		1:begin // power on delay
 			command_id<=0;
@@ -291,10 +344,7 @@ always @(posedge main_clk) begin
 			general_use_counter<=general_use_counter+1'b1;
 			if (general_use_counter==8'hFF) begin
 				// timeout
-				address_controller_at_mmio<=12'b0000_00000010;
-				data_write_controller_at_mmio<=3'b101;
-				write_enable_controller_at_mmio<=1;
-				controller_state_now<=0;
+				controller_state_now<=39;
 			end else if (final_byte_came_in==8'h01) begin
 				controller_state_now<=9;
 				general_use_counter<=0;
@@ -345,10 +395,7 @@ always @(posedge main_clk) begin
 		15:begin
 			if (delayed_init_check) begin
 				// bad answer to cmd8, initialization failure
-				address_controller_at_mmio<=12'b0000_00000010;
-				data_write_controller_at_mmio<=3'b101;
-				write_enable_controller_at_mmio<=1;
-				controller_state_now<=0;
+				controller_state_now<=39;
 			end else begin
 				// answer to cmd8 is good
 				controller_state_now<=16;
@@ -366,20 +413,14 @@ always @(posedge main_clk) begin
 			general_use_counter<=general_use_counter+1'b1;
 			if (general_use_counter==8'hFF) begin
 				// timeout, initialization fails
-				address_controller_at_mmio<=12'b0000_00000010;
-				data_write_controller_at_mmio<=3'b101;
-				write_enable_controller_at_mmio<=1;
-				controller_state_now<=0;
+				controller_state_now<=39;
 			end else if (final_byte_came_in!=8'hFF) begin
 				if (final_byte_came_in==8'h01 || final_byte_came_in==8'h00) begin
 					controller_state_now<=18;
 					general_use_counter<=0;
 				end else begin
 					// error of some sort, initialization fails
-					address_controller_at_mmio<=12'b0000_00000010;
-					data_write_controller_at_mmio<=3'b101;
-					write_enable_controller_at_mmio<=1;
-					controller_state_now<=0;
+					controller_state_now<=39;
 				end
 			end
 		end
@@ -395,10 +436,7 @@ always @(posedge main_clk) begin
 			general_use_counter<=general_use_counter+1'b1;
 			if (general_use_counter==8'hFF) begin
 				// timeout, initialization fails
-				address_controller_at_mmio<=12'b0000_00000010;
-				data_write_controller_at_mmio<=3'b101;
-				write_enable_controller_at_mmio<=1;
-				controller_state_now<=0;
+				controller_state_now<=39;
 			end else if (final_byte_came_in!=8'hFF) begin
 				if (final_byte_came_in==8'h00) begin
 					controller_state_now<=21;
@@ -408,10 +446,7 @@ always @(posedge main_clk) begin
 					general_use_counter<=0;
 				end else begin
 					// error of some sort, initialization fails
-					address_controller_at_mmio<=12'b0000_00000010;
-					data_write_controller_at_mmio<=3'b101;
-					write_enable_controller_at_mmio<=1;
-					controller_state_now<=0;
+					controller_state_now<=39;
 				end
 			end
 		end
@@ -429,29 +464,23 @@ always @(posedge main_clk) begin
 			controller_state_now<=2;
 			general_use_counter<=0;
 		end
-		22:begin // recieve responce for cmd 58 (byte 0)
+		22:begin // recieve responce for cmd 58 (byte 4)
 			chip_select_next<=0;
 			general_use_counter<=general_use_counter+1'b1;
 			if (general_use_counter==8'hFF) begin
 				// timeout, initialization fails
-				address_controller_at_mmio<=12'b0000_00000010;
-				data_write_controller_at_mmio<=3'b101;
-				write_enable_controller_at_mmio<=1;
-				controller_state_now<=0;
+				controller_state_now<=39;
 			end else if (final_byte_came_in!=8'hFF) begin
 				if (final_byte_came_in==8'h00) begin
 					controller_state_now<=23;
 					general_use_counter<=0;
 				end else begin
 					// error of some sort, initialization fails
-					address_controller_at_mmio<=12'b0000_00000010;
-					data_write_controller_at_mmio<=3'b101;
-					write_enable_controller_at_mmio<=1;
-					controller_state_now<=0;
+					controller_state_now<=39;
 				end
 			end
 		end
-		23:begin // recieve responce for cmd 58 (byte 1)
+		23:begin // recieve responce for cmd 58 (byte 3)
 			chip_select_next<=0;
 			controller_state_now<=24;
 			is_sd_card_byte_address<=!final_byte_came_in[6];
@@ -461,21 +490,18 @@ always @(posedge main_clk) begin
 			controller_state_now<=25;
 			delayed_init_check<=!(final_byte_came_in[5] & final_byte_came_in[4]);
 		end
-		25:begin // recieve responce for cmd 58 (byte 3)
+		25:begin // recieve responce for cmd 58 (byte 1)
 			chip_select_next<=0;
 			controller_state_now<=26;
 		end
-		26:begin // recieve responce for cmd 58 (byte 4)
+		26:begin // recieve responce for cmd 58 (byte 0)
 			chip_select_next<=0;
 			controller_state_now<=27;
 		end
 		27:begin // interpret responce for cmd 58
 			if (delayed_init_check) begin
 				// card doesn't support voltage range. initialization fails
-				address_controller_at_mmio<=12'b0000_00000010;
-				data_write_controller_at_mmio<=3'b101;
-				write_enable_controller_at_mmio<=1;
-				controller_state_now<=0;
+				controller_state_now<=39;
 			end else begin
 				// card does support voltage range
 				controller_state_now<=28; // initialization (likely) success, go set block size and enable crc
@@ -493,20 +519,14 @@ always @(posedge main_clk) begin
 			general_use_counter<=general_use_counter+1'b1;
 			if (general_use_counter==8'hFF) begin
 				// timeout, initialization fails
-				address_controller_at_mmio<=12'b0000_00000010;
-				data_write_controller_at_mmio<=3'b101;
-				write_enable_controller_at_mmio<=1;
-				controller_state_now<=0;
+				controller_state_now<=39;
 			end else if (final_byte_came_in!=8'hFF) begin
 				if (final_byte_came_in==8'h00) begin
 					controller_state_now<=30;
 					general_use_counter<=0;
 				end else begin
 					// error of some sort, initialization fails
-					address_controller_at_mmio<=12'b0000_00000010;
-					data_write_controller_at_mmio<=3'b101;
-					write_enable_controller_at_mmio<=1;
-					controller_state_now<=0;
+					controller_state_now<=39;
 				end
 			end
 		end
@@ -522,24 +542,24 @@ always @(posedge main_clk) begin
 			general_use_counter<=general_use_counter+1'b1;
 			if (general_use_counter==8'hFF) begin
 				// timeout, initialization fails
-				address_controller_at_mmio<=12'b0000_00000010;
-				data_write_controller_at_mmio<=3'b101;
-				write_enable_controller_at_mmio<=1;
-				controller_state_now<=0;
+				controller_state_now<=39;
 			end else if (final_byte_came_in!=8'hFF) begin
 				if (final_byte_came_in==8'h00) begin
 					controller_state_now<=50; // initialization of the sd card (or mmc card) is complete
 					general_use_counter<=0;
 				end else begin
 					// error of some sort, initialization fails
-					address_controller_at_mmio<=12'b0000_00000010;
-					data_write_controller_at_mmio<=3'b101;
-					write_enable_controller_at_mmio<=1;
-					controller_state_now<=0;
+					controller_state_now<=39;
 				end
 			end
 		end
-		/*  32<->39 is skipped in case I need to add something later that I want to put here */
+		/*  32<->38 is skipped in case I need to add something later that I want to put here */
+		39:begin // indicate card communication failure and reset
+			address_controller_at_mmio<=12'b0000_00000010;
+			data_write_controller_at_mmio<=3'b101;
+			write_enable_controller_at_mmio<=1;
+			controller_state_now<=0;
+		end
 		40:begin // send cmd55 (next command is application specific)
 			is_sd_card_byte_address<=1;
 			command_id<=55;
@@ -553,20 +573,14 @@ always @(posedge main_clk) begin
 			general_use_counter<=general_use_counter+1'b1;
 			if (general_use_counter==8'hFF) begin
 				// timeout, initialization fails
-				address_controller_at_mmio<=12'b0000_00000010;
-				data_write_controller_at_mmio<=3'b101;
-				write_enable_controller_at_mmio<=1;
-				controller_state_now<=0;
+				controller_state_now<=39;
 			end else if (final_byte_came_in!=8'hFF) begin
 				if (final_byte_came_in==8'h01 || final_byte_came_in==8'h00) begin
 					controller_state_now<=42;
 					general_use_counter<=0;
 				end else begin
 					// error of some sort, initialization fails
-					address_controller_at_mmio<=12'b0000_00000010;
-					data_write_controller_at_mmio<=3'b101;
-					write_enable_controller_at_mmio<=1;
-					controller_state_now<=0;
+					controller_state_now<=39;
 				end
 			end
 		end
@@ -587,6 +601,7 @@ always @(posedge main_clk) begin
 				if (final_byte_came_in==8'h00) begin
 					controller_state_now<=28; // initialization (likely) success, go set block size and enable crc
 					general_use_counter<=0;
+					is_sd_card_standard_v1<=1;
 				end else if (final_byte_came_in==8'h01) begin
 					controller_state_now<=44;
 					general_use_counter<=0;
@@ -616,10 +631,7 @@ always @(posedge main_clk) begin
 			general_use_counter<=general_use_counter+1'b1;
 			if (general_use_counter==8'hFF) begin
 				// timeout, initialization fails
-				address_controller_at_mmio<=12'b0000_00000010;
-				data_write_controller_at_mmio<=3'b101;
-				write_enable_controller_at_mmio<=1;
-				controller_state_now<=0;
+				controller_state_now<=39;
 			end else if (final_byte_came_in!=8'hFF) begin
 				controller_state_now<=47; // result is mostly unchecked on first attempt of cmd 1 . I read somewhere that this was sometimes important because the mmc card might not reset the "invalid instruction flag" from the previous invalid instruction
 				general_use_counter<=0;
@@ -637,10 +649,7 @@ always @(posedge main_clk) begin
 			general_use_counter<=general_use_counter+1'b1;
 			if (general_use_counter==8'hFF) begin
 				// timeout, initialization fails
-				address_controller_at_mmio<=12'b0000_00000010;
-				data_write_controller_at_mmio<=3'b101;
-				write_enable_controller_at_mmio<=1;
-				controller_state_now<=0;
+				controller_state_now<=39;
 			end else if (final_byte_came_in!=8'hFF) begin
 				if (final_byte_came_in==8'h00) begin
 					controller_state_now<=28; // initialization (likely) success, go set block size and enable crc
@@ -650,10 +659,7 @@ always @(posedge main_clk) begin
 					general_use_counter<=0;
 				end else begin
 					// error of some sort, initialization fails
-					address_controller_at_mmio<=12'b0000_00000010;
-					data_write_controller_at_mmio<=3'b101;
-					write_enable_controller_at_mmio<=1;
-					controller_state_now<=0;
+					controller_state_now<=39;
 				end
 			end
 		end
@@ -667,13 +673,573 @@ always @(posedge main_clk) begin
 		50:begin
 			// card initialization complete.
 			// todo: determine physical size of card and write to mmio memory, then indicate that the controller is ready
+			// send cmd 9 to determine card size
+			command_id<=9;
+			command_arg<=0;
+			controller_state_after_command_sent<=51;
+			controller_state_now<=2;
+			general_use_counter<=0;
+		end
+		51:begin // wait for responce to cmd 9
+			chip_select_next<=0;
+			general_use_counter<=general_use_counter+1'b1;
+			if (general_use_counter==8'hFF) begin
+				// timeout, could not communicate with card
+				controller_state_now<=39;
+			end else if (final_byte_came_in!=8'hFF) begin
+				if (final_byte_came_in==8'h00) begin
+					controller_state_now<=52;
+					general_use_counter<=0;
+				end else begin
+					// error of some sort, try again
+					controller_state_now<=50;
+				end
+			end
+		end
+		52:begin // wait for data block of cmd 9 responce
+			chip_select_next<=0;
+			general_use_counter<=general_use_counter+1'b1;
+			if (general_use_counter==8'hFF) begin
+				// timeout, could not communicate with card
+				controller_state_now<=39;
+			end else if (final_byte_came_in!=8'hFF) begin
+				if (final_byte_came_in==8'hFE) begin
+					controller_state_now<=53;
+					general_use_counter<=0;
+				end else begin
+					// error of some sort, the data block didn't start with a data block start.
+					// I am going to catagorize this as "could not communicate with card" and have it do a full reset
+					controller_state_now<=39;
+				end
+			end
+		end
+		53:begin // cmd 9 responce --> card_csd_content (Byte 15)
+			chip_select_next<=0;
+			card_csd_content[127:120]<=final_byte_came_in;
+			controller_state_now<=54;
+		end
+		54:begin // cmd 9 responce --> card_csd_content (Byte 14)
+			chip_select_next<=0;
+			card_csd_content[119:112]<=final_byte_came_in;
+			controller_state_now<=55;
+		end
+		55:begin // cmd 9 responce --> card_csd_content (Byte 13)
+			chip_select_next<=0;
+			card_csd_content[111:104]<=final_byte_came_in;
+			controller_state_now<=56;
+		end
+		56:begin // cmd 9 responce --> card_csd_content (Byte 12)
+			chip_select_next<=0;
+			card_csd_content[103: 96]<=final_byte_came_in;
+			controller_state_now<=57;
+		end
+		57:begin // cmd 9 responce --> card_csd_content (Byte 11)
+			chip_select_next<=0;
+			card_csd_content[ 95: 88]<=final_byte_came_in;
+			controller_state_now<=58;
+		end
+		58:begin // cmd 9 responce --> card_csd_content (Byte 10)
+			chip_select_next<=0;
+			card_csd_content[ 87: 80]<=final_byte_came_in;
+			controller_state_now<=59;
+		end
+		59:begin // cmd 9 responce --> card_csd_content (Byte 9)
+			chip_select_next<=0;
+			card_csd_content[ 79: 72]<=final_byte_came_in;
+			controller_state_now<=60;
+		end
+		60:begin // cmd 9 responce --> card_csd_content (Byte 8)
+			chip_select_next<=0;
+			card_csd_content[ 71: 64]<=final_byte_came_in;
+			controller_state_now<=61;
+		end
+		61:begin // cmd 9 responce --> card_csd_content (Byte 7)
+			chip_select_next<=0;
+			card_csd_content[ 63: 56]<=final_byte_came_in;
+			controller_state_now<=62;
+		end
+		62:begin // cmd 9 responce --> card_csd_content (Byte 6)
+			chip_select_next<=0;
+			card_csd_content[ 55: 48]<=final_byte_came_in;
+			controller_state_now<=63;
+		end
+		63:begin // cmd 9 responce --> card_csd_content (Byte 5)
+			chip_select_next<=0;
+			card_csd_content[ 47: 40]<=final_byte_came_in;
+			controller_state_now<=64;
+		end
+		64:begin // cmd 9 responce --> card_csd_content (Byte 4)
+			chip_select_next<=0;
+			card_csd_content[ 39: 32]<=final_byte_came_in;
+			controller_state_now<=65;
+		end
+		65:begin // cmd 9 responce --> card_csd_content (Byte 3)
+			chip_select_next<=0;
+			card_csd_content[ 31: 24]<=final_byte_came_in;
+			controller_state_now<=66;
+		end
+		66:begin // cmd 9 responce --> card_csd_content (Byte 2)
+			chip_select_next<=0;
+			card_csd_content[ 23: 16]<=final_byte_came_in;
+			controller_state_now<=67;
+		end
+		67:begin // cmd 9 responce --> card_csd_content (Byte 1)
+			chip_select_next<=0;
+			card_csd_content[ 15:  8]<=final_byte_came_in;
+			controller_state_now<=68;
+		end
+		68:begin // cmd 9 responce --> card_csd_content (Byte 0)
+			chip_select_next<=0;
+			card_csd_content[  7:  0]<=final_byte_came_in;
+			controller_state_now<=69;
+		end
+		69:begin // cmd 9 responce (crc16 byte 0, unchecked because clock speed is still low so it's not really needed)
+			chip_select_next<=0;
+			controller_state_now<=70;
+		end
+		70:begin // cmd 9 responce (crc16 byte 1, unchecked because clock speed is still low so it's not really needed)
+			chip_select_next<=0;
+			controller_state_now<=71;
+		end
+		71:begin // using cmd 9 responce, calculate the number of blocks on the card (512bit blocks)
+			highest_block_address<=calculated_highest_block_address_result;
+			controller_state_now<=72;
+		end
+		72:begin // increase clock speed
+			clk_div_factor<=4;
+			controller_state_now<=73;
+		end
+		73:begin // write word 1 of highest block size into mmio contents
+			address_controller_at_mmio<=12'b0000_00001001;
+			data_write_controller_at_mmio<=highest_block_address[31:16];
+			write_enable_controller_at_mmio<=1;
+			controller_state_now<=74;
+		end
+		74:begin // write word 0 of highest block size into mmio contents
+			address_controller_at_mmio<=12'b0000_00001001;
+			data_write_controller_at_mmio<=highest_block_address[15: 0];
+			write_enable_controller_at_mmio<=1;
+			controller_state_now<=75;
+		end
+		75:begin // clear error value
+			address_controller_at_mmio<=12'b0000_00000011;
+			data_write_controller_at_mmio<=0;
+			write_enable_controller_at_mmio<=1;
+			controller_state_now<=76;
+		end
+		76:begin // detect command request status after reset
+			address_controller_at_mmio<=12'b0000_00000001;
+			controller_state_now<=77;
+		end
+		77:begin // branch based on command request status after reset
+			write_enable_controller_at_mmio<=1;
+			address_controller_at_mmio<=12'b0000_00000010;
+			if (data_read_controller_at_mmio[0]) begin
+				// a command was in progress when the controller reset
+				// Indicate that the command may not have been completed and request that the CPU acknowledge that by stopping the request
+				data_write_controller_at_mmio<=3'b110;
+				controller_state_now<=78;
+			end else begin
+				// no command was being executed when the controller reset. Go to idle state
+				data_write_controller_at_mmio<=3'b100;
+				controller_state_now<=80;
+			end
+		end
+		78:begin // start detection of if acknowledgment is known
+			address_controller_at_mmio<=12'b0000_00000001;
+			controller_state_now<=79;
+		end
+		79:begin // wait until acknowledged
+			if (!data_read_controller_at_mmio[0]) controller_state_now<=80;
+		end
+		80:begin // set to idle
+			write_enable_controller_at_mmio<=1;
+			address_controller_at_mmio<=12'b0000_00000010;
+			data_write_controller_at_mmio<=3'b100;
+			controller_state_now<=81;
+		end
+		81:begin // start detection of if command is being requested
+			address_controller_at_mmio<=12'b0000_00000001;
+			controller_state_now<=82;
+		end
+		82:begin // wait for command request in idle state
+			if (data_read_controller_at_mmio[0]) begin
+				write_enable_controller_at_mmio<=1;
+				address_controller_at_mmio<=12'b0000_00000010;
+				data_write_controller_at_mmio<=3'b001;
+				controller_state_now<=83;
+			end
+		end
+		83:begin // read command request (clear previous errors)
+			address_controller_at_mmio<=12'b0000_00000011;
+			data_write_controller_at_mmio<=0;
+			write_enable_controller_at_mmio<=1;
+			controller_state_now<=84;
+		end
+		84:begin // read command request (start reading command)
+			address_controller_at_mmio<=12'b0000_00000000;
+			controller_state_now<=85;
+		end
+		85:begin // read command request (is write command)
+			address_controller_at_mmio<=12'b0000_00000111;
+			is_command_write<=data_read_controller_at_mmio[0];
+			controller_state_now<=86;
+		end
+		86:begin // read command request (base target address word 1)
+			address_controller_at_mmio<=12'b0000_00000110;
+			target_base_block_address[31:16]<=data_read_controller_at_mmio;
+			controller_state_now<=87;
+		end
+		87:begin // read command request (base target address word 0)
+			address_controller_at_mmio<=12'b0000_00000100;
+			target_base_block_address[15: 0]<=data_read_controller_at_mmio;
+			controller_state_now<=88;
+		end
+		88:begin // read command request (transfer section list word 0)
+			address_controller_at_mmio<=12'b0000_00000101;
+			transfer_section_list[15: 0]<=data_read_controller_at_mmio;
+			controller_state_now<=89;
+		end
+		89:begin // read command request (transfer section list word 1). And branch to command type
+			write_enable_controller_at_mmio<=1;
+			address_controller_at_mmio<=12'b0000_00000010;
+			data_write_controller_at_mmio<=3'b010;
 			
+			transfer_section_list[31:16]<=data_read_controller_at_mmio;
+			if (transfer_section_list[3:0]==4'h0) begin
+				// do a check status on the sd/mmc card
+				controller_state_now<=90;
+			end else if (is_command_write) begin
+				// do a write command
+				controller_state_now<=114;
+			end else begin
+				// do a read command
+				controller_state_now<=120;
+			end
+		end
+		90:begin // send cmd 13 (send status)
+			command_id<=13;
+			command_arg<=0;
+			controller_state_after_command_sent<=91;
+			controller_state_now<=2;
+			general_use_counter<=0;
+		end
+		91:begin // recieve cmd 13 responce (byte 0)
+			chip_select_next<=0;
+			general_use_counter<=general_use_counter+1'b1;
+			if (general_use_counter==8'hFF) begin
+				// timeout, could not communicate with card
+				controller_state_now<=39;
+			end else if (final_byte_came_in!=8'hFF) begin
+				storage_status[7:0]<=final_byte_came_in;
+				if (final_byte_came_in==8'h00) begin
+					controller_state_now<=92;
+					general_use_counter<=0;
+				end else begin
+					// error of some sort, try once again
+					controller_state_now<=93;
+				end
+			end
+		end
+		92:begin // recieve cmd 13 responce (byte 1)
+			chip_select_next<=0;
+			if (final_byte_came_in==8'h00) begin
+				controller_state_now<=97;
+			end else begin
+				// error of some sort, try once again
+				controller_state_now<=93;
+			end
+		end
+		93:begin // wait one byte then resend cmd 13
+			controller_state_now<=94;
+		end
+		94:begin // re-send cmd 13 (send status)
+			command_id<=13;
+			command_arg<=0;
+			controller_state_after_command_sent<=95;
+			controller_state_now<=2;
+			general_use_counter<=0;
+		end
+		95:begin // recieve cmd 13 responce (byte 0)
+			chip_select_next<=0;
+			general_use_counter<=general_use_counter+1'b1;
+			if (general_use_counter==8'hFF) begin
+				// timeout, could not communicate with card
+				controller_state_now<=39;
+			end else if (final_byte_came_in!=8'hFF) begin
+				if (final_byte_came_in==8'h00) begin
+					controller_state_now<=96;
+					general_use_counter<=0;
+				end else begin
+					// error of some sort, either could not communicate with card or it isn't initialized (which would mean it was taken out and another inserted)
+					controller_state_now<=39;
+				end
+			end
+		end
+		96:begin // recieve cmd 13 responce (byte 1)
+			chip_select_next<=0;
+			if (final_byte_came_in==8'h00) begin
+				controller_state_now<=97;
+			end else begin
+				// error of some sort, either could not communicate with card or it isn't initialized (which would mean it was taken out and another inserted)
+				controller_state_now<=39;
+			end
+		end
+		97:begin // sending cmd 13 yielded a successful responce
+			write_enable_controller_at_mmio<=1;
+			address_controller_at_mmio<=12'b0000_00000010;
+			data_write_controller_at_mmio<=3'b011;
+			controller_state_now<=78;
+		end
+		/* 98<->99 are left blank in case I want to add something later */
+		100:begin // write block subroutine (enter state, does not send command)
+			chip_select_next<=0;
+			final_byte_going_out<=8'hFE;
+			general_use_counter<=0;
+			controller_state_now<=101;
+			address_controller_at_mmio<=0;
+			walking_crc16_register<=0;
+			crc_byte<=0;
+			address_controller_at_mmio[11:8]<=transfer_section_list[ 3: 0];
+			transfer_section_list[ 3: 0]<=transfer_section_list[ 7: 4];
+			transfer_section_list[ 7: 4]<=transfer_section_list[11: 8];
+			transfer_section_list[11: 8]<=transfer_section_list[15:12];
+			transfer_section_list[15:12]<=transfer_section_list[19:16];
+			transfer_section_list[19:16]<=transfer_section_list[23:20];
+			transfer_section_list[23:20]<=transfer_section_list[27:24];
+			transfer_section_list[27:24]<=transfer_section_list[31:28];
+			transfer_section_list[31:28]<=0;
+		end
+		101:begin // write block subroutine (even byte)
+			chip_select_next<=0;
+			final_byte_going_out<=data_read_controller_at_mmio[ 7:0];
+			crc_byte<=data_read_controller_at_mmio[ 7:0];
+			walking_crc16_register<=walking_crc16_output;
+			controller_state_now<=102;
+		end
+		102:begin // write block subroutine (odd  byte)
+			chip_select_next<=0;
+			final_byte_going_out<=data_read_controller_at_mmio[15:8];
+			crc_byte<=data_read_controller_at_mmio[15:8];
+			walking_crc16_register<=walking_crc16_output;
+			general_use_counter<=general_use_counter+1'b1;
+			address_controller_at_mmio[7:0]<=general_use_counter+1'b1;
+			if (general_use_counter==8'hFF) begin
+				controller_state_now<=103;
+			end else begin
+				controller_state_now<=101;
+			end
+		end
+		103:begin // send crc16 byte 1
+			general_use_counter<=0;
+			chip_select_next<=0;
+			final_byte_going_out<=walking_crc16_output[15:8];
+			controller_state_now<=104;
+		end
+		104:begin // send crc16 byte 0
+			chip_select_next<=0;
+			final_byte_going_out<=walking_crc16_output[ 7:0];
+			controller_state_now<=105;
+		end
+		105:begin // delay for data responce
+			chip_select_next<=0;
+			controller_state_now<=105;
+		end
+		106:begin // store write data responce
+			chip_select_next<=0;
+			storage_write_responce[2:0]<=final_byte_came_in[3:1];
+			storage_write_responce[3]<=(!final_byte_came_in[4] && final_byte_came_in[0])?1'b1:1'b0;
+		end
+		107:begin // wait for busy clear
+			chip_select_next<=0;
+			if (final_byte_came_in==8'hFF) controller_state_now<=108;
+		end
+		108:begin // send cmd 13 (send status)
+			command_id<=13;
+			command_arg<=0;
+			controller_state_after_command_sent<=109;
+			controller_state_now<=2;
+			general_use_counter<=0;
+		end
+		109:begin // recieve cmd 13 responce (byte 0)
+			chip_select_next<=0;
+			general_use_counter<=general_use_counter+1'b1;
+			if (general_use_counter==8'hFF) begin
+				// timeout, could not communicate with card
+				controller_state_now<=39;
+			end else if (final_byte_came_in!=8'hFF) begin
+				storage_bad_status<=(final_byte_came_in!=8'h00)?1'b1:1'b0;
+				controller_state_now<=110;
+			end
+		end
+		110:begin // recieve cmd 13 responce (byte 1) and detect write successfulness
+			chip_select_next<=0;
+			if (storage_write_responce==4'b1101) begin // write rejected due to crc error
+				controller_state_now<=111;
+			end else if (storage_write_responce==4'b1010 && !(storage_bad_status | ((final_byte_came_in!=8'h00)?1'b1:1'b0))) begin // write accepted and responce valid
+				controller_state_now<=113;
+			end else begin // then either there was a write error (4'b1110) or the responce is invalid. Those cases are treated the same
+				controller_state_now<=111;
+			end
+		end
+		111:begin // signal failure to write in error value
+			address_controller_at_mmio<=12'b0000_00000011;
+			data_write_controller_at_mmio<=16'b1;
+			write_enable_controller_at_mmio<=1;
+			controller_state_now<=113;
+		end
+		112:begin // signal success to write in error value
+			address_controller_at_mmio<=12'b0000_00000011;
+			data_write_controller_at_mmio<=16'b0;
+			write_enable_controller_at_mmio<=1;
+			controller_state_now<=113;
+			target_base_block_address<=target_base_block_address+1'b1;
+			if (transfer_section_list[ 3: 0]!=4'h0) begin
+				controller_state_now<=114; // then start another write at the next address
+			end
+		end
+		113:begin // signal write command finished
+			address_controller_at_mmio<=12'b0000_00000010;
+			data_write_controller_at_mmio<=3'b011;
+			write_enable_controller_at_mmio<=1;
+			controller_state_now<=78;
+		end
+		114:begin // send write command
+			command_id<=24;
+			command_arg<=is_sd_card_byte_address?{target_base_block_address[22:0],9'b0}:target_base_block_address;
+			controller_state_after_command_sent<=115;
+			controller_state_now<=2;
+			general_use_counter<=0;
+		end
+		115:begin // recieve write command responce
+			chip_select_next<=0;
+			general_use_counter<=general_use_counter+1'b1;
+			if (general_use_counter==8'hFF) begin
+				// timeout, could not communicate with card
+				controller_state_now<=39;
+			end else if (final_byte_came_in!=8'hFF) begin
+				if (final_byte_came_in==8'h00) begin
+					controller_state_now<=116;
+					general_use_counter<=0;
+				end else begin
+					// error of some sort, failure to write
+					controller_state_now<=111;
+				end
+			end
+		end
+		116:begin // delay before start to write
+			chip_select_next<=0;
+			controller_state_now<=100;
+		end
+		/* 117<->119 are left blank in case I want to add something later */
+		120:begin // send read command
+			command_id<=17;
+			command_arg<=is_sd_card_byte_address?{target_base_block_address[22:0],9'b0}:target_base_block_address;
+			controller_state_after_command_sent<=121;
+			controller_state_now<=2;
+			general_use_counter<=0;
+		end
+		121:begin
+			chip_select_next<=0;
+			general_use_counter<=general_use_counter+1'b1;
+			if (general_use_counter==8'hFF) begin
+				// timeout, could not communicate with card
+				controller_state_now<=39;
+			end else if (final_byte_came_in!=8'hFF) begin
+				if (final_byte_came_in==8'h00) begin
+					controller_state_now<=122;
+					general_use_counter<=0;
+				end else begin
+					// error of some sort, failure to read
+					controller_state_now<=128;
+				end
+			end
+		end
+		122:begin // wait until data start token
+			chip_select_next<=0;
+			general_use_counter<=general_use_counter+1'b1;
+			if (general_use_counter==8'hFF) begin
+				// timeout, could not communicate with card
+				controller_state_now<=39;
+			end else if (final_byte_came_in==8'hFE) begin
+				controller_state_now<=123;
+				address_controller_at_mmio<=0;
+				walking_crc16_register<=0;
+				crc_byte<=0;
+				address_controller_at_mmio[11:8]<=transfer_section_list[ 3: 0];
+				transfer_section_list[ 3: 0]<=transfer_section_list[ 7: 4];
+				transfer_section_list[ 7: 4]<=transfer_section_list[11: 8];
+				transfer_section_list[11: 8]<=transfer_section_list[15:12];
+				transfer_section_list[15:12]<=transfer_section_list[19:16];
+				transfer_section_list[19:16]<=transfer_section_list[23:20];
+				transfer_section_list[23:20]<=transfer_section_list[27:24];
+				transfer_section_list[27:24]<=transfer_section_list[31:28];
+				transfer_section_list[31:28]<=0;
+			end
+		end
+		123:begin // read block subroutine (even byte)
+			chip_select_next<=0;
+			crc_byte<=final_byte_came_in;
+			walking_crc16_register<=walking_crc16_output;
+			controller_state_now<=124;
+		end
+		124:begin // read block subroutine (odd  byte)
+			chip_select_next<=0;
+			crc_byte<=final_byte_came_in;
+			walking_crc16_register<=walking_crc16_output;
+			general_use_counter<=general_use_counter+1'b1;
+			address_controller_at_mmio[7:0]<=general_use_counter+1'b1;
+			data_write_controller_at_mmio<={final_byte_came_in,crc_byte};
+			write_enable_controller_at_mmio<=1;
+			if (general_use_counter==8'hFF) begin
+				controller_state_now<=125;
+			end else begin
+				controller_state_now<=123;
+			end
+		end
+		125:begin // read crc16 byte 1
+			chip_select_next<=0;
+			storage_bad_status=(walking_crc16_output[15:8]!=final_byte_came_in)?1'b1:1'b0;
+			controller_state_now<=126;
+		end
+		126:begin // read crc16 byte 0
+			chip_select_next<=0; // cs probably not needed
+			storage_bad_status=storage_bad_status || (walking_crc16_output[15:8]!=final_byte_came_in)?1'b1:1'b0;
+			controller_state_now<=127;
+		end
+		127:begin // decide read success
+			if (storage_bad_status) begin
+				controller_state_now<=128;
+			end else begin
+				controller_state_now<=129;
+			end
+		end
+		128:begin // signal failure to read in error value
+			address_controller_at_mmio<=12'b0000_00000011;
+			data_write_controller_at_mmio<=16'b1;
+			write_enable_controller_at_mmio<=1;
+			controller_state_now<=130;
+		end
+		129:begin // signal success to read in error value
+			address_controller_at_mmio<=12'b0000_00000011;
+			data_write_controller_at_mmio<=16'b0;
+			write_enable_controller_at_mmio<=1;
+			controller_state_now<=130;
+			target_base_block_address<=target_base_block_address+1'b1;
+			if (transfer_section_list[ 3: 0]!=4'h0) begin
+				controller_state_now<=120; // then start another read at the next address
+			end
+		end
+		130:begin // signal read command finished
+			address_controller_at_mmio<=12'b0000_00000010;
+			data_write_controller_at_mmio<=3'b011;
+			write_enable_controller_at_mmio<=1;
+			controller_state_now<=78;
 		end
 		endcase
 	end
 end
 
-// TODO: some stuff...
 
 crc7_byte crc7_byte_inst(
 	walking_crc7_output,

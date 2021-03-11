@@ -247,22 +247,22 @@ always @(posedge main_clk) begin
 	fifo_instruction_cache_addresses[4'hE]<=fifo_instruction_cache_addresses_future_E[fifo_instruction_cache_indexes_future[4'hE]];
 	fifo_instruction_cache_addresses[4'hF]<=fifo_instruction_cache_addresses_future_F[fifo_instruction_cache_indexes_future[4'hF]];
 	
-	fifo_instruction_cache_addresses[4'h0]<=1'b0;
-	fifo_instruction_cache_addresses[4'h1]<=1'b0;
-	fifo_instruction_cache_addresses[4'h2]<=1'b0;
-	fifo_instruction_cache_addresses[4'h3]<=1'b0;
-	fifo_instruction_cache_addresses[4'h4]<=1'b0;
-	fifo_instruction_cache_addresses[4'h5]<=1'b0;
-	fifo_instruction_cache_addresses[4'h6]<=1'b0;
-	fifo_instruction_cache_addresses[4'h7]<=1'b0;
-	fifo_instruction_cache_addresses[4'h8]<=1'b0;
-	fifo_instruction_cache_addresses[4'h9]<=1'b0;
-	fifo_instruction_cache_addresses[4'hA]<=1'b0;
-	fifo_instruction_cache_addresses[4'hB]<=1'b0;
-	fifo_instruction_cache_addresses[4'hC]<=1'b0;
-	fifo_instruction_cache_addresses[4'hD]<=1'b0;
-	fifo_instruction_cache_addresses[4'hE]<=1'b0;
-	fifo_instruction_cache_addresses[4'hF]<=1'b0;
+	fifo_instruction_cache_addresses[4'h0][0]<=1'b0;
+	fifo_instruction_cache_addresses[4'h1][0]<=1'b0;
+	fifo_instruction_cache_addresses[4'h2][0]<=1'b0;
+	fifo_instruction_cache_addresses[4'h3][0]<=1'b0;
+	fifo_instruction_cache_addresses[4'h4][0]<=1'b0;
+	fifo_instruction_cache_addresses[4'h5][0]<=1'b0;
+	fifo_instruction_cache_addresses[4'h6][0]<=1'b0;
+	fifo_instruction_cache_addresses[4'h7][0]<=1'b0;
+	fifo_instruction_cache_addresses[4'h8][0]<=1'b0;
+	fifo_instruction_cache_addresses[4'h9][0]<=1'b0;
+	fifo_instruction_cache_addresses[4'hA][0]<=1'b0;
+	fifo_instruction_cache_addresses[4'hB][0]<=1'b0;
+	fifo_instruction_cache_addresses[4'hC][0]<=1'b0;
+	fifo_instruction_cache_addresses[4'hD][0]<=1'b0;
+	fifo_instruction_cache_addresses[4'hE][0]<=1'b0;
+	fifo_instruction_cache_addresses[4'hF][0]<=1'b0;
 end
 
 assign fifo_instruction_cache_addresses_future_0[0]=hyper_jump_guess_address_added[0];

@@ -16,10 +16,19 @@ module memory_io(
 	output		          		VGA_HS,
 	output		          		VGA_VS,
 	
+	output [9:0] led_out_state,
+	
 	output ps2_at0_external_clock_pulldown,
 	output ps2_at0_external_data_pulldown,
 	input ps2_at0_external_clock_in,
 	input ps2_at0_external_data_in,
+	
+	output sd_at0_clk_external,
+	output sd_at0_chip_select_external,
+	output sd_at0_data_external_mosi,
+	input  sd_at0_data_external_miso,
+	
+	output [7:0] debug_controller_state_now,
 	
 	input vga_clk,
 	input main_clk
@@ -29,10 +38,11 @@ module memory_io(
 
 Address access mapping:
 	address_io[31]    determines if any IO device is accessed ( 0==no , 1==yes )
-	address_io[25:20] determines which IO device is accessed
-	address_io[25:20]==0 : VGA's VRAM
-	address_io[25:20]==1 : sd card controller
-	address_io[25:20]==2 : ps2 controller
+	address_io[25:23] determines which IO device is accessed
+	address_io[25:23]==0 : LEDs on circuit board
+	address_io[25:23]==1 : VGA's VRAM
+	address_io[25:23]==2 : sd card controller
+	address_io[25:23]==3 : ps2 controller
 
 Typical considerations for IO mapped devices:
 	All IO devices will not "react" (change state) due to a memory read. However, they may change state due to other factors, which could change the resulting value of the read.
@@ -71,7 +81,9 @@ reg [31:0] address_io_r=0;
 reg [ 1:0] control_io_r=0;
 reg [31:0] address_io_rr=0;
 reg [ 1:0] control_io_rr=0;
+reg [15:0] data_in_io_modified_r=0;
 always @(posedge main_clk) begin
+	data_in_io_modified_r<=data_in_io_modified;
 	address_io_r<=address_io;
 	control_io_r<=control_io;
 	
@@ -79,19 +91,27 @@ always @(posedge main_clk) begin
 	control_io_rr<=control_io_r;
 end
 
-wire [15:0] out_mux [63:0];
-wire [15:0] nearly_data_out_io=out_mux[address_io_rr[25:20]];
+wire [15:0] out_mux [7:0];
+wire [15:0] nearly_data_out_io=out_mux[address_io_rr[25:23]];
 assign data_out_io=control_io_rr[0]?(address_io_rr[0]?{8'h0,nearly_data_out_io[15:8]}:{8'h0,nearly_data_out_io[ 7:0]}):nearly_data_out_io;
-assign out_mux[0]=16'h0; // VGA's VRAM cannot be read
-// out_mux[1] is sd card controller
-// out_mux[2] is ps2 controller
+assign out_mux[0]=16'h0; // LEDs on circuit board cannot be read
+assign out_mux[1]=16'h0; // VGA's VRAM cannot be read
+// out_mux[2] is sd card controller
+// out_mux[3] is ps2 controller
 
-
+reg [9:0] led_state=0;
+assign led_out_state=led_state;
+always @(posedge main_clk) begin
+	// LEDs
+	if (control_io_r[1] && address_io_r[31] && address_io_r[25:23]==3'd0 && address_io_r[3:0]<4'd10) begin
+		led_state[address_io_r[3:0]]=data_in_io_modified_r[0];
+	end
+end
 
 vga_driver vga_driver_inst(
 	.VGA_B(VGA_B),.VGA_G(VGA_G),.VGA_R(VGA_R),.VGA_HS(VGA_HS),.VGA_VS(VGA_VS),
 	
-	.do_write(control_io[1] && address_io_rr[31] && address_io[25:20]==6'd0 && !control_io[1]),
+	.do_write(control_io[1] && address_io[31] && address_io[25:23]==3'd1 && !control_io[1]),
 	.write_addr(address_io[16:1]),
 	.write_data(data_in_io[11:0]),
 	.main_clk(main_clk),
@@ -99,12 +119,17 @@ vga_driver vga_driver_inst(
 );
 
 sd_card_controller sd_card_controller_inst(
+	.clk_external(sd_at0_clk_external),
+	.chip_select_external(sd_at0_chip_select_external),
+	.data_external_mosi(sd_at0_data_external_mosi),
+	.data_external_miso(sd_at0_data_external_miso),
 	
+	.debug_controller_state_now(debug_controller_state_now),
 	
-	.data_read_mmio(out_mux[1]),
+	.data_read_mmio(out_mux[2]),
 	.data_write_mmio(data_in_io_modified),
 	.address_mmio(address_io[12:0]),
-	.is_mmio_write(control_io[1] && address_io_rr[31] && address_io[25:20]==6'd1),
+	.is_mmio_write(control_io[1] && address_io[31] && address_io[25:23]==3'd2),
 	.is_mmio_byte(control_io[0]),
 	.main_clk(main_clk)
 );
@@ -115,12 +140,12 @@ ps2_controller ps2_controller_inst(
 	.external_clock_in(ps2_at0_external_clock_in),
 	.external_data_in(ps2_at0_external_data_in),
 	
-	.data_read_mmio(out_mux[2][7:0]),
+	.data_read_mmio(out_mux[3][7:0]),
 	.data_write_mmio(data_in_io_modified[7:0]),
 	.address_mmio(address_io[2:0]),
-	.is_mmio_write(control_io[1] && address_io_rr[31] && address_io[25:20]==6'd2),
+	.is_mmio_write(control_io[1] && address_io[31] && address_io[25:23]==3'd3),
 	.main_clk(main_clk)
 );
-assign out_mux[2][15:8]=out_mux[2][7:0];
+assign out_mux[3][15:8]=out_mux[3][7:0];
 
 endmodule

@@ -3,8 +3,8 @@ import subprocess
 from glob import glob
 
 sep="\\"
-seed_lower=18
-seed_upper=18
+seed_lower=2
+seed_upper=10
 quartus_dir="H:\\FPGA\\program\\quartus\\bin64\\"
 
 def directory_find(origin):

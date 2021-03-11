@@ -15,7 +15,7 @@
 `define ENABLE_LED
 `define ENABLE_SW
 `define ENABLE_VGA
-`define ENABLE_ACCELEROMETER
+//`define ENABLE_ACCELEROMETER
 `define ENABLE_ARDUINO
 `define ENABLE_GPIO
 
@@ -112,7 +112,7 @@ module top_cookie(
 	inout 		          		ARDUINO_RESET_N,
 `endif
 
-	//////////// GPIO, GPIO connect to GPIO Default: 3.3-V LVTTL //////////
+	//////////// GPIO : 3.3-V LVTTL //////////
 `ifdef ENABLE_GPIO
 	inout 		    [35:0]		GPIO
 `endif
@@ -183,20 +183,31 @@ core_main core__main(
 	debug_scheduler
 );
 
+wire [7:0] debug_controller_state_now; // for sd card debug
+
 generate_hex_display_base10 generate_hex_display_inst(
 	hex_display,
-	debug_user_reg[SW[3:0]]
+	{8'h0,debug_controller_state_now}
+	//debug_user_reg[SW[3:0]]
 );
 
 wire ps2_at0_external_clock_pulldown;
 wire ps2_at0_external_data_pulldown;
 wire ps2_at0_external_clock_in;
 wire ps2_at0_external_data_in;
-assign GPIO[0]=ps2_at0_external_clock_pulldown; // GPIO[0]
-assign GPIO[1]=ps2_at0_external_data_pulldown;  // GPIO[1]
-assign ps2_at0_external_clock_in=GPIO[2];       // GPIO[2]
-assign ps2_at0_external_data_in=GPIO[3];        // GPIO[3]
+assign GPIO[0]=ps2_at0_external_data_pulldown;  // GPIO[0]
+assign ps2_at0_external_data_in=GPIO[1];        // GPIO[1]
+assign GPIO[2]=ps2_at0_external_clock_pulldown; // GPIO[2]
+assign ps2_at0_external_clock_in=GPIO[3];       // GPIO[3]
 
+wire sd_at0_clk_external;
+wire sd_at0_chip_select_external;
+wire sd_at0_data_external_mosi;
+wire sd_at0_data_external_miso;
+assign sd_at0_data_external_miso=GPIO[4];       // GPIO[4]
+assign GPIO[5]=sd_at0_clk_external;             // GPIO[5]
+assign GPIO[6]=sd_at0_data_external_mosi;       // GPIO[6]
+assign GPIO[7]=sd_at0_chip_select_external;     // GPIO[7]
 
 memory_io memory__io(
 	.data_out_io(data_out_io),
@@ -206,10 +217,19 @@ memory_io memory__io(
 	
 	.VGA_B(VGA_B),.VGA_G(VGA_G),.VGA_R(VGA_R),.VGA_HS(VGA_HS),.VGA_VS(VGA_VS),
 	
+	.led_out_state(LEDR),
+	
 	.ps2_at0_external_clock_pulldown(ps2_at0_external_clock_pulldown),
 	.ps2_at0_external_data_pulldown(ps2_at0_external_data_pulldown),
 	.ps2_at0_external_clock_in(ps2_at0_external_clock_in),
 	.ps2_at0_external_data_in(ps2_at0_external_data_in),
+	
+	.sd_at0_clk_external(sd_at0_clk_external),
+	.sd_at0_chip_select_external(sd_at0_chip_select_external),
+	.sd_at0_data_external_mosi(sd_at0_data_external_mosi),
+	.sd_at0_data_external_miso(sd_at0_data_external_miso),
+	
+	.debug_controller_state_now(debug_controller_state_now),
 	
 	.vga_clk(vga_clk),
 	.main_clk(main_clk)
