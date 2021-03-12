@@ -244,7 +244,7 @@ always @(posedge main_clk) begin
 		if (prefeched_is_valid && (addr_prefetched==addr_req_read)) begin
 			controller_state<=40;
 			addr_for_read<=addr_req_read;
-		end else if (bank_status_general[addr_req_read_dram_side_dram[1:0]]==0) begin
+		end else if (bank_status_general[dram_addr_bank_for_read_from_unsaved]==0) begin
 			controller_state<=4;
 			prefeched_is_valid<=1; // prefetch will occur, bank is garenteed to be ready when it is needed (todo: check that)
 			addr_prefetched<=addr_prefetch_next;
@@ -286,16 +286,17 @@ always @(posedge main_clk) begin
 	9:begin
 		controller_state<=10;
 		DRAM_DQM_r<=0;
+		lane_from_dram_to_cache[ 15:  0]<=DRAM_DQ_rIN;
 	end
 	10:begin
 		controller_state<=11;
 		DRAM_DQM_r<=0;
-		lane_from_dram_to_cache[ 15:  0]<=DRAM_DQ_rIN;
+		lane_from_dram_to_cache[ 31: 16]<=DRAM_DQ_rIN;
 	end
 	11:begin
 		controller_state<=12;
 		DRAM_DQM_r<=0;
-		lane_from_dram_to_cache[ 31: 16]<=DRAM_DQ_rIN;
+		lane_from_dram_to_cache[ 47: 32]<=DRAM_DQ_rIN;
 		DRAM_RAS_r<=0;// activate command
 		DRAM_ADDR_r<=dram_addr_row_for_prefetch_from_saved;
 		DRAM_BA_r<=dram_addr_bank_for_prefetch_from_saved;
@@ -303,12 +304,12 @@ always @(posedge main_clk) begin
 	12:begin
 		controller_state<=13;
 		DRAM_DQM_r<=0;
-		lane_from_dram_to_cache[ 47: 32]<=DRAM_DQ_rIN;
+		lane_from_dram_to_cache[ 63: 48]<=DRAM_DQ_rIN;
 	end
 	13:begin
 		controller_state<=14;
 		DRAM_DQM_r<=0;
-		lane_from_dram_to_cache[ 63: 48]<=DRAM_DQ_rIN;
+		lane_from_dram_to_cache[ 79: 64]<=DRAM_DQ_rIN;
 		DRAM_CAS_r<=0;// read command
 		DRAM_BA_r<=dram_addr_bank_for_prefetch_from_saved;
 		DRAM_ADDR_r[2:0]<=3'd0;
@@ -318,47 +319,47 @@ always @(posedge main_clk) begin
 	14:begin
 		controller_state<=15;
 		DRAM_DQM_r<=0;
-		lane_from_dram_to_cache[ 79: 64]<=DRAM_DQ_rIN;
+		lane_from_dram_to_cache[ 95: 80]<=DRAM_DQ_rIN;
 	end
 	15:begin
 		controller_state<=16;
 		DRAM_DQM_r<=0;
-		lane_from_dram_to_cache[ 95: 80]<=DRAM_DQ_rIN;
+		lane_from_dram_to_cache[111: 96]<=DRAM_DQ_rIN;
 	end
 	16:begin
 		controller_state<=17;
 		DRAM_DQM_r<=0;
-		lane_from_dram_to_cache[111: 96]<=DRAM_DQ_rIN;
+		lane_from_dram_to_cache[127:112]<=DRAM_DQ_rIN;
 	end
 	17:begin
 		controller_state<=18;
 		DRAM_DQM_r<=0;
-		lane_from_dram_to_cache[127:112]<=DRAM_DQ_rIN;
+		lane_prefetched[ 15:  0]<=DRAM_DQ_rIN;
 	end
 	18:begin
 		controller_state<=19;
 		DRAM_DQM_r<=0;
-		lane_prefetched[ 15:  0]<=DRAM_DQ_rIN;
+		lane_prefetched[ 31: 16]<=DRAM_DQ_rIN;
 		dram_controller_ack_read_pulse_r<=1;
 	end
 	19:begin
 		controller_state<=20;
 		DRAM_DQM_r<=0;
-		lane_prefetched[ 31: 16]<=DRAM_DQ_rIN;
+		lane_prefetched[ 47: 32]<=DRAM_DQ_rIN;
 	end
 	20:begin
 		controller_state<=21;
 		DRAM_DQM_r<=0;
-		lane_prefetched[ 47: 32]<=DRAM_DQ_rIN;
+		lane_prefetched[ 63: 48]<=DRAM_DQ_rIN;
 	end
 	21:begin
 		controller_state<=22;
 		DRAM_DQM_r<=0;
-		lane_prefetched[ 63: 48]<=DRAM_DQ_rIN;
+		lane_prefetched[ 79: 64]<=DRAM_DQ_rIN;
 	end
 	22:begin
 		controller_state<=23;
-		lane_prefetched[ 79: 64]<=DRAM_DQ_rIN;
+		lane_prefetched[ 95: 80]<=DRAM_DQ_rIN;
 		
 		if (write_needed_because_dirty) begin
 			DRAM_RAS_r<=0;// activate command
@@ -368,15 +369,13 @@ always @(posedge main_clk) begin
 	end
 	23:begin
 		controller_state<=24;
-		lane_prefetched[ 95: 80]<=DRAM_DQ_rIN;
+		lane_prefetched[111: 96]<=DRAM_DQ_rIN;
 	end
 	24:begin
 		controller_state<=25;
-		lane_prefetched[111: 96]<=DRAM_DQ_rIN;
+		lane_prefetched[127:112]<=DRAM_DQ_rIN;
 	end
 	25:begin
-		lane_prefetched[127:112]<=DRAM_DQ_rIN;
-		
 		if (write_needed_because_dirty) begin
 			controller_state<=28;
 			DRAM_CAS_r<=0;// write command
