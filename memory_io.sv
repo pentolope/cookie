@@ -111,7 +111,7 @@ end
 vga_driver vga_driver_inst(
 	.VGA_B(VGA_B),.VGA_G(VGA_G),.VGA_R(VGA_R),.VGA_HS(VGA_HS),.VGA_VS(VGA_VS),
 	
-	.do_write(control_io[1] && address_io[31] && address_io[25:23]==3'd1 && !control_io[1]),
+	.do_write(control_io[1] && address_io[31] && address_io[25:23]==3'd1 && !control_io[0]),
 	.write_addr(address_io[16:1]),
 	.write_data(data_in_io[11:0]),
 	.main_clk(main_clk),

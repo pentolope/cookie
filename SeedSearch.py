@@ -1,10 +1,12 @@
 import os
 import subprocess
 from glob import glob
+from time import sleep
 
 sep="\\"
+parallel=2
 seed_lower=2
-seed_upper=10
+seed_upper=5
 quartus_dir="H:\\FPGA\\program\\quartus\\bin64\\"
 
 def directory_find(origin):
@@ -97,10 +99,26 @@ if ("set_global_assignment -name SEED 1" in qsf_content) and not bad_initial_see
 		f=open(directory_root+"cookie.qsf","wb")
 		f.write(qsf_content.replace("set_global_assignment -name SEED 1","set_global_assignment -name SEED "+str(seed_value)))
 		f.close()
-	for seed_value in range(seed_lower,seed_upper+1):
-		print('Executing seed '+str(seed_value))
-		subprocess.call('start /low /wait /b seed_search'+sep+'run_script_'+str(seed_value)+'.bat',shell=True) # can't use quotes around the filepath inside this command... idk why, but it breaks things in strange ways
-		subprocess.call('del seed_search'+sep+'run_script_'+str(seed_value)+'.bat',shell=True)
+	que0=range(seed_lower,seed_upper+1)
+	que1=[]
+	while len(que0)!=0 or len(que1)!=0:
+		l=[]
+		for i in que1:
+			try:
+				f=open("seed_search"+sep+"cookie_"+str(i)+".sta.summary","r")
+				f.close()
+				l.append(i)
+				print('Detected seed '+str(i)+' is done')
+			except:
+				pass
+		for i in l:
+			que1.pop(que1.index(i))
+		while len(que0)!=0 and len(que1)<parallel:
+			i=que0.pop(0)
+			que1.append(i)
+			print('Executing seed '+str(i))
+			subprocess.call('start /low /b "" "seed_search'+sep+'run_script_'+str(i)+'.bat"',shell=True)
+		sleep(2)
 	print('Collecting results...')
 	final_slack_seed_values=[]
 	for seed_value in range(seed_lower,seed_upper+1):
@@ -117,11 +135,13 @@ if ("set_global_assignment -name SEED 1" in qsf_content) and not bad_initial_see
 		else:
 			print("Warning: Could not find slack data for seed "+str(seed_value))
 	final_slack_seed_values=sorted(final_slack_seed_values,key=lambda x:x[0])
-	result_file_content="Seed : Slack\n"
+	for seed_value in range(seed_lower,seed_upper+1):
+		subprocess.call('del seed_search'+sep+'run_script_'+str(seed_value)+'.bat',shell=True)
 	if len(final_slack_seed_values)!=0:
 		print("Results below, sorted by lowest slack first.")
 		print("")
 		print("Seed : Slack")
+		result_file_content="Seed : Slack\n"
 		for slack_value,seed_value in final_slack_seed_values:
 			seed_value_s=str(seed_value)
 			while len(seed_value_s)<5:seed_value_s=seed_value_s+" "
