@@ -96,7 +96,7 @@ always @(posedge main_clk) begin
 	// send refresh every 976 cycles. However, because of potential delays, it is sent slightly more frequently (960 cycles).
 	// this needs to be recalculated
 	if (refresh_ack) refresh_req<=0;
-	if (refresh_counter==10'd960) begin
+	if (refresh_counter==10'd660) begin // temp change to 660 for testing
 		refresh_req<=1;
 		refresh_counter<=0;
 	end
@@ -168,6 +168,7 @@ reg [5:0] controller_state=0;
 always @(posedge main_clk) begin
 	controller_state<=controller_state; // assignment not needed, it is implied
 	
+	
 	dram_controller_ack_read_pulse_r<=0;
 	DRAM_DQ_oe_r<=0;
 	DRAM_ADDR_r<=0;
@@ -228,7 +229,19 @@ always @(posedge main_clk) begin
 				refresh_ack<=1;
 			end
 		end else if (dram_controller_req_read_pending) begin
-			controller_state<=3;
+			if (prefeched_is_valid && (addr_prefetched==addr_req_read)) begin
+				controller_state<=40;
+				addr_for_read<=addr_req_read;
+				prefeched_is_valid<=0;
+			end else if (bank_status_general[dram_addr_bank_for_read_from_unsaved]==0) begin
+				controller_state<=4;
+				prefeched_is_valid<=1; // prefetch will occur, bank is garenteed to be ready when it is needed (todo: check that)
+				addr_prefetched<=addr_prefetch_next;
+				addr_for_read<=addr_req_read;
+				DRAM_RAS_r<=0;// activate command
+				DRAM_ADDR_r<=dram_addr_row_for_read_from_unsaved;
+				DRAM_BA_r<=dram_addr_bank_for_read_from_unsaved;
+			end
 		end
 	end
 	2:begin
@@ -240,22 +253,12 @@ always @(posedge main_clk) begin
 		DRAM_RAS_r<=0;
 		controller_state<=1;
 	end
-	3:begin
-		if (prefeched_is_valid && (addr_prefetched==addr_req_read)) begin
-			controller_state<=40;
-			addr_for_read<=addr_req_read;
-		end else if (bank_status_general[dram_addr_bank_for_read_from_unsaved]==0) begin
-			controller_state<=4;
-			prefeched_is_valid<=1; // prefetch will occur, bank is garenteed to be ready when it is needed (todo: check that)
-			addr_prefetched<=addr_prefetch_next;
-			addr_for_read<=addr_req_read;
-			DRAM_RAS_r<=0;// activate command
-			DRAM_ADDR_r<=dram_addr_row_for_read_from_unsaved;
-			DRAM_BA_r<=dram_addr_bank_for_read_from_unsaved;
-		end
-	end
 	4:begin
 		controller_state<=5;
+		
+		addr_for_write_upper<=addr_req_write_dram_side_dram;
+		write_needed_because_dirty<=dram_controller_entry_dirty_side_dram;
+		lane_from_cache_to_dram<=lane_from_cache_to_dram_side_dram;
 	end
 	5:begin
 		controller_state<=6;
@@ -269,11 +272,6 @@ always @(posedge main_clk) begin
 	6:begin
 		controller_state<=7;
 		DRAM_DQM_r<=0;
-		
-		// might be able to be sooner
-		addr_for_write_upper<=addr_req_write_dram_side_dram;
-		write_needed_because_dirty<=dram_controller_entry_dirty_side_dram;
-		lane_from_cache_to_dram<=lane_from_cache_to_dram_side_dram;
 	end
 	7:begin
 		controller_state<=8;
@@ -330,6 +328,7 @@ always @(posedge main_clk) begin
 		controller_state<=17;
 		DRAM_DQM_r<=0;
 		lane_from_dram_to_cache[127:112]<=DRAM_DQ_rIN;
+		dram_controller_ack_read_pulse_r<=1;
 	end
 	17:begin
 		controller_state<=18;
@@ -340,12 +339,12 @@ always @(posedge main_clk) begin
 		controller_state<=19;
 		DRAM_DQM_r<=0;
 		lane_prefetched[ 31: 16]<=DRAM_DQ_rIN;
-		dram_controller_ack_read_pulse_r<=1;
 	end
 	19:begin
 		controller_state<=20;
 		DRAM_DQM_r<=0;
 		lane_prefetched[ 47: 32]<=DRAM_DQ_rIN;
+		
 	end
 	20:begin
 		controller_state<=21;
@@ -372,8 +371,8 @@ always @(posedge main_clk) begin
 		lane_prefetched[111: 96]<=DRAM_DQ_rIN;
 	end
 	24:begin
-		controller_state<=25;
 		lane_prefetched[127:112]<=DRAM_DQ_rIN;
+		controller_state<=25;
 	end
 	25:begin
 		if (write_needed_because_dirty) begin
@@ -445,19 +444,10 @@ always @(posedge main_clk) begin
 	end
 	
 	40:begin
-		controller_state<=41;
 		lane_from_dram_to_cache<=lane_prefetched;
-		prefeched_is_valid<=0;
-	end
-	41:begin
-		controller_state<=42;
-	end
-	42:begin
-		// might be able to be sooner
-		dram_controller_ack_read_pulse_r<=1;
-		lane_from_cache_to_dram<=lane_from_cache_to_dram_side_dram;
 		addr_for_write_upper<=addr_req_write_dram_side_dram;
-		
+		lane_from_cache_to_dram<=lane_from_cache_to_dram_side_dram;
+		dram_controller_ack_read_pulse_r<=1;
 		if (dram_controller_entry_dirty_side_dram) begin
 			controller_state<=43;
 		end else begin

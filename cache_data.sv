@@ -12,8 +12,7 @@ module cache_data(
 	input  [127:0] raw_in_full_data,
 	
 	input  [8:0] target_segment,
-	input  [1:0] target_way_read,
-	input  [1:0] target_way_write,
+	input  [1:0] target_way,
 	
 	input  do_full_write,
 	input  do_partial_write,
@@ -277,11 +276,11 @@ ip_cache_data ip_cache_data_inst(
 	main_clk,
 	write_data,
 	{
-		target_way_read,
+		target_way,
 		target_segment
 	},
 	{
-		target_way_write,
+		target_way,
 		target_segment
 	},
 	do_write,
@@ -293,11 +292,11 @@ ip_cache_dirty ip_cache_dirty_inst(
 	main_clk,
 	do_write && !do_full_write,
 	{
-		target_way_read,
+		target_way,
 		target_segment
 	},
 	{
-		target_way_write,
+		target_way,
 		target_segment
 	},
 	do_write,

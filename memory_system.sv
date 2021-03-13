@@ -76,15 +76,12 @@ module memory_system(
 
 reg was_cache_faulting=0;
 reg is_cache_fault_start;
-reg is_cache_fault_end;
 reg is_cache_fault_start_state=0;
-reg is_cache_fault_end_state=0;
 reg mask_calculated_cache_fault;
 
 wire calculated_cache_fault;
 
 always @(posedge main_clk) is_cache_fault_start_state<=is_cache_fault_start;
-always @(posedge main_clk) is_cache_fault_end_state<=is_cache_fault_end;
 
 wire is_cache_being_filled; // this is referring to being filled from DRAM
 
@@ -120,10 +117,12 @@ always_comb begin
 	if (was_cache_faulting) is_cache_fault_start=1'b0;
 end
 
-always_comb begin
-	is_cache_fault_end=is_cache_fault_end_state;
-	if (was_cache_faulting) is_cache_fault_end=1'b1;
-	if (calculated_cache_fault) is_cache_fault_end=1'b0;
+
+reg change_way_for_data=0;
+
+always @(posedge main_clk) begin
+	if (calculated_cache_fault && !was_cache_faulting) change_way_for_data<=1;
+	if (is_cache_being_filled) change_way_for_data<=0;
 end
 
 always @(posedge main_clk) cache_data_target_address<=cache_way_target_address;
@@ -151,8 +150,7 @@ reg [15:0] cd_access_mask;
 wire [127:0] cd_raw_out_full_data;
 wire [127:0] cd_raw_in_full_data;
 wire [8:0] cd_target_segment;
-wire [1:0] cd_target_way_read;
-wire [1:0] cd_target_way_write;
+wire [1:0] cd_target_way;
 wire cd_do_partial_write;
 wire cd_do_byte_operation;
 
@@ -160,8 +158,7 @@ reg lru_enable_write;
 
 reg cache_no_write_override; // this is for not writing the cache when an I/O mapped memory access occures
 
-assign cd_target_way_read=calculated_cache_way;
-assign cd_target_way_write=is_cache_being_filled?lru_least_used_index:calculated_cache_way;
+assign cd_target_way=change_way_for_data?lru_least_used_index:calculated_cache_way;
 
 assign cd_target_segment=cache_data_target_address[12:4];
 assign cd_do_partial_write=do_partial_write_saved;
@@ -545,8 +542,7 @@ cache_data cache_data_inst(
 	cd_raw_in_full_data,
 
 	cd_target_segment,
-	cd_target_way_read,
-	cd_target_way_write,
+	cd_target_way,
 
 	is_cache_being_filled, // do_full_write
 	cd_do_partial_write,
@@ -561,7 +557,7 @@ cache_LRU cache_LRU_inst(
 	lru_least_used_index,
 
 	cd_target_segment, // lru_addr
-	cd_target_way_write, // lru_used_index
+	cd_target_way, // lru_used_index
 	lru_enable_write,
 	main_clk
 );
@@ -575,7 +571,7 @@ dram_controller dram_controller_inst(
 	cd_raw_out_full_data,
 	cd_out_dirty,
 	
-	is_cache_fault_start,
+	is_cache_fault_start_state, // using the state version of is_cache_fault_start will probably help to seperate the circuits of cache and dram
 	is_cache_being_filled,
 	
 	

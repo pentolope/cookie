@@ -84,7 +84,7 @@ cache_LRU_sub_read_through_write cache_LRU_sub_read_through_write_inst(
 endmodule
 
 
-module cache_LRU( // not really tested, but would be one cycle faster (so that dram controller could be a little faster)
+module cache_LRU( // partially tested, but would be two cycles faster (so that dram controller could be a little faster when already prefetched)
 	output [1:0] least_used_index,
 
 	input  [8:0] addr,
@@ -99,10 +99,9 @@ wire [8:0] read_addr;assign read_addr=addr;
 reg  [8:0] write_addr=0;
 wire [4:0] raw_perm_out;
 wire [4:0] raw_perm_in;
-reg  [1:0] least_used_index_calc_r;
-assign least_used_index=least_used_index_calc_r;
 wire [1:0] least_used_index_calc;
 
+lcell_2 lc_lru_out(least_used_index,least_used_index_calc);
 
 `include "AutoGen0.sv"
 
@@ -111,7 +110,6 @@ always @(posedge main_clk) begin
 	enable_write_delayed<=enable_write;
 	used_index_delayed<=used_index;
 	write_addr<=read_addr;
-	least_used_index_calc_r<=least_used_index_calc;
 end
 
 cache_LRU_sub_read_through_write cache_LRU_sub_read_through_write_inst(
