@@ -119,7 +119,6 @@ module top_cookie(
 );
 
 
-wire isLockedPLL_internal;
 wire reference_clock;
 assign reference_clock=MAX10_CLK1_50;
 
@@ -131,8 +130,7 @@ wire vga_clk; // 12.5875MHz
 
 ip_pll_internal ip_pll_internal_inst(
 	reference_clock,
-	main_clk,
-	isLockedPLL_internal
+	main_clk
 );
 
 ip_pll_vga ip_pll_vga_inst(

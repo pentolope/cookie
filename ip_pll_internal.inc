@@ -20,6 +20,5 @@ FUNCTION ip_pll_internal
 )
 
 RETURNS (
-	c0,
-	locked
+	c0
 );
