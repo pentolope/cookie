@@ -122,7 +122,7 @@ module top_cookie(
 wire reference_clock;
 assign reference_clock=MAX10_CLK1_50;
 
-wire main_clk; // 90MHz
+wire main_clk; // 83.3333MHz
 assign DRAM_CLK=main_clk;
 
 wire vga_clk; // 12.5875MHz
@@ -185,8 +185,8 @@ wire [7:0] debug_controller_state_now; // for sd card debug
 
 generate_hex_display_base10 generate_hex_display_inst(
 	hex_display,
-	{8'h0,debug_controller_state_now}
-	//debug_user_reg[SW[3:0]]
+	//{8'h0,debug_controller_state_now}
+	debug_user_reg[SW[3:0]]
 );
 
 wire ps2_at0_external_clock_pulldown;

@@ -425,7 +425,7 @@ set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to GPIO[33]
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to GPIO[34]
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to GPIO[35]
 set_global_assignment -name OPTIMIZATION_MODE "HIGH PERFORMANCE EFFORT"
-set_global_assignment -name ALLOW_REGISTER_RETIMING OFF
+set_global_assignment -name ALLOW_REGISTER_RETIMING ON
 set_global_assignment -name MUX_RESTRUCTURE ON
 set_global_assignment -name STATE_MACHINE_PROCESSING "USER-ENCODED"
 set_global_assignment -name INFER_RAMS_FROM_RAW_LOGIC OFF
@@ -436,10 +436,6 @@ set_global_assignment -name AUTO_RAM_RECOGNITION OFF
 set_global_assignment -name STRICT_RAM_RECOGNITION ON
 set_global_assignment -name SYNTH_PROTECT_SDC_CONSTRAINT ON
 set_global_assignment -name PRE_MAPPING_RESYNTHESIS ON
-set_instance_assignment -name DONT_MERGE_REGISTER ON -to *instructionCurrent*
-set_instance_assignment -name PHYSICAL_SYNTHESIS_REGISTER_RETIMING OFF -to *user_reg*
-set_instance_assignment -name PHYSICAL_SYNTHESIS_REGISTER_RETIMING OFF -to *stack_pointer*
-set_instance_assignment -name QII_AUTO_PACKED_REGISTERS OFF -to *user_reg*
 set_global_assignment -name SAVE_DISK_SPACE OFF
 set_global_assignment -name TIMING_ANALYZER_MULTICORNER_ANALYSIS ON
 set_global_assignment -name NUM_PARALLEL_PROCESSORS ALL
@@ -482,4 +478,26 @@ set_global_assignment -name OPTIMIZE_SSN "NORMAL COMPILATION"
 set_global_assignment -name OPTIMIZE_IOC_REGISTER_PLACEMENT_FOR_TIMING "PACK ALL IO REGISTERS"
 set_global_assignment -name FINAL_PLACEMENT_OPTIMIZATION ALWAYS
 set_global_assignment -name WEAK_PULL_UP_RESISTOR ON
+set_instance_assignment -name REMOVE_DUPLICATE_REGISTERS OFF -to "core_main:core__main|scheduler:scheduler_inst|is_instructions_valid[*]"
+set_instance_assignment -name PHYSICAL_SYNTHESIS_REGISTER_RETIMING OFF -to *user_reg[*][*]
+set_instance_assignment -name PHYSICAL_SYNTHESIS_REGISTER_RETIMING OFF -to *stack_pointer[*]
+set_instance_assignment -name QII_AUTO_PACKED_REGISTERS OFF -to *user_reg[*][*]
+set_instance_assignment -name REMOVE_DUPLICATE_REGISTERS OFF -to *tick_tock
+set_instance_assignment -name QII_AUTO_PACKED_REGISTERS OFF -to *wv_8[0]
+set_instance_assignment -name QII_AUTO_PACKED_REGISTERS OFF -to *wv_8[1]
+set_instance_assignment -name QII_AUTO_PACKED_REGISTERS OFF -to *wv_8[2]
+set_instance_assignment -name QII_AUTO_PACKED_REGISTERS OFF -to *wv_8[3]
+set_instance_assignment -name QII_AUTO_PACKED_REGISTERS OFF -to *wv_8[4]
+set_instance_assignment -name QII_AUTO_PACKED_REGISTERS OFF -to *wv_8[5]
+set_instance_assignment -name QII_AUTO_PACKED_REGISTERS OFF -to *wv_8[6]
+set_instance_assignment -name QII_AUTO_PACKED_REGISTERS OFF -to *wv_8[7]
+set_instance_assignment -name QII_AUTO_PACKED_REGISTERS OFF -to *wv_6[0]
+set_instance_assignment -name QII_AUTO_PACKED_REGISTERS OFF -to *wv_6[1]
+set_instance_assignment -name QII_AUTO_PACKED_REGISTERS OFF -to *wv_6[2]
+set_instance_assignment -name QII_AUTO_PACKED_REGISTERS OFF -to *wv_6[3]
+set_instance_assignment -name QII_AUTO_PACKED_REGISTERS OFF -to *wv_6[4]
+set_instance_assignment -name QII_AUTO_PACKED_REGISTERS OFF -to *wv_6[5]
+set_instance_assignment -name QII_AUTO_PACKED_REGISTERS OFF -to *wv_6[6]
+set_instance_assignment -name QII_AUTO_PACKED_REGISTERS OFF -to *wv_6[7]
+set_instance_assignment -name PHYSICAL_SYNTHESIS_REGISTER_RETIMING OFF -to *wv_8[*]
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top

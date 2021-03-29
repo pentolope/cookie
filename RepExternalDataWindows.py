@@ -192,16 +192,16 @@ s6='9'
 s7='9'
 s8='9'
 
-p=int(round(float(11.1111111111111111)*scale))
-p2=int(round(float(11.1111111111111111/2)*scale))
+p=int(round(float(12.0)*scale))
+p2=int(round(float(12.0/2)*scale))
 
 
 print([dataTransitionMin,dataTransitionMax,clkTransitionMin, clkTransitionMax ])
-print([p2,p,int(round(float(11.1111111111111111*3)*scale))+7])
+print([p2,p,int(round(float(12.0*3)*scale))+7])
 print('\n\n')
 
 
-rt=range(int(round(float(11.1111111111111111*3)*scale))+7)
+rt=range(int(round(float(12.0*3)*scale))+7)
 for t in rt:
     tp=t%p
     tp2=t%p2

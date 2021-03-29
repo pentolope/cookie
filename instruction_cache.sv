@@ -10,6 +10,7 @@ module instruction_cache(
 	output is_performing_jump_state_e,
 	output is_performing_jump_e,
 	output [4:0] fifo_instruction_cache_size_e,
+	output [4:0] fifo_instruction_cache_size_next_e,
 	output [25:0] mem_target_address_instruction_fetch,
 	output [25:0] mem_target_address_hyper_instruction_fetch_0,
 	output [25:0] mem_target_address_hyper_instruction_fetch_1,
@@ -22,7 +23,6 @@ module instruction_cache(
 	input  mem_is_hyper_instruction_fetch_0_acknowledged_pulse,
 	input  mem_is_hyper_instruction_fetch_1_acknowledged_pulse,
 	input  is_performing_jump_instant_on,
-	input  [1:0] jump_executer_index,
 	input  [31:0] instruction_jump_address_selected,
 	input  [15:0] mem_data_out_type_0 [7:0],
 	input  [15:0] user_reg [15:0],
@@ -46,6 +46,7 @@ assign mem_target_address_hyper_instruction_fetch_1=target_address_hyper_instruc
 
 reg  is_hyper_instruction_fetch_0_requesting=0;
 reg  is_hyper_instruction_fetch_1_requesting=0;
+reg  will_hyper_instruction_fetch_1_request_after=0;
 assign mem_is_hyper_instruction_fetch_0_requesting=is_hyper_instruction_fetch_0_requesting;
 assign mem_is_hyper_instruction_fetch_1_requesting=is_hyper_instruction_fetch_1_requesting;
 
@@ -90,6 +91,27 @@ wire [15:0] fifo_instruction_cache_data_at_write_addr_m2;
 wire [15:0] fifo_instruction_cache_data_at_write_addr_m3;
 wire [15:0] fifo_instruction_cache_data_at_write_addr_m4;
 
+reg [4:0] fifo_instruction_cache_size_next;
+assign fifo_instruction_cache_size_next_e=fifo_instruction_cache_size_next;
+always_comb begin
+	fifo_instruction_cache_size_next=fifo_instruction_cache_size_after_read;
+	if (is_performing_jump) fifo_instruction_cache_size_next=0;
+	
+	if (is_instruction_cache_requesting) begin
+		if (mem_is_instruction_fetch_acknowledged_pulse) begin
+			if (!is_performing_jump) begin
+				fifo_instruction_cache_size_next=fifo_instruction_cache_size_after_read+instruction_fetch_returning_word_count_actual;
+			end
+		end
+	end else begin
+		if (is_performing_jump) begin
+			if (hyper_jump_potentially_valid_type0 && !is_hyper_instruction_fetch_0_requesting && instruction_jump_address[25:1]==hyper_jump_guess_address_saved[25:1]) begin
+				fifo_instruction_cache_size_next=hyper_instruction_fetch_size;
+			end
+		end
+	end
+end
+
 instruction_cache_mux instruction_cache_mux_inst(
 	hyper_jump_guess_address_calc,
 	hyper_jump_guess_address_calc_alt,
@@ -119,39 +141,44 @@ instruction_cache_mux instruction_cache_mux_inst(
 	main_clk
 );
 
+always @(posedge main_clk) fifo_instruction_cache_size<=fifo_instruction_cache_size_next;
+
+
 always @(posedge main_clk) begin
+	will_hyper_instruction_fetch_1_request_after<=0;
+	void_hyper_instruction_fetch<=0;
 	instruction_jump_address_saved<=instruction_jump_address;
 	instruction_jump_address_saved[0]<=1'b0;
 	is_performing_jump_state<=is_performing_jump;
-	fifo_instruction_cache_size<=fifo_instruction_cache_size_after_read;
 	
 	is_hyper_instruction_fetch_0_requesting<=mem_is_hyper_instruction_fetch_0_acknowledged_pulse?1'b0:is_hyper_instruction_fetch_0_requesting;
-	is_hyper_instruction_fetch_1_requesting<=mem_is_hyper_instruction_fetch_1_acknowledged_pulse?1'b0:is_hyper_instruction_fetch_1_requesting;
+	is_hyper_instruction_fetch_1_requesting<=mem_is_hyper_instruction_fetch_1_acknowledged_pulse?1'b0:(is_hyper_instruction_fetch_1_requesting | will_hyper_instruction_fetch_1_request_after);
 	
-	if (void_hyper_instruction_fetch) void_hyper_instruction_fetch<=0;
+	if (will_hyper_instruction_fetch_1_request_after) begin
+		target_address_hyper_instruction_fetch_1<={target_address_hyper_instruction_fetch_0[25:4]+1'b1,4'b0};
+	end
 	
 	if (hyper_jump_potentially_valid_type1) begin
 		if (hyper_jump_potentially_valid_type3) begin
 			hyper_jump_guess_address_saved<=hyper_jump_guess_address_calc_alt;
 			target_address_hyper_instruction_fetch_0<={hyper_jump_guess_address_calc_alt[25:1],1'b0};
-			target_address_hyper_instruction_fetch_1<={hyper_jump_guess_address_calc_alt[25:4]+1'b1,4'b0};
 		end else begin
 			hyper_jump_guess_address_saved<=hyper_jump_guess_address_calc;
 			target_address_hyper_instruction_fetch_0<={hyper_jump_guess_address_calc[25:1],1'b0};
-			target_address_hyper_instruction_fetch_1<={hyper_jump_guess_address_calc[25:4]+1'b1,4'b0};
 		end
 		hyper_jump_potentially_valid_type2<=0;
 		hyper_jump_potentially_valid_type1<=0;
 		hyper_jump_potentially_valid_type0<=1;
 		is_hyper_instruction_fetch_0_requesting<=1;
-		is_hyper_instruction_fetch_1_requesting<=1;
+		is_hyper_instruction_fetch_1_requesting<=0;
+		will_hyper_instruction_fetch_1_request_after<=1;
 		hyper_instruction_fetch_size<=0;
 	end
 	if (mem_is_hyper_instruction_fetch_0_acknowledged_pulse) begin
-		hyper_instruction_fetch_size<=hyper_instruction_fetch_size+instruction_fetch_returning_word_count_actual;
+		hyper_instruction_fetch_size<=(4'd7-target_address_hyper_instruction_fetch_0[3:1])+1'b1;
 		hyper_instruction_fetch_storage[7:0]<=mem_data_out_type_0;
-	end else if (mem_is_hyper_instruction_fetch_1_acknowledged_pulse) begin
-		hyper_instruction_fetch_size<=hyper_instruction_fetch_size+instruction_fetch_returning_word_count_actual;
+	end else if (mem_is_hyper_instruction_fetch_1_acknowledged_pulse && !is_hyper_instruction_fetch_0_requesting) begin
+		hyper_instruction_fetch_size<=hyper_instruction_fetch_size+5'h8;
 		unique case (hyper_instruction_fetch_size)
 		1:hyper_instruction_fetch_storage[ 8:1]<=mem_data_out_type_0;
 		2:hyper_instruction_fetch_storage[ 9:2]<=mem_data_out_type_0;
@@ -163,8 +190,6 @@ always @(posedge main_clk) begin
 		8:hyper_instruction_fetch_storage[15:8]<=mem_data_out_type_0;
 		endcase
 	end
-	
-	if (is_performing_jump) fifo_instruction_cache_size<=0;
 	
 	if (is_instruction_cache_requesting) begin
 		if (mem_is_instruction_fetch_acknowledged_pulse) begin
@@ -196,6 +221,7 @@ always @(posedge main_clk) begin
 				hyper_jump_potentially_valid_type0<=0;
 				is_hyper_instruction_fetch_0_requesting<=0;
 				is_hyper_instruction_fetch_1_requesting<=0;
+				will_hyper_instruction_fetch_1_request_after<=0;
 				void_hyper_instruction_fetch<=1;
 				hyper_jump_look_index<=3'hx;
 				
@@ -310,7 +336,6 @@ always @(posedge main_clk) begin
 						end
 					end
 				
-				fifo_instruction_cache_size<=fifo_instruction_cache_size_after_read+instruction_fetch_returning_word_count_actual;
 				instruction_fetch_address<=instruction_fetch_address+{instruction_fetch_returning_word_count_actual,1'b0};
 				is_instruction_cache_requesting<=0;
 			end
@@ -321,6 +346,7 @@ always @(posedge main_clk) begin
 			isWaitingForJump<=0;
 			is_hyper_instruction_fetch_0_requesting<=0;
 			is_hyper_instruction_fetch_1_requesting<=0;
+			will_hyper_instruction_fetch_1_request_after<=0;
 			void_hyper_instruction_fetch<=1;
 			hyper_jump_potentially_valid_type3<=1;
 			hyper_jump_potentially_valid_type2<=0;
@@ -331,7 +357,6 @@ always @(posedge main_clk) begin
 			
 			if (hyper_jump_potentially_valid_type0 && !is_hyper_instruction_fetch_0_requesting && instruction_jump_address[25:1]==hyper_jump_guess_address_saved[25:1]) begin
 				instruction_fetch_address<={hyper_jump_guess_address_saved[25:1]+hyper_instruction_fetch_size,1'b0};
-				fifo_instruction_cache_size<=hyper_instruction_fetch_size;
 				is_instruction_cache_requesting<=0;
 				
 				if (hyper_instruction_fetch_size>5'd15) begin

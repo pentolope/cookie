@@ -278,11 +278,24 @@ wire		     [3:0]		VGA_G;
 wire		     [3:0]		VGA_R;
 wire		          		VGA_HS;
 wire		          		VGA_VS;
+wire		     [9:0]		LEDR;
+
+wire ps2_at0_external_clock_pulldown;
+wire ps2_at0_external_data_pulldown;
+wire ps2_at0_external_clock_in;
+wire ps2_at0_external_data_in;
+
+wire sd_at0_clk_external;
+wire sd_at0_chip_select_external;
+wire sd_at0_data_external_mosi;
+wire sd_at0_data_external_miso;
+
+wire [7:0] debug_controller_state_now; // for sd card debug
 
 wire [15:0] data_out_io;
 wire [15:0] data_in_io;
-wire [31:0] address_out_io;
-wire [1:0] control_out_io;
+wire [31:0] address_io;
+wire [1:0] control_io;
 
 wire [15:0] debug_user_reg [15:0];
 wire [15:0] debug_stack_pointer;
@@ -341,8 +354,8 @@ core_main core__main(
 	
 	data_out_io,
 	data_in_io,
-	address_out_io,
-	control_out_io,
+	address_io,
+	control_io,
 	
 	main_clk,
 	
@@ -352,6 +365,31 @@ core_main core__main(
 	debug_scheduler
 );
 
+memory_io memory__io(
+	.data_out_io(data_out_io),
+	.data_in_io(data_in_io),
+	.address_io(address_io),
+	.control_io(control_io),
+	
+	.VGA_B(VGA_B),.VGA_G(VGA_G),.VGA_R(VGA_R),.VGA_HS(VGA_HS),.VGA_VS(VGA_VS),
+	
+	.led_out_state(LEDR),
+	
+	.ps2_at0_external_clock_pulldown(ps2_at0_external_clock_pulldown),
+	.ps2_at0_external_data_pulldown(ps2_at0_external_data_pulldown),
+	.ps2_at0_external_clock_in(ps2_at0_external_clock_in),
+	.ps2_at0_external_data_in(ps2_at0_external_data_in),
+	
+	.sd_at0_clk_external(sd_at0_clk_external),
+	.sd_at0_chip_select_external(sd_at0_chip_select_external),
+	.sd_at0_data_external_mosi(sd_at0_data_external_mosi),
+	.sd_at0_data_external_miso(sd_at0_data_external_miso),
+	
+	.debug_controller_state_now(debug_controller_state_now),
+	
+	.vga_clk(vga_clk),
+	.main_clk(main_clk)
+);
 
 initial begin // stopping timer
 	#10;

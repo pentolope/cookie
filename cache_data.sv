@@ -1,275 +1,206 @@
 `timescale 1 ps / 1 ps
 
 module cache_data(
-	output out_dirty, // out_dirty only refers to the single_access_out_full_data
+	output out_dirty,
 	
-	output [15:0] multi_access_out_full_data_extern [7:0],
-	output [15:0] single_access_out_full_data_extern [7:0],
-	input  [15:0] access_mask,
+	output [15:0] access_out_full_data_extern [7:0],
 	output [127:0] raw_out_full_data_extern,
 	
-	input  [15:0] access_in_full_data [7:0],
+	input  [15:0] access_in_full_data [3:0],
 	input  [127:0] raw_in_full_data,
 	
 	input  [8:0] target_segment,
 	input  [1:0] target_way,
 	
-	input  do_full_write,
 	input  do_partial_write,
 	input  do_byte_operation,
 	
-	input  override_no_write, // unless do_full_write
-	input  calculated_cache_fault,
+	input  byte_operation_polarity, // 0==lower byte , 1==upper byte
+	input  [2:0] word_offset,
+	input  [2:0] access_length, // access_length signifies a number of words one greater then it's value
+	
+	input  do_full_write, // do_full_write uses raw_in and ignores typical access mechanics
+	input  any_fault,
 	
 	input  main_clk
 );
 
-reg [15:0] multi_access_out_full_data [7:0];
-reg [15:0] single_access_out_full_data [7:0];
-reg [127:0] raw_out_full_data;
-
+reg [15:0] access_out_full_data [7:0];
+wire [127:0] raw_out_full_data;
 
 assign raw_out_full_data_extern=raw_out_full_data;
-assign single_access_out_full_data_extern=single_access_out_full_data;
-assign multi_access_out_full_data_extern=multi_access_out_full_data;
+assign access_out_full_data_extern=access_out_full_data;
 
-reg [15:0] masked_out_full_data [7:0];
+reg [7:0] word_mask;
 
-reg [15:0] access_mask_r;
-reg [15:0] single_access_out_full_data_r [7:0];
 reg do_byte_operation_r=0;
+reg byte_operation_polarity_r=0;
+reg [2:0] word_offset_r=0;
+always @(posedge main_clk) word_offset_r<=word_offset;
+always @(posedge main_clk) do_byte_operation_r<=do_byte_operation;
+always @(posedge main_clk) byte_operation_polarity_r<=byte_operation_polarity;
 
-always_comb begin
-	masked_out_full_data[0]={({8{access_mask_r[ 1]}}),({8{access_mask_r[ 0]}})} & raw_out_full_data[ 15:  0];
-	masked_out_full_data[1]={({8{access_mask_r[ 3]}}),({8{access_mask_r[ 2]}})} & raw_out_full_data[ 31: 16];
-	masked_out_full_data[2]={({8{access_mask_r[ 5]}}),({8{access_mask_r[ 4]}})} & raw_out_full_data[ 47: 32];
-	masked_out_full_data[3]={({8{access_mask_r[ 7]}}),({8{access_mask_r[ 6]}})} & raw_out_full_data[ 63: 48];
-	masked_out_full_data[4]={({8{access_mask_r[ 9]}}),({8{access_mask_r[ 8]}})} & raw_out_full_data[ 79: 64];
-	masked_out_full_data[5]={({8{access_mask_r[11]}}),({8{access_mask_r[10]}})} & raw_out_full_data[ 95: 80];
-	masked_out_full_data[6]={({8{access_mask_r[13]}}),({8{access_mask_r[12]}})} & raw_out_full_data[111: 96];
-	masked_out_full_data[7]={({8{access_mask_r[15]}}),({8{access_mask_r[14]}})} & raw_out_full_data[127:112];
-end
+wire do_write;
+reg [15:0] byte_enable;
+reg [1:0] byte_pair;
 
-wire do_write=do_full_write | (do_partial_write & !override_no_write & !calculated_cache_fault);
+assign do_write=do_full_write | (do_partial_write & !any_fault);
 
 reg [127:0] write_data;
-reg [15:0] byte_enable;
 
 always_comb begin
+	write_data=128'hx;
 	if (do_full_write) begin
 		write_data=raw_in_full_data;
 	end else begin
-		write_data[ 15:  0]=access_in_full_data[0];
-		write_data[ 31: 16]=access_in_full_data[1];
-		write_data[ 47: 32]=access_in_full_data[2];
-		write_data[ 63: 48]=access_in_full_data[3];
-		write_data[ 79: 64]=access_in_full_data[4];
-		write_data[ 95: 80]=access_in_full_data[5];
-		write_data[111: 96]=access_in_full_data[6];
-		write_data[127:112]=access_in_full_data[7];
+		unique case (word_offset)
+		0:begin
+			write_data[ 15:  0]=access_in_full_data[0];
+			write_data[ 31: 16]=access_in_full_data[1];
+			write_data[ 47: 32]=access_in_full_data[2];
+			write_data[ 63: 48]=access_in_full_data[3];
+		end
+		1:begin
+			write_data[ 31: 16]=access_in_full_data[0];
+			write_data[ 47: 32]=access_in_full_data[1];
+			write_data[ 63: 48]=access_in_full_data[2];
+			write_data[ 79: 64]=access_in_full_data[3];
+		end
+		2:begin
+			write_data[ 47: 32]=access_in_full_data[0];
+			write_data[ 63: 48]=access_in_full_data[1];
+			write_data[ 79: 64]=access_in_full_data[2];
+			write_data[ 95: 80]=access_in_full_data[3];
+		end
+		3:begin
+			write_data[ 63: 48]=access_in_full_data[0];
+			write_data[ 79: 64]=access_in_full_data[1];
+			write_data[ 95: 80]=access_in_full_data[2];
+			write_data[111: 96]=access_in_full_data[3];
+		end
+		4:begin
+			write_data[ 79: 64]=access_in_full_data[0];
+			write_data[ 95: 80]=access_in_full_data[1];
+			write_data[111: 96]=access_in_full_data[2];
+			write_data[127:112]=access_in_full_data[3];
+		end
+		5:begin
+			write_data[ 95: 80]=access_in_full_data[0];
+			write_data[111: 96]=access_in_full_data[1];
+			write_data[127:112]=access_in_full_data[2];
+		end
+		6:begin
+			write_data[111: 96]=access_in_full_data[0];
+			write_data[127:112]=access_in_full_data[1];
+		end
+		7:begin
+			write_data[127:112]=access_in_full_data[0];
+		end
+		endcase
 	end
 end
 
 always_comb begin
-	byte_enable[0]=access_mask[0];
-	byte_enable[1]=access_mask[1];
-	byte_enable[2]=access_mask[2];
-	byte_enable[3]=access_mask[3];
-	byte_enable[4]=access_mask[4];
-	byte_enable[5]=access_mask[5];
-	byte_enable[6]=access_mask[6];
-	byte_enable[7]=access_mask[7];
-	byte_enable[8]=access_mask[8];
-	byte_enable[9]=access_mask[9];
-	byte_enable[10]=access_mask[10];
-	byte_enable[11]=access_mask[11];
-	byte_enable[12]=access_mask[12];
-	byte_enable[13]=access_mask[13];
-	byte_enable[14]=access_mask[14];
-	byte_enable[15]=access_mask[15];
-	byte_enable=byte_enable | {16{do_full_write}};
-end
-
-reg [2:0] word_offset=0;
-
-reg [3:0] temp0_word_size=0;
-reg [3:0] temp1_word_size=0;
-reg [3:0] temp2_word_size=0;
-reg [2:0] word_size=0; // word_size is one cycle behind word_offset
-
-always_comb begin
-	unique case({(access_mask[ 5] | access_mask[ 4]),(access_mask[ 3] | access_mask[ 2]),(access_mask[ 1] | access_mask[ 0])})
-	3'b000:temp0_word_size<=0;
-	3'b001:temp0_word_size<=1;
-	3'b010:temp0_word_size<=1;
-	3'b011:temp0_word_size<=2;
-	3'b100:temp0_word_size<=1;
-	3'b101:temp0_word_size<=2;
-	3'b110:temp0_word_size<=2;
-	3'b111:temp0_word_size<=3;
+	byte_pair[0]=(do_byte_operation?!byte_operation_polarity:1'b1)?1'b1:1'b0;
+	byte_pair[1]=(do_byte_operation? byte_operation_polarity:1'b1)?1'b1:1'b0;
+	word_mask=8'hxx;
+	unique case (access_length)
+	0:word_mask=8'b00_00_00_01;
+	1:word_mask=8'b00_00_00_11;
+	2:word_mask=8'b00_00_01_11;
+	3:word_mask=8'b00_00_11_11;
+	4:word_mask=8'b00_01_11_11;
+	5:word_mask=8'b00_11_11_11;
+	6:word_mask=8'b01_11_11_11;
+	7:word_mask=8'b11_11_11_11;
 	endcase
-	unique case({(access_mask[11] | access_mask[10]),(access_mask[ 9] | access_mask[ 8]),(access_mask[ 7] | access_mask[ 6])})
-	3'b000:temp1_word_size<=0;
-	3'b001:temp1_word_size<=1;
-	3'b010:temp1_word_size<=1;
-	3'b011:temp1_word_size<=2;
-	3'b100:temp1_word_size<=1;
-	3'b101:temp1_word_size<=2;
-	3'b110:temp1_word_size<=2;
-	3'b111:temp1_word_size<=3;
-	endcase
-	unique case({(access_mask[15] | access_mask[14]),(access_mask[13] | access_mask[12])})
-	2'b00:temp2_word_size<=0;
-	2'b01:temp2_word_size<=1;
-	2'b10:temp2_word_size<=1;
-	2'b11:temp2_word_size<=2;
-	endcase
-end
-
-always @(posedge main_clk) begin
-	if (!calculated_cache_fault) begin
-		access_mask_r<=access_mask;
-		single_access_out_full_data_r<=single_access_out_full_data;
-		do_byte_operation_r<=do_byte_operation;
-		
-		word_size <= (temp0_word_size + temp1_word_size + temp2_word_size) - 4'h1; // "truncated value with size 4 to match size of target (3)" warning is expected here. It is fine
-		
-		word_offset<=3'h0;
-		if (access_mask[15] | access_mask[14]) word_offset<=3'h7;
-		if (access_mask[13] | access_mask[12]) word_offset<=3'h6;
-		if (access_mask[11] | access_mask[10]) word_offset<=3'h5;
-		if (access_mask[ 9] | access_mask[ 8]) word_offset<=3'h4;
-		if (access_mask[ 7] | access_mask[ 6]) word_offset<=3'h3;
-		if (access_mask[ 5] | access_mask[ 4]) word_offset<=3'h2;
-		if (access_mask[ 3] | access_mask[ 2]) word_offset<=3'h1;
-		if (access_mask[ 1] | access_mask[ 0]) word_offset<=3'h0;
-	end
-end
-
-
-always_comb begin
-	single_access_out_full_data[0]=0;
-	single_access_out_full_data[1]=0;
-	single_access_out_full_data[2]=0;
-	single_access_out_full_data[3]=0;
-	single_access_out_full_data[4]=0;
-	single_access_out_full_data[5]=0;
-	single_access_out_full_data[6]=0;
-	single_access_out_full_data[7]=0;
 	
-	unique case (word_offset)
+	word_mask=word_mask << word_offset;
+	
+	byte_enable[ 1: 0]={2{word_mask[0]}};
+	byte_enable[ 3: 2]={2{word_mask[1]}};
+	byte_enable[ 5: 4]={2{word_mask[2]}};
+	byte_enable[ 7: 6]={2{word_mask[3]}};
+	byte_enable[ 9: 8]={2{word_mask[4]}};
+	byte_enable[11:10]={2{word_mask[5]}};
+	byte_enable[13:12]={2{word_mask[6]}};
+	byte_enable[15:14]={2{word_mask[7]}};
+	
+	byte_enable=(byte_enable & {8{byte_pair}}) | {16{do_full_write}};
+end
+
+
+always_comb begin
+	access_out_full_data[0]=16'hx;
+	access_out_full_data[1]=16'hx;
+	access_out_full_data[2]=16'hx;
+	access_out_full_data[3]=16'hx;
+	access_out_full_data[4]=16'hx;
+	access_out_full_data[5]=16'hx;
+	access_out_full_data[6]=16'hx;
+	access_out_full_data[7]=16'hx;
+	
+	unique case (word_offset_r)
 	0:begin
-		single_access_out_full_data[0]=masked_out_full_data[0];
-		single_access_out_full_data[1]=masked_out_full_data[1];
-		single_access_out_full_data[2]=masked_out_full_data[2];
-		single_access_out_full_data[3]=masked_out_full_data[3];
-		single_access_out_full_data[4]=masked_out_full_data[4];
-		single_access_out_full_data[5]=masked_out_full_data[5];
-		single_access_out_full_data[6]=masked_out_full_data[6];
-		single_access_out_full_data[7]=masked_out_full_data[7];
+		access_out_full_data[0]=raw_out_full_data[ 15:  0];
+		access_out_full_data[1]=raw_out_full_data[ 31: 16];
+		access_out_full_data[2]=raw_out_full_data[ 47: 32];
+		access_out_full_data[3]=raw_out_full_data[ 63: 48];
+		access_out_full_data[4]=raw_out_full_data[ 79: 64];
+		access_out_full_data[5]=raw_out_full_data[ 95: 80];
+		access_out_full_data[6]=raw_out_full_data[111: 96];
+		access_out_full_data[7]=raw_out_full_data[127:112];
 	end
 	1:begin
-		single_access_out_full_data[0]=masked_out_full_data[1];
-		single_access_out_full_data[1]=masked_out_full_data[2];
-		single_access_out_full_data[2]=masked_out_full_data[3];
-		single_access_out_full_data[3]=masked_out_full_data[4];
-		single_access_out_full_data[4]=masked_out_full_data[5];
-		single_access_out_full_data[5]=masked_out_full_data[6];
-		single_access_out_full_data[6]=masked_out_full_data[7];
+		access_out_full_data[0]=raw_out_full_data[ 31: 16];
+		access_out_full_data[1]=raw_out_full_data[ 47: 32];
+		access_out_full_data[2]=raw_out_full_data[ 63: 48];
+		access_out_full_data[3]=raw_out_full_data[ 79: 64];
+		access_out_full_data[4]=raw_out_full_data[ 95: 80];
+		access_out_full_data[5]=raw_out_full_data[111: 96];
+		access_out_full_data[6]=raw_out_full_data[127:112];
 	end
 	2:begin
-		single_access_out_full_data[0]=masked_out_full_data[2];
-		single_access_out_full_data[1]=masked_out_full_data[3];
-		single_access_out_full_data[2]=masked_out_full_data[4];
-		single_access_out_full_data[3]=masked_out_full_data[5];
-		single_access_out_full_data[4]=masked_out_full_data[6];
-		single_access_out_full_data[5]=masked_out_full_data[7];
+		access_out_full_data[0]=raw_out_full_data[ 47: 32];
+		access_out_full_data[1]=raw_out_full_data[ 63: 48];
+		access_out_full_data[2]=raw_out_full_data[ 79: 64];
+		access_out_full_data[3]=raw_out_full_data[ 95: 80];
+		access_out_full_data[4]=raw_out_full_data[111: 96];
+		access_out_full_data[5]=raw_out_full_data[127:112];
 	end
 	3:begin
-		single_access_out_full_data[0]=masked_out_full_data[3];
-		single_access_out_full_data[1]=masked_out_full_data[4];
-		single_access_out_full_data[2]=masked_out_full_data[5];
-		single_access_out_full_data[3]=masked_out_full_data[6];
-		single_access_out_full_data[4]=masked_out_full_data[7];
+		access_out_full_data[0]=raw_out_full_data[ 63: 48];
+		access_out_full_data[1]=raw_out_full_data[ 79: 64];
+		access_out_full_data[2]=raw_out_full_data[ 95: 80];
+		access_out_full_data[3]=raw_out_full_data[111: 96];
+		access_out_full_data[4]=raw_out_full_data[127:112];
 	end
 	4:begin
-		single_access_out_full_data[0]=masked_out_full_data[4];
-		single_access_out_full_data[1]=masked_out_full_data[5];
-		single_access_out_full_data[2]=masked_out_full_data[6];
-		single_access_out_full_data[3]=masked_out_full_data[7];
+		access_out_full_data[0]=raw_out_full_data[ 79: 64];
+		access_out_full_data[1]=raw_out_full_data[ 95: 80];
+		access_out_full_data[2]=raw_out_full_data[111: 96];
+		access_out_full_data[3]=raw_out_full_data[127:112];
 	end
 	5:begin
-		single_access_out_full_data[0]=masked_out_full_data[5];
-		single_access_out_full_data[1]=masked_out_full_data[6];
-		single_access_out_full_data[2]=masked_out_full_data[7];
+		access_out_full_data[0]=raw_out_full_data[ 95: 80];
+		access_out_full_data[1]=raw_out_full_data[111: 96];
+		access_out_full_data[2]=raw_out_full_data[127:112];
 	end
 	6:begin
-		single_access_out_full_data[0]=masked_out_full_data[6];
-		single_access_out_full_data[1]=masked_out_full_data[7];
+		access_out_full_data[0]=raw_out_full_data[111: 96];
+		access_out_full_data[1]=raw_out_full_data[127:112];
 	end
 	7:begin
-		single_access_out_full_data[0]=masked_out_full_data[7];
+		access_out_full_data[0]=raw_out_full_data[127:112];
 	end
 	endcase
 	
 	if (do_byte_operation_r) begin
-		single_access_out_full_data[0][ 7: 0]=single_access_out_full_data[0][ 7: 0] | single_access_out_full_data[0][15: 8];
-		single_access_out_full_data[0][15: 8]=8'h0;
+		access_out_full_data[0][ 7: 0]=byte_operation_polarity_r ? access_out_full_data[0][15: 8] : access_out_full_data[0][ 7: 0] ;
+		access_out_full_data[0][15: 8]=8'h0;
 	end
 end
 
-
-
-always_comb begin
-	multi_access_out_full_data=single_access_out_full_data_r;
-	
-	unique case (word_size)
-	0:begin
-		multi_access_out_full_data[1]=single_access_out_full_data[0];
-		multi_access_out_full_data[2]=single_access_out_full_data[1];
-		multi_access_out_full_data[3]=single_access_out_full_data[2];
-		multi_access_out_full_data[4]=single_access_out_full_data[3];
-		multi_access_out_full_data[5]=single_access_out_full_data[4];
-		multi_access_out_full_data[6]=single_access_out_full_data[5];
-		multi_access_out_full_data[7]=single_access_out_full_data[6];
-	end
-	1:begin
-		multi_access_out_full_data[2]=single_access_out_full_data[0];
-		multi_access_out_full_data[3]=single_access_out_full_data[1];
-		multi_access_out_full_data[4]=single_access_out_full_data[2];
-		multi_access_out_full_data[5]=single_access_out_full_data[3];
-		multi_access_out_full_data[6]=single_access_out_full_data[4];
-		multi_access_out_full_data[7]=single_access_out_full_data[5];
-	end
-	2:begin
-		multi_access_out_full_data[3]=single_access_out_full_data[0];
-		multi_access_out_full_data[4]=single_access_out_full_data[1];
-		multi_access_out_full_data[5]=single_access_out_full_data[2];
-		multi_access_out_full_data[6]=single_access_out_full_data[3];
-		multi_access_out_full_data[7]=single_access_out_full_data[4];
-	end
-	3:begin
-		multi_access_out_full_data[4]=single_access_out_full_data[4];
-		multi_access_out_full_data[5]=single_access_out_full_data[5];
-		multi_access_out_full_data[6]=single_access_out_full_data[6];
-		multi_access_out_full_data[7]=single_access_out_full_data[7];
-	end
-	4:begin
-		multi_access_out_full_data[5]=single_access_out_full_data[5];
-		multi_access_out_full_data[6]=single_access_out_full_data[6];
-		multi_access_out_full_data[7]=single_access_out_full_data[7];
-	end
-	5:begin
-		multi_access_out_full_data[6]=single_access_out_full_data[6];
-		multi_access_out_full_data[7]=single_access_out_full_data[7];
-	end
-	6:begin
-		multi_access_out_full_data[7]=single_access_out_full_data[7];
-	end
-	7:begin
-	end
-	endcase
-end
 
 ip_cache_data ip_cache_data_inst(
 	byte_enable,

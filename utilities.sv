@@ -34,6 +34,48 @@ lcell lc3 (.in(i[3]),.out(o[3]));
 lcell lc4 (.in(i[4]),.out(o[4]));
 lcell lc5 (.in(i[5]),.out(o[5]));
 endmodule
+module lcell_8(output [7:0] o,input  [7:0] i);
+lcell lc0 (.in(i[0]),.out(o[0]));
+lcell lc1 (.in(i[1]),.out(o[1]));
+lcell lc2 (.in(i[2]),.out(o[2]));
+lcell lc3 (.in(i[3]),.out(o[3]));
+lcell lc4 (.in(i[4]),.out(o[4]));
+lcell lc5 (.in(i[5]),.out(o[5]));
+lcell lc6 (.in(i[6]),.out(o[6]));
+lcell lc7 (.in(i[7]),.out(o[7]));
+endmodule
+module lcell_13(output [12:0] o,input  [12:0] i);
+lcell lc0 (.in(i[0]),.out(o[0]));
+lcell lc1 (.in(i[1]),.out(o[1]));
+lcell lc2 (.in(i[2]),.out(o[2]));
+lcell lc3 (.in(i[3]),.out(o[3]));
+lcell lc4 (.in(i[4]),.out(o[4]));
+lcell lc5 (.in(i[5]),.out(o[5]));
+lcell lc6 (.in(i[6]),.out(o[6]));
+lcell lc7 (.in(i[7]),.out(o[7]));
+lcell lc8 (.in(i[8]),.out(o[8]));
+lcell lc9 (.in(i[9]),.out(o[9]));
+lcell lc10 (.in(i[10]),.out(o[10]));
+lcell lc11 (.in(i[11]),.out(o[11]));
+lcell lc12 (.in(i[12]),.out(o[12]));
+endmodule
+module lcell_15(output [14:0] o,input  [14:0] i);
+lcell lc0 (.in(i[0]),.out(o[0]));
+lcell lc1 (.in(i[1]),.out(o[1]));
+lcell lc2 (.in(i[2]),.out(o[2]));
+lcell lc3 (.in(i[3]),.out(o[3]));
+lcell lc4 (.in(i[4]),.out(o[4]));
+lcell lc5 (.in(i[5]),.out(o[5]));
+lcell lc6 (.in(i[6]),.out(o[6]));
+lcell lc7 (.in(i[7]),.out(o[7]));
+lcell lc8 (.in(i[8]),.out(o[8]));
+lcell lc9 (.in(i[9]),.out(o[9]));
+lcell lc10 (.in(i[10]),.out(o[10]));
+lcell lc11 (.in(i[11]),.out(o[11]));
+lcell lc12 (.in(i[12]),.out(o[12]));
+lcell lc13 (.in(i[13]),.out(o[13]));
+lcell lc14 (.in(i[14]),.out(o[14]));
+endmodule
 module lcell_16(output [15:0] o,input  [15:0] i);
 lcell lc0 (.in(i[0]),.out(o[0]));
 lcell lc1 (.in(i[1]),.out(o[1]));
@@ -51,6 +93,25 @@ lcell lc12 (.in(i[12]),.out(o[12]));
 lcell lc13 (.in(i[13]),.out(o[13]));
 lcell lc14 (.in(i[14]),.out(o[14]));
 lcell lc15 (.in(i[15]),.out(o[15]));
+endmodule
+module lcell_17(output [16:0] o,input  [16:0] i);
+lcell lc0 (.in(i[0]),.out(o[0]));
+lcell lc1 (.in(i[1]),.out(o[1]));
+lcell lc2 (.in(i[2]),.out(o[2]));
+lcell lc3 (.in(i[3]),.out(o[3]));
+lcell lc4 (.in(i[4]),.out(o[4]));
+lcell lc5 (.in(i[5]),.out(o[5]));
+lcell lc6 (.in(i[6]),.out(o[6]));
+lcell lc7 (.in(i[7]),.out(o[7]));
+lcell lc8 (.in(i[8]),.out(o[8]));
+lcell lc9 (.in(i[9]),.out(o[9]));
+lcell lc10 (.in(i[10]),.out(o[10]));
+lcell lc11 (.in(i[11]),.out(o[11]));
+lcell lc12 (.in(i[12]),.out(o[12]));
+lcell lc13 (.in(i[13]),.out(o[13]));
+lcell lc14 (.in(i[14]),.out(o[14]));
+lcell lc15 (.in(i[15]),.out(o[15]));
+lcell lc16 (.in(i[16]),.out(o[16]));
 endmodule
 module lcell_19(output [18:0] o,input  [18:0] i);
 lcell lc0 (.in(i[0]),.out(o[0]));
@@ -100,6 +161,16 @@ lcell lc22 (.in(i[22]),.out(o[22]));
 lcell lc23 (.in(i[23]),.out(o[23]));
 lcell lc24 (.in(i[24]),.out(o[24]));
 lcell lc25 (.in(i[25]),.out(o[25]));
+endmodule
+module lcell_32(output [31:0] o,input  [31:0] i);
+lcell_16 lc0(o[15: 0],i[15: 0]);
+lcell_16 lc1(o[31:16],i[31:16]);
+endmodule
+module lcell_4_16(output [15:0] o [3:0],input  [15:0] i [3:0]);
+lcell_16 lc0(o[0],i[0]);
+lcell_16 lc1(o[1],i[1]);
+lcell_16 lc2(o[2],i[2]);
+lcell_16 lc3(o[3],i[3]);
 endmodule
 
 module division_remainder(
@@ -268,12 +339,12 @@ wire [7:0] hex_display_pre_inv [5:0];
 
 
 // idk if that is the correct order (as in if the ones digit is on the right side 7seg)
-assign hex_display_pre_inv[0][6:0]=hex_display_lut[digit_binary[5]];
-assign hex_display_pre_inv[1][6:0]=(digit_binary[0]==4'd0 && digit_binary[1]==4'd0 && digit_binary[2]==4'd0 && digit_binary[3]==4'd0 && digit_binary[4]==4'd0)?7'b0:hex_display_lut[digit_binary[4]];
-assign hex_display_pre_inv[2][6:0]=(digit_binary[0]==4'd0 && digit_binary[1]==4'd0 && digit_binary[2]==4'd0 && digit_binary[3]==4'd0)?7'b0:hex_display_lut[digit_binary[3]];
-assign hex_display_pre_inv[3][6:0]=(digit_binary[0]==4'd0 && digit_binary[1]==4'd0 && digit_binary[2]==4'd0)?7'b0:hex_display_lut[digit_binary[2]];
-assign hex_display_pre_inv[4][6:0]=(digit_binary[0]==4'd0 && digit_binary[1]==4'd0)?7'b0:hex_display_lut[digit_binary[1]];
-assign hex_display_pre_inv[5][6:0]=(digit_binary[0]==4'd0)?7'b0:hex_display_lut[digit_binary[0]];
+assign hex_display_pre_inv[0][6:0]=hex_display_lut[digit_binary[0]];
+assign hex_display_pre_inv[1][6:0]=(digit_binary[5]==4'd0 && digit_binary[4]==4'd0 && digit_binary[3]==4'd0 && digit_binary[2]==4'd0 && digit_binary[1]==4'd0)?7'b0:hex_display_lut[digit_binary[1]];
+assign hex_display_pre_inv[2][6:0]=(digit_binary[5]==4'd0 && digit_binary[4]==4'd0 && digit_binary[3]==4'd0 && digit_binary[2]==4'd0)?7'b0:hex_display_lut[digit_binary[2]];
+assign hex_display_pre_inv[3][6:0]=(digit_binary[5]==4'd0 && digit_binary[4]==4'd0 && digit_binary[3]==4'd0)?7'b0:hex_display_lut[digit_binary[3]];
+assign hex_display_pre_inv[4][6:0]=(digit_binary[5]==4'd0 && digit_binary[4]==4'd0)?7'b0:hex_display_lut[digit_binary[4]];
+assign hex_display_pre_inv[5][6:0]=(digit_binary[5]==4'd0)?7'b0:hex_display_lut[digit_binary[5]];
 
 assign hex_display_pre_inv[0][7]=1'b0;
 assign hex_display_pre_inv[1][7]=1'b0;
@@ -333,10 +404,10 @@ wire [7:0] hex_display_pre_inv [5:0];
 
 
 // idk if that is the correct order (as in if the ones digit is on the right side 7seg)
-assign hex_display_pre_inv[0][6:0]=hex_display_lut[number[15:12]];
-assign hex_display_pre_inv[1][6:0]=hex_display_lut[number[11: 8]];
-assign hex_display_pre_inv[2][6:0]=hex_display_lut[number[ 7: 4]];
-assign hex_display_pre_inv[3][6:0]=hex_display_lut[number[ 3: 0]];
+assign hex_display_pre_inv[0][6:0]=hex_display_lut[number[ 3: 0]];
+assign hex_display_pre_inv[1][6:0]=hex_display_lut[number[ 7: 4]];
+assign hex_display_pre_inv[2][6:0]=hex_display_lut[number[11: 8]];
+assign hex_display_pre_inv[3][6:0]=hex_display_lut[number[15:12]];
 assign hex_display_pre_inv[4][6:0]=7'b0;
 assign hex_display_pre_inv[5][6:0]=7'b0;
 
@@ -437,13 +508,13 @@ recomb_mux_slice slice_15 (o[15],b[15],r,ac,{ic[3][15],ic[2][15],ic[1][15],ic[0]
 endmodule
 
 module recomb_mux_all_user_reg(
-	output [15:0] o [15:0], // output
-	input  [15:0] b [15:0], // before
-	input  [15:0] a [3:0], // override active
-	input  [15:0] i0 [15:0], // instant values from executer 0
-	input  [15:0] i1 [15:0], // instant values from executer 1
-	input  [15:0] i2 [15:0], // instant values from executer 2
-	input  [15:0] i3 [15:0]  // instant values from executer 3
+	output [15:0] o [16:0], // output
+	input  [15:0] b [16:0], // before
+	input  [16:0] a [3:0], // override active
+	input  [15:0] i0 [16:0], // instant values from executer 0
+	input  [15:0] i1 [16:0], // instant values from executer 1
+	input  [15:0] i2 [16:0], // instant values from executer 2
+	input  [15:0] i3 [16:0]  // instant values from executer 3
 );
 recomb_mux recomb_mux_0(
 	o[0],
@@ -541,6 +612,70 @@ recomb_mux recomb_mux_15(
 	{a[3][15],a[2][15],a[1][15],a[0][15]},
 	'{i3[15],i2[15],i1[15],i0[15]}
 );
+recomb_mux recomb_mux_16(
+	o[16],
+	b[16],
+	{a[3][16],a[2][16],a[1][16],a[0][16]},
+	'{i3[16],i2[16],i1[16],i0[16]}
+);
+endmodule
+
+module recomb_mux_all_user_reg_large(
+	output [15:0] o [16:0], // output
+	input  [15:0] b [16:0], // before
+	input  [16:0] a [7:0], // override active
+	input  [15:0] i0 [16:0], // instant values from executer 0
+	input  [15:0] i1 [16:0], // instant values from executer 1
+	input  [15:0] i2 [16:0], // instant values from executer 2
+	input  [15:0] i3 [16:0], // instant values from executer 3
+	input  [15:0] i4 [16:0], // instant values from executer 4
+	input  [15:0] i5 [16:0], // instant values from executer 5
+	input  [15:0] i6 [16:0], // instant values from executer 6
+	input  [15:0] i7 [16:0]  // instant values from executer 7
+);
+wire [15:0] o0 [16:0];
+wire [15:0] o1 [16:0];
+wire [15:0] x [16:0];
+assign x='{16'hx,16'hx,16'hx,16'hx,16'hx,16'hx,16'hx,16'hx,16'hx,16'hx,16'hx,16'hx,16'hx,16'hx,16'hx,16'hx,16'hx};
+recomb_mux_all_user_reg recomb_mux_part0(o0,x,a[3:0],i0,i1,i2,i3);
+recomb_mux_all_user_reg recomb_mux_part1(o1,b,a[7:4],i4,i5,i6,i7);
+wire [16:0] a0;
+lcell_1 lc_a0_0(a0[0],a[0][0]|a[1][0]|a[2][0]|a[3][0]);
+lcell_1 lc_a0_1(a0[1],a[0][1]|a[1][1]|a[2][1]|a[3][1]);
+lcell_1 lc_a0_2(a0[2],a[0][2]|a[1][2]|a[2][2]|a[3][2]);
+lcell_1 lc_a0_3(a0[3],a[0][3]|a[1][3]|a[2][3]|a[3][3]);
+lcell_1 lc_a0_4(a0[4],a[0][4]|a[1][4]|a[2][4]|a[3][4]);
+lcell_1 lc_a0_5(a0[5],a[0][5]|a[1][5]|a[2][5]|a[3][5]);
+lcell_1 lc_a0_6(a0[6],a[0][6]|a[1][6]|a[2][6]|a[3][6]);
+lcell_1 lc_a0_7(a0[7],a[0][7]|a[1][7]|a[2][7]|a[3][7]);
+lcell_1 lc_a0_8(a0[8],a[0][8]|a[1][8]|a[2][8]|a[3][8]);
+lcell_1 lc_a0_9(a0[9],a[0][9]|a[1][9]|a[2][9]|a[3][9]);
+lcell_1 lc_a0_10(a0[10],a[0][10]|a[1][10]|a[2][10]|a[3][10]);
+lcell_1 lc_a0_11(a0[11],a[0][11]|a[1][11]|a[2][11]|a[3][11]);
+lcell_1 lc_a0_12(a0[12],a[0][12]|a[1][12]|a[2][12]|a[3][12]);
+lcell_1 lc_a0_13(a0[13],a[0][13]|a[1][13]|a[2][13]|a[3][13]);
+lcell_1 lc_a0_14(a0[14],a[0][14]|a[1][14]|a[2][14]|a[3][14]);
+lcell_1 lc_a0_15(a0[15],a[0][15]|a[1][15]|a[2][15]|a[3][15]);
+lcell_1 lc_a0_16(a0[16],a[0][16]|a[1][16]|a[2][16]|a[3][16]);
+
+lcell_16 lc_o_0(o[0],a0[0]?o0[0]:o1[0]);
+lcell_16 lc_o_1(o[1],a0[1]?o0[1]:o1[1]);
+lcell_16 lc_o_2(o[2],a0[2]?o0[2]:o1[2]);
+lcell_16 lc_o_3(o[3],a0[3]?o0[3]:o1[3]);
+lcell_16 lc_o_4(o[4],a0[4]?o0[4]:o1[4]);
+lcell_16 lc_o_5(o[5],a0[5]?o0[5]:o1[5]);
+lcell_16 lc_o_6(o[6],a0[6]?o0[6]:o1[6]);
+lcell_16 lc_o_7(o[7],a0[7]?o0[7]:o1[7]);
+lcell_16 lc_o_8(o[8],a0[8]?o0[8]:o1[8]);
+lcell_16 lc_o_9(o[9],a0[9]?o0[9]:o1[9]);
+lcell_16 lc_o_10(o[10],a0[10]?o0[10]:o1[10]);
+lcell_16 lc_o_11(o[11],a0[11]?o0[11]:o1[11]);
+lcell_16 lc_o_12(o[12],a0[12]?o0[12]:o1[12]);
+lcell_16 lc_o_13(o[13],a0[13]?o0[13]:o1[13]);
+lcell_16 lc_o_14(o[14],a0[14]?o0[14]:o1[14]);
+lcell_16 lc_o_15(o[15],a0[15]?o0[15]:o1[15]);
+lcell_16 lc_o_16(o[16],a0[16]?o0[16]:o1[16]);
+
 endmodule
 
 module fast_ur_mux_slice(
@@ -644,4 +779,127 @@ fast_ur_mux_slice fast_ur_mux_slice0 (
 );
 
 lcell_16 lc_ic(o, ov1[3] | ov1[2] | ov1[1] | ov1[0]);
+endmodule
+
+
+module mem_inter_mux(
+	output [31:0] o0,
+	output [31:0] o1,
+	output [15:0] o2 [3:0],
+	output [15:0] o3 [3:0],
+	output [2:0] o4,
+	output [2:0] o5,
+	output [2:0] o6,
+	output o7,
+	output o8,
+
+	input [31:0] i0 [7:0],
+	input [31:0] i1 [7:0],
+	input [15:0] i2 [7:0][3:0],
+	input [15:0] i3 [7:0][3:0],
+	input [2:0] i4 [7:0],
+	input [2:0] i5 [7:0],
+	input [2:0] i6 [7:0],
+	input [7:0] i7,
+	input [7:0] i8,
+	
+	input [2:0] s
+);
+wire [31:0] ic0 [7:0];
+wire [31:0] ic1 [7:0];
+wire [15:0] ic2 [7:0][3:0];
+wire [15:0] ic3 [7:0][3:0];
+wire [2:0] ic4 [7:0];
+wire [2:0] ic5 [7:0];
+wire [2:0] ic6 [7:0];
+wire [7:0] ic7;
+wire [7:0] ic8;
+wire [2:0] sc;
+
+lcell_32 lc0_0(ic0[0],i0[0]);
+lcell_32 lc1_0(ic0[1],i0[1]);
+lcell_32 lc2_0(ic0[2],i0[2]);
+lcell_32 lc3_0(ic0[3],i0[3]);
+
+lcell_32 lc4_0(ic1[0],i1[0]);
+lcell_32 lc5_0(ic1[1],i1[1]);
+lcell_32 lc6_0(ic1[2],i1[2]);
+lcell_32 lc7_0(ic1[3],i1[3]);
+
+lcell_4_16 lc8_0(ic2[0],i2[0]);
+lcell_4_16 lc9_0(ic2[1],i2[1]);
+lcell_4_16 lc10_0(ic2[2],i2[2]);
+lcell_4_16 lc11_0(ic2[3],i2[3]);
+
+lcell_4_16 lc12_0(ic3[0],i3[0]);
+lcell_4_16 lc13_0(ic3[1],i3[1]);
+lcell_4_16 lc14_0(ic3[2],i3[2]);
+lcell_4_16 lc15_0(ic3[3],i3[3]);
+
+lcell_3 lc16_0(ic4[0],i4[0]);
+lcell_3 lc17_0(ic4[1],i4[1]);
+lcell_3 lc18_0(ic4[2],i4[2]);
+lcell_3 lc19_0(ic4[3],i4[3]);
+
+lcell_3 lc20_0(ic5[0],i5[0]);
+lcell_3 lc21_0(ic5[1],i5[1]);
+lcell_3 lc22_0(ic5[2],i5[2]);
+lcell_3 lc23_0(ic5[3],i5[3]);
+
+lcell_3 lc24_0(ic6[0],i6[0]);
+lcell_3 lc25_0(ic6[1],i6[1]);
+lcell_3 lc26_0(ic6[2],i6[2]);
+lcell_3 lc27_0(ic6[3],i6[3]);
+
+
+lcell_32 lc0_1(ic0[4],i0[4]);
+lcell_32 lc1_1(ic0[5],i0[5]);
+lcell_32 lc2_1(ic0[6],i0[6]);
+lcell_32 lc3_1(ic0[7],i0[7]);
+
+lcell_32 lc4_1(ic1[4],i1[4]);
+lcell_32 lc5_1(ic1[5],i1[5]);
+lcell_32 lc6_1(ic1[6],i1[6]);
+lcell_32 lc7_1(ic1[7],i1[7]);
+
+lcell_4_16 lc8_1(ic2[4],i2[4]);
+lcell_4_16 lc9_1(ic2[5],i2[5]);
+lcell_4_16 lc10_1(ic2[6],i2[6]);
+lcell_4_16 lc11_1(ic2[7],i2[7]);
+
+lcell_4_16 lc12_1(ic3[4],i3[4]);
+lcell_4_16 lc13_1(ic3[5],i3[5]);
+lcell_4_16 lc14_1(ic3[6],i3[6]);
+lcell_4_16 lc15_1(ic3[7],i3[7]);
+
+lcell_3 lc16_1(ic4[4],i4[4]);
+lcell_3 lc17_1(ic4[5],i4[5]);
+lcell_3 lc18_1(ic4[6],i4[6]);
+lcell_3 lc19_1(ic4[7],i4[7]);
+
+lcell_3 lc20_1(ic5[4],i5[4]);
+lcell_3 lc21_1(ic5[5],i5[5]);
+lcell_3 lc22_1(ic5[6],i5[6]);
+lcell_3 lc23_1(ic5[7],i5[7]);
+
+lcell_3 lc24_1(ic6[4],i6[4]);
+lcell_3 lc25_1(ic6[5],i6[5]);
+lcell_3 lc26_1(ic6[6],i6[6]);
+lcell_3 lc27_1(ic6[7],i6[7]);
+
+
+assign ic7=i7;
+assign ic8=i8;
+assign sc=s;
+
+lcell_32 lc_muxed_target_address_executer(o0,ic0[sc]);
+lcell_32 lc_muxed_target_address_executer_alt(o1,ic1[sc]);
+lcell_4_16 lc_muxed_data_in(o2,ic2[sc]);
+lcell_4_16 lc_muxed_data_in_alt(o3,ic3[sc]);
+lcell_3 lc_muxed_access_length(o4,ic4[sc]);
+lcell_3 lc_muxed_access_length0(o5,ic5[sc]);
+lcell_3 lc_muxed_access_length1(o6,ic6[sc]);
+lcell_1 lc_muxed_is_byte_op(o7,ic7[sc]);
+lcell_1 lc_muxed_is_write_op(o8,ic8[sc]);
+
 endmodule

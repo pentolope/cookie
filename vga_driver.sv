@@ -15,8 +15,8 @@ module vga_driver(
 );
 
 reg do_write_r=0;
-reg [15:0] write_addr_r;
-reg [11:0] write_data_r;
+reg [15:0] write_addr_r=0;
+reg [11:0] write_data_r=0;
 
 always @(posedge main_clk) begin
 	do_write_r<=do_write;
@@ -26,7 +26,7 @@ end
 
 reg  [15:0] read_addr;
 wire [11:0] read_data;
-reg  [11:0] read_data_r;
+reg  [11:0] read_data_r=0;
 
 reg [2:0] horizontal_sync_pulse_delay_chain=3'b111;
 reg [2:0] vertical_sync_pulse_delay_chain=0;

@@ -6,8 +6,8 @@ from time import sleep
 sep="\\"
 parallel=2
 seed_lower=2
-seed_upper=5
-quartus_dir="H:\\FPGA\\program\\quartus\\bin64\\"
+seed_upper=3
+quartus_dir="%QUARTUS_ROOTDIR%"+sep+"bin64"+sep
 
 def directory_find(origin):
 	return [(dr,directory_find(dr)) for dr in glob(origin+"*"+sep)]

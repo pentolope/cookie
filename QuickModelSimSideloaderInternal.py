@@ -1,8 +1,48 @@
 
 fileBasePath="H:\\FPGA\\projects\\cookie\\simulation\\"
 
+
+
 waveAdds=[
-'/sim_enviroment/*'
+'/sim_enviroment/core__main/main_clk',
+'-radix hexadecimal /sim_enviroment/core__main/new_instruction_table',
+'-radix hexadecimal /sim_enviroment/core__main/new_instruction_address_table',
+'-radix hexadecimal /sim_enviroment/core__main/mem_data_out_type_0',
+'/sim_enviroment/core__main/main_clk',
+
+'-radix hexadecimal /sim_enviroment/core__main/instruction_cache_inst/instruction_cache_mux_inst/fifo_instruction_cache_data',
+'-radix hexadecimal /sim_enviroment/core__main/instruction_cache_inst/instruction_cache_mux_inst/fifo_instruction_cache_addresses',
+'-radix hexadecimal /sim_enviroment/core__main/instruction_cache_inst/instruction_cache_mux_inst/fifo_instruction_cache_indexes_future',
+'-radix unsigned /sim_enviroment/core__main/instruction_cache_inst/instruction_cache_mux_inst/fifo_instruction_cache_indexes_future',
+'/sim_enviroment/core__main/instruction_cache_inst/instruction_cache_mux_inst/size_help_value',
+'-radix unsigned /sim_enviroment/core__main/instruction_cache_inst/instruction_cache_mux_inst/fifo_instruction_cache_consume_count_p1',
+
+
+'/sim_enviroment/core__main/main_clk',
+
+'-radix hexadecimal /sim_enviroment/core__main/user_reg',
+'-radix hexadecimal /sim_enviroment/core__main/stack_pointer',
+'-radix hexadecimal /sim_enviroment/core__main/instant_updated_core_values',
+'-radix hexadecimal /sim_enviroment/core__main/core_executer_inst0/simExecutingInstruction',
+'-radix hexadecimal /sim_enviroment/core__main/core_executer_inst1/simExecutingInstruction',
+'-radix hexadecimal /sim_enviroment/core__main/core_executer_inst2/simExecutingInstruction',
+'-radix hexadecimal /sim_enviroment/core__main/core_executer_inst3/simExecutingInstruction',
+'-radix hexadecimal /sim_enviroment/core__main/core_executer_inst4/simExecutingInstruction',
+'-radix hexadecimal /sim_enviroment/core__main/core_executer_inst5/simExecutingInstruction',
+'-radix hexadecimal /sim_enviroment/core__main/core_executer_inst6/simExecutingInstruction',
+'-radix hexadecimal /sim_enviroment/core__main/core_executer_inst7/simExecutingInstruction',
+
+'/sim_enviroment/core__main/main_clk',
+
+'/sim_enviroment/core__main/fifo_instruction_cache_size',
+'/sim_enviroment/core__main/fifo_instruction_cache_consume_count',
+'/sim_enviroment/core__main/fifo_instruction_cache_size_after_read',
+'/sim_enviroment/core__main/main_clk',
+'/sim_enviroment/core__main/scheduler_inst/fifo_instruction_cache_size_next',
+'/sim_enviroment/core__main/is_performing_jump_next_instant_on',
+'/sim_enviroment/core__main/is_performing_jump_instant_on',
+#'/sim_enviroment/core__main/memory_interface_inst/*',
+'/sim_enviroment/core__main/main_clk'
 ]
 
 try:

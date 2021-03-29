@@ -98,6 +98,11 @@ assign out_mux[0]=16'h0; // LEDs on circuit board cannot be read
 assign out_mux[1]=16'h0; // VGA's VRAM cannot be read
 // out_mux[2] is sd card controller
 // out_mux[3] is ps2 controller
+assign out_mux[4]=16'h0; // not connected
+assign out_mux[5]=16'h0; // not connected
+assign out_mux[6]=16'h0; // not connected
+assign out_mux[7]=16'h0; // not connected
+
 
 reg [9:0] led_state=0;
 assign led_out_state=led_state;

@@ -3,11 +3,28 @@ fileBasePath="H:\\FPGA\\projects\\cookie\\simulation\\"
 
 waveAdds=[
 '/sim_enviroment/core__main/main_clk',
-'/sim_enviroment/core__main/*',
 '-radix hexadecimal /sim_enviroment/core__main/user_reg',
-'/sim_enviroment/core__main/executerEnable',
-'-radix hexadecimal /sim_enviroment/core__main/scheduler_inst/executingInstructionsSimView',
-'-radix hexadecimal /sim_enviroment/core__main/scheduler_inst/allInstructionsSimView',
+'-radix hexadecimal /sim_enviroment/core__main/stack_pointer',
+'-radix hexadecimal /sim_enviroment/core__main/instant_updated_core_values',
+'-radix hexadecimal /sim_enviroment/core__main/vr0',
+'-radix hexadecimal /sim_enviroment/core__main/vr1',
+'-radix hexadecimal /sim_enviroment/core__main/vr2',
+'-radix hexadecimal /sim_enviroment/core__main/core_executer_inst0/simExecutingInstruction',
+'-radix hexadecimal /sim_enviroment/core__main/core_executer_inst1/simExecutingInstruction',
+'-radix hexadecimal /sim_enviroment/core__main/core_executer_inst2/simExecutingInstruction',
+'-radix hexadecimal /sim_enviroment/core__main/core_executer_inst3/simExecutingInstruction',
+'/sim_enviroment/core__main/core_executer_inst2/dependSelfRegRead',
+'/sim_enviroment/core__main/core_executer_inst2/resolveDependSelfRegRead',
+'-radix hexadecimal /sim_enviroment/core__main/core_executer_inst2/user_reg',
+'-radix hexadecimal /sim_enviroment/core__main/core_executer_inst2/stack_pointer',
+#'/sim_enviroment/core__main/core_executer_inst0/dependSelfRegWrite',
+#'/sim_enviroment/core__main/core_executer_inst0/dependSelfSpecial',
+#'/sim_enviroment/core__main/core_executer_inst0/resolveDependSelfRegRead',
+#'/sim_enviroment/core__main/core_executer_inst0/unreadyDependSelfRegWrite',
+#'/sim_enviroment/core__main/core_executer_inst0/isUnblocked',
+#'/sim_enviroment/core__main/core_executer_inst0/isAfter',
+'/sim_enviroment/core__main/main_clk',
+'/sim_enviroment/core__main/*',
 '/sim_enviroment/core__main/main_clk'
 ]
 

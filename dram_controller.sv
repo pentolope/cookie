@@ -47,7 +47,7 @@ assign DRAM_WE_N=DRAM_WE_r;
 reg [15:0] DRAM_DQ_rIN=0;
 reg [15:0] DRAM_DQ_rOUT=0;
 
-assign DRAM_DQ=DRAM_DQ_oe_r ? DRAM_DQ_rOUT : 16'hz ;
+assign DRAM_DQ=DRAM_DQ_oe_r ? DRAM_DQ_rOUT : 16'hZZZZ ;
 
 always @(posedge main_clk) DRAM_DQ_rIN<=DRAM_DQ;
 
