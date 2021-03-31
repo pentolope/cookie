@@ -492,41 +492,47 @@ always_comb begin
 		)) unreadyDependSelfRegWrite[16]=1'b1;
 end
 
-reg isUnblocked=0;
+wire isUnblocked;
+reg [3:0] isUnblockedPieces=0;
+lcell_1 lc_isUnblocked(isUnblocked,(isUnblockedPieces[0] && isUnblockedPieces[1] && isUnblockedPieces[2] && isUnblockedPieces[3])?1'b1:1'b0);
 always @(posedge main_clk) begin
-	isUnblocked<=1;
-	if (dependSelfRegRead_next!=17'h00) isUnblocked<=0;
-	if (unreadyDependSelfRegWrite!=17'h00) isUnblocked<=0; // this check using unreadyDependSelfRegWrite could be more advanced, an instruction could start without this (but especially for memory instructions, there would have to be some handling if it isn't ready to write when the data comes in).
-	if (is_new_instruction_entering_this_cycle) isUnblocked<=0;
+	isUnblockedPieces[0]<=1;
+	isUnblockedPieces[1]<=1;
+	isUnblockedPieces[2]<=1;
+	isUnblockedPieces[3]<=1;
+	if (is_new_instruction_entering_this_cycle) isUnblockedPieces[1]<=0;
+	if (dependSelfRegRead_next[7:0]!=8'h0) isUnblockedPieces[1]<=0;
+	if (dependSelfRegRead_next[16:8]!=9'h0) isUnblockedPieces[0]<=0;
+	if (unreadyDependSelfRegWrite!=17'h0) isUnblockedPieces[1]<=0; // this check using unreadyDependSelfRegWrite could be more advanced, an instruction could start without this (but especially for memory instructions, there would have to be some handling if it isn't ready to write when the data comes in).
 	
-	if (isAfter_next[0] && dependOtherSpecial_next[0][0]) isUnblocked<=0;
-	if (isAfter_next[1] && dependOtherSpecial_next[1][0]) isUnblocked<=0;
-	if (isAfter_next[2] && dependOtherSpecial_next[2][0]) isUnblocked<=0;
-	if (isAfter_next[3] && dependOtherSpecial_next[3][0]) isUnblocked<=0;
-	if (isAfter_next[4] && dependOtherSpecial_next[4][0]) isUnblocked<=0;
-	if (isAfter_next[5] && dependOtherSpecial_next[5][0]) isUnblocked<=0;
-	if (isAfter_next[6] && dependOtherSpecial_next[6][0]) isUnblocked<=0;
-	if (isAfter_next[7] && dependOtherSpecial_next[7][0]) isUnblocked<=0;
+	if (isAfter_next[0] && dependOtherSpecial_next[0][0]) isUnblockedPieces[2]<=0;
+	if (isAfter_next[1] && dependOtherSpecial_next[1][0]) isUnblockedPieces[2]<=0;
+	if (isAfter_next[2] && dependOtherSpecial_next[2][0]) isUnblockedPieces[2]<=0;
+	if (isAfter_next[3] && dependOtherSpecial_next[3][0]) isUnblockedPieces[2]<=0;
+	if (isAfter_next[4] && dependOtherSpecial_next[4][0]) isUnblockedPieces[3]<=0;
+	if (isAfter_next[5] && dependOtherSpecial_next[5][0]) isUnblockedPieces[3]<=0;
+	if (isAfter_next[6] && dependOtherSpecial_next[6][0]) isUnblockedPieces[3]<=0;
+	if (isAfter_next[7] && dependOtherSpecial_next[7][0]) isUnblockedPieces[3]<=0;
 	
 	if (dependSelfSpecial_next[1]) begin
-		if (isAfter_next[0] && dependOtherSpecial_next[0][2]) isUnblocked<=0;
-		if (isAfter_next[1] && dependOtherSpecial_next[1][2]) isUnblocked<=0;
-		if (isAfter_next[2] && dependOtherSpecial_next[2][2]) isUnblocked<=0;
-		if (isAfter_next[3] && dependOtherSpecial_next[3][2]) isUnblocked<=0;
-		if (isAfter_next[4] && dependOtherSpecial_next[4][2]) isUnblocked<=0;
-		if (isAfter_next[5] && dependOtherSpecial_next[5][2]) isUnblocked<=0;
-		if (isAfter_next[6] && dependOtherSpecial_next[6][2]) isUnblocked<=0;
-		if (isAfter_next[7] && dependOtherSpecial_next[7][2]) isUnblocked<=0;
+		if (isAfter_next[0] && dependOtherSpecial_next[0][2]) isUnblockedPieces[2]<=0;
+		if (isAfter_next[1] && dependOtherSpecial_next[1][2]) isUnblockedPieces[2]<=0;
+		if (isAfter_next[2] && dependOtherSpecial_next[2][2]) isUnblockedPieces[2]<=0;
+		if (isAfter_next[3] && dependOtherSpecial_next[3][2]) isUnblockedPieces[2]<=0;
+		if (isAfter_next[4] && dependOtherSpecial_next[4][2]) isUnblockedPieces[3]<=0;
+		if (isAfter_next[5] && dependOtherSpecial_next[5][2]) isUnblockedPieces[3]<=0;
+		if (isAfter_next[6] && dependOtherSpecial_next[6][2]) isUnblockedPieces[3]<=0;
+		if (isAfter_next[7] && dependOtherSpecial_next[7][2]) isUnblockedPieces[3]<=0;
 	end
 	if (dependSelfSpecial_next[2]) begin
-		if (isAfter_next[0] && (dependOtherSpecial_next[0][2] || dependOtherSpecial_next[0][1])) isUnblocked<=0;
-		if (isAfter_next[1] && (dependOtherSpecial_next[1][2] || dependOtherSpecial_next[1][1])) isUnblocked<=0;
-		if (isAfter_next[2] && (dependOtherSpecial_next[2][2] || dependOtherSpecial_next[2][1])) isUnblocked<=0;
-		if (isAfter_next[3] && (dependOtherSpecial_next[3][2] || dependOtherSpecial_next[3][1])) isUnblocked<=0;
-		if (isAfter_next[4] && (dependOtherSpecial_next[4][2] || dependOtherSpecial_next[4][1])) isUnblocked<=0;
-		if (isAfter_next[5] && (dependOtherSpecial_next[5][2] || dependOtherSpecial_next[5][1])) isUnblocked<=0;
-		if (isAfter_next[6] && (dependOtherSpecial_next[6][2] || dependOtherSpecial_next[6][1])) isUnblocked<=0;
-		if (isAfter_next[7] && (dependOtherSpecial_next[7][2] || dependOtherSpecial_next[7][1])) isUnblocked<=0;
+		if (isAfter_next[0] && (dependOtherSpecial_next[0][2] || dependOtherSpecial_next[0][1])) isUnblockedPieces[2]<=0;
+		if (isAfter_next[1] && (dependOtherSpecial_next[1][2] || dependOtherSpecial_next[1][1])) isUnblockedPieces[2]<=0;
+		if (isAfter_next[2] && (dependOtherSpecial_next[2][2] || dependOtherSpecial_next[2][1])) isUnblockedPieces[2]<=0;
+		if (isAfter_next[3] && (dependOtherSpecial_next[3][2] || dependOtherSpecial_next[3][1])) isUnblockedPieces[2]<=0;
+		if (isAfter_next[4] && (dependOtherSpecial_next[4][2] || dependOtherSpecial_next[4][1])) isUnblockedPieces[3]<=0;
+		if (isAfter_next[5] && (dependOtherSpecial_next[5][2] || dependOtherSpecial_next[5][1])) isUnblockedPieces[3]<=0;
+		if (isAfter_next[6] && (dependOtherSpecial_next[6][2] || dependOtherSpecial_next[6][1])) isUnblockedPieces[3]<=0;
+		if (isAfter_next[7] && (dependOtherSpecial_next[7][2] || dependOtherSpecial_next[7][1])) isUnblockedPieces[3]<=0;
 	end
 end
 
@@ -709,11 +715,10 @@ end
 always_comb temporary1={instructionIn[11:4],1'b0} + user_reg[4'h1];
 
 reg [15:0] mul16TempVal [2:0];
-always_comb mul16TempVal[0]=vr0[ 7:0]*vr1[ 7:0];
-always_comb mul16TempVal[1]=vr0[15:8]*vr1[ 7:0];
-always_comb mul16TempVal[2]=vr0[ 7:0]*vr1[15:8];
+always @(posedge main_clk) mul16TempVal[0]<=vr0[ 7:0]*vr1[ 7:0];
+always @(posedge main_clk) mul16TempVal[1]<=vr0[15:8]*vr1[ 7:0];
+always @(posedge main_clk) mul16TempVal[2]<=vr0[ 7:0]*vr1[15:8];
 
-//always_comb mul16Temp=vr1*vr0;
 always_comb mul16Temp[ 7:0]=mul16TempVal[0][ 7:0];
 always_comb mul16Temp[15:8]=mul16TempVal[0][15:8]+mul16TempVal[1][ 7:0]+mul16TempVal[2][ 7:0];
 
@@ -966,7 +971,13 @@ always_comb begin
 		is_instruction_valid_next=0;
 	end
 	5'h17:begin
-		is_instruction_valid_next=0;
+		unique case (state)
+		1:begin
+		end
+		2:begin
+			is_instruction_valid_next=0;
+		end
+		endcase
 	end
 	5'h18:begin
 		unique case (state)
@@ -1601,9 +1612,16 @@ always @(posedge main_clk) begin
 		state<=0;
 	end
 	5'h17:begin
-		doWrite[instructionIn[3:0]]<=1'b1;
-		is_instruction_finishing_this_cycle_pulse<=1;
-		state<=0;
+		unique case (state)
+		1:begin
+			state<=2;
+		end
+		2:begin
+			doWrite[instructionIn[3:0]]<=1'b1;
+			is_instruction_finishing_this_cycle_pulse<=1;
+			state<=0;
+		end
+		endcase
 	end
 	5'h18:begin
 		unique case (state)
