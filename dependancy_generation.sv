@@ -212,7 +212,6 @@ always_comb begin
 		generatedDependSelfRegWrite[16]=1'b1;
 	end
 	endcase
-	//generatedDependSelfRegRead=17'h1FFFF; // temp
 end
 
 

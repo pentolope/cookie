@@ -844,7 +844,7 @@ always_comb begin
 	j_co=0;
 	j_uc=0;
 	dependSelfRegRead_next=dependSelfRegRead & ~resolveDependSelfRegRead;
-	dependSelfRegWrite_next=dependSelfRegWrite;
+	dependSelfRegWrite_next=dependSelfRegWrite; //  & ~doWrite;  :: maybe... I'm going to check this later
 	dependSelfSpecial_next=dependSelfSpecial;
 	
 	unique case (effectiveID)

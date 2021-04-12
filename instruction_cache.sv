@@ -126,6 +126,7 @@ instruction_cache_mux instruction_cache_mux_inst(
 	hyper_jump_guess_address_table,
 	hyper_jump_guess_source_table,
 	mem_data_out_type_0,
+	fifo_instruction_cache_size,
 	fifo_instruction_cache_size_after_read,
 	fifo_instruction_cache_consume_count,
 	instruction_fetch_address,
@@ -571,7 +572,7 @@ always @(posedge main_clk) begin
 				instruction_fetch_address<=instruction_jump_address;
 				is_instruction_cache_requesting<=1;
 			end
-		end else if (({1'b0,fifo_instruction_cache_size_after_read}+(5'd8-instruction_fetch_address[4:1]))<5'h10 && !isWaitingForJump) begin
+		end else if (({1'b0,fifo_instruction_cache_size_after_read}+(5'd8-instruction_fetch_address[3:1]))<5'h10 && !isWaitingForJump) begin
 			is_instruction_cache_requesting<=1;
 		end
 	end

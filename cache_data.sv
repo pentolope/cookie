@@ -52,6 +52,8 @@ always_comb begin
 	write_data=128'hx;
 	if (do_full_write) begin
 		write_data=raw_in_full_data;
+	end else if (do_byte_operation) begin
+		write_data={16{access_in_full_data[0][7:0]}};
 	end else begin
 		unique case (word_offset)
 		0:begin

@@ -14,6 +14,7 @@ module instruction_cache_mux(
 	input  [31:0] hyper_jump_guess_address_table [7:0],
 	input  [7:0] hyper_jump_guess_source_table [7:0],
 	input  [15:0] mem_data_out_type_0 [7:0],
+	input  [4:0] fifo_instruction_cache_size,
 	input  [4:0] fifo_instruction_cache_size_after_read,
 	input  [2:0] fifo_instruction_cache_consume_count,
 	input  [25:0] instruction_fetch_address,
@@ -116,10 +117,10 @@ fast_ur_mux fum3(hyper_jump_temp5,hyper_jump_temp1[3:0],user_reg);
 assign hyper_jump_guess_address_calc=hyper_jump_potentially_valid_type2?({hyper_jump_temp2,hyper_jump_temp3}):(hyper_jump_guess_address_table[hyper_jump_look_index]);
 assign hyper_jump_guess_address_calc_alt=hyper_jump_potentially_valid_type2?({hyper_jump_temp4,hyper_jump_temp5}):(hyper_jump_guess_address_table_alt[hyper_jump_look_index_alt]);
 
-assign fifo_instruction_cache_data_at_write_addr_m1=(fifo_instruction_cache_size_after_read==5'd0)?fifo_instruction_cache_data_old[5'd3                                       ]:fifo_instruction_cache_data[fifo_instruction_cache_size_after_read-5'd1];
-assign fifo_instruction_cache_data_at_write_addr_m2=(fifo_instruction_cache_size_after_read <5'd1)?fifo_instruction_cache_data_old[5'd3-fifo_instruction_cache_size_after_read]:fifo_instruction_cache_data[fifo_instruction_cache_size_after_read-5'd2];
-assign fifo_instruction_cache_data_at_write_addr_m3=(fifo_instruction_cache_size_after_read <5'd2)?fifo_instruction_cache_data_old[5'd3-fifo_instruction_cache_size_after_read]:fifo_instruction_cache_data[fifo_instruction_cache_size_after_read-5'd3];
-assign fifo_instruction_cache_data_at_write_addr_m4=(fifo_instruction_cache_size_after_read <5'd3)?fifo_instruction_cache_data_old[5'd3-fifo_instruction_cache_size_after_read]:fifo_instruction_cache_data[fifo_instruction_cache_size_after_read-5'd4];
+assign fifo_instruction_cache_data_at_write_addr_m1=(5'd0==fifo_instruction_cache_size)?fifo_instruction_cache_data_old[2'd3                                        ]:fifo_instruction_cache_data[fifo_instruction_cache_size-5'd1];
+assign fifo_instruction_cache_data_at_write_addr_m2=(5'd1>=fifo_instruction_cache_size)?fifo_instruction_cache_data_old[2'd3-(2'd1-fifo_instruction_cache_size[1:0])]:fifo_instruction_cache_data[fifo_instruction_cache_size-5'd2];
+assign fifo_instruction_cache_data_at_write_addr_m3=(5'd2>=fifo_instruction_cache_size)?fifo_instruction_cache_data_old[2'd3-(2'd2-fifo_instruction_cache_size[1:0])]:fifo_instruction_cache_data[fifo_instruction_cache_size-5'd3];
+assign fifo_instruction_cache_data_at_write_addr_m4=(5'd3>=fifo_instruction_cache_size)?fifo_instruction_cache_data_old[fifo_instruction_cache_size[1:0]            ]:fifo_instruction_cache_data[fifo_instruction_cache_size-5'd4];
 
 reg [2:0] fifo_instruction_cache_consume_count_p1;
 always_comb begin

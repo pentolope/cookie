@@ -58,9 +58,10 @@ wire soft_fault;
 wire hard_fault;
 wire any_fault; // includes no access faulting
 
-wire is_hard_fault_start;
+wire was_hard_fault_starting;
 wire was_hard_faulting;
-
+reg signal_dram_of_hard_fault=0;
+always @(posedge main_clk) signal_dram_of_hard_fault<=was_hard_fault_starting;
 
 wire [8:0] cd_target_segment;
 wire [1:0] cd_target_way;
@@ -71,7 +72,7 @@ reg [15:0] cd_data_in [3:0];
 reg [30:0] cd_target_address=0;
 
 always @(posedge main_clk) begin
-	if (!is_hard_fault_start) begin
+	if (!(hard_fault && !was_hard_faulting)) begin
 		cd_target_address<=cw_target_address;
 		cd_is_byte_op<=cw_is_byte_op;
 		cd_is_write_op<=cw_is_write_op;
@@ -112,7 +113,7 @@ assign cw_data_in=tt_data[tick_tock_phase1[0]];
 always @(posedge main_clk) begin
 	tick_tock_phase2<=tick_tock_phase1;
 	tick_tock_phase1<=tick_tock_phase1 + ((tick_tock_phase0!=tick_tock_phase1)?1'b1:1'b0);
-	if (was_hard_faulting) begin
+	if (hard_fault) begin
 		tick_tock_phase2<=tick_tock_phase2;
 		tick_tock_phase1<=tick_tock_phase2;
 	end
@@ -129,7 +130,7 @@ cache_way cache_way(
 	soft_fault,
 	hard_fault,
 	any_fault,
-	is_hard_fault_start,
+	was_hard_fault_starting,
 	was_hard_faulting,
 	
 	cd_way,
@@ -177,6 +178,16 @@ cache_LRU cache_LRU_inst(
 	main_clk
 );
 
+always @(posedge main_clk) begin
+	if (signal_dram_of_hard_fault) begin
+		$display("signal_dram_of_hard_fault [%h]",cd_target_address);
+	end
+	if (hard_fault) begin
+		$display("addr_at_in_way_index [%h,%h]",addr_at_in_way_index,cd_target_address);
+	end
+end
+
+
 
 dram_controller dram_controller_inst(
 	cd_target_address[25:13],
@@ -186,7 +197,7 @@ dram_controller dram_controller_inst(
 	cd_raw_out_full_data,
 	cd_out_dirty,
 	
-	is_hard_fault_start,
+	signal_dram_of_hard_fault,
 	is_cache_being_filled,
 	
 	

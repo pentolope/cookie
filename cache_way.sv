@@ -6,7 +6,7 @@ module cache_way(
 	output out_soft_fault,
 	output out_hard_fault,
 	output out_any_fault,
-	output out_is_hard_fault_start,
+	output out_was_hard_fault_starting,
 	output out_was_hard_faulting,
 	
 	output [ 1:0] out_way_index,
@@ -21,9 +21,9 @@ module cache_way(
 	input main_clk
 );
 
-reg is_hard_fault_start=0;
+reg was_hard_fault_starting=0;
 reg was_hard_faulting=0;
-assign out_is_hard_fault_start=is_hard_fault_start;
+assign out_was_hard_fault_starting=was_hard_fault_starting;
 assign out_was_hard_faulting=was_hard_faulting;
 
 wire possible_soft_fault;
@@ -32,9 +32,9 @@ wire possible_any_fault;
 wire soft_fault;
 wire hard_fault;
 wire any_fault;
-assign soft_fault=is_hard_fault_start?1'b0:possible_soft_fault; // don't need to check previous value, it is already known here
-assign hard_fault=is_hard_fault_start?1'b1:possible_hard_fault; // don't need to check previous value, it is already known here
-assign any_fault =is_hard_fault_start?1'b0:possible_any_fault;  // don't need to check previous value, it is already known here
+assign soft_fault=was_hard_fault_starting?1'b0:possible_soft_fault; // don't need to check previous value, it is already known here
+assign hard_fault=was_hard_fault_starting?1'b1:possible_hard_fault; // don't need to check previous value, it is already known here
+assign any_fault =was_hard_fault_starting?1'b1:possible_any_fault;  // don't need to check previous value, it is already known here
 assign out_soft_fault=soft_fault;
 assign out_hard_fault=hard_fault;
 assign out_any_fault=any_fault;
@@ -59,11 +59,12 @@ wire [3:0] match;
 wire [1:0] calc_way_index;
 reg [1:0] calc_way_index_r=0;
 
-assign out_way_index=is_hard_fault_start?calc_way_index_r:calc_way_index;
+assign out_way_index=was_hard_fault_starting?calc_way_index_r:calc_way_index;
 
 
 always @(posedge main_clk) begin
 	in_way_index_r<=in_way_index;
+	calc_way_index_r<=calc_way_index;
 	saved_target<=target_address[25:13];
 	out_fault_modification<=0;
 	if (is_hyper_fetch) out_fault_modification<=2;
@@ -71,7 +72,7 @@ always @(posedge main_clk) begin
 end
 
 always @(posedge main_clk) begin
-	if (!is_hard_fault_start) begin
+	if (!was_hard_fault_starting) begin
 		raw_out0_r<=raw_out0;
 		raw_out1_r<=raw_out1;
 		raw_out2_r<=raw_out2;
@@ -156,8 +157,8 @@ assign possible_hard_fault=(fault && out_fault_modification==2'd0);
 always @(posedge main_clk) was_hard_faulting<=hard_fault;
 
 always @(posedge main_clk) begin
-	if (hard_fault) is_hard_fault_start<=1;
-	if (was_hard_faulting) is_hard_fault_start<=0;
+	if (hard_fault) was_hard_fault_starting<=1;
+	if (was_hard_faulting) was_hard_fault_starting<=0;
 end
 
 
