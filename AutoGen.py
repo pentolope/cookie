@@ -89,6 +89,14 @@ assemblerMemoryLocations={}
 assemblerLabelLocations={}
 walkingPointer=-1
 
+def a_tR(dataIn):
+	d={
+	'RET' :'FB00',
+	}
+	r=d[dataIn[0]]
+	assert len(r)==4
+	return r
+
 def a_t0(dataIn):
 	d={
 	'LDLO':'0'+dataIn[2]+dataIn[1],
@@ -131,6 +139,7 @@ def a_t2(dataIn):
 	'MREB':'FC'+dataIn[2]+dataIn[1],
 	'MWRB':'FD'+dataIn[2]+dataIn[1],
 	'AJMP':'FE'+dataIn[2]+dataIn[1],
+	'CALL':'FA'+dataIn[2]+dataIn[1],
 	'SPSS':'FF'+'0'      +dataIn[1]
 	}
 	r=d[dataIn[0]]
@@ -189,6 +198,9 @@ assemblerInstructions['MWRB']=(('%','%'),2,a_t2) #write memory byte
 
 assemblerInstructions['AJMP']=(('%','%'),2,a_t2) #absolute (always) jump
 assemblerInstructions['SPSS']=(('%',),2,a_t2) #stack pointer subtract (and) set
+
+assemblerInstructions['RET' ]=(tuple([]),2,a_tR) #ret
+assemblerInstructions['CALL']=(('%','%'),2,a_t2) #call
 
 assemblerMemoryLocations[ 0]=('LDLO','0','00')
 assemblerMemoryLocations[ 1]=True

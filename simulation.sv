@@ -403,24 +403,11 @@ memory_io memory__io(
 
 initial begin // stopping timer
 	#10;
-	for (i=0;i<800;i=i+1) begin//131072
+	for (i=0;i<131072;i=i+1) begin//131072//800
 		#20;
 	end
 	$display("Stopping Normally due to cutoff timer.");
 	$stop;
 end
-
-
-always @(posedge main_clk) assert(debug_user_reg[0]===16'h0);
-/*
-initial begin // stopping timer
-	#10;
-	for (i=0;i<1826650;i=i+1) begin
-		#20;
-	end
-	$display("Stopping Normally due to cutoff timer.");
-	$stop;
-end
-*/
 
 endmodule

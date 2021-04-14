@@ -844,7 +844,7 @@ always_comb begin
 	j_co=0;
 	j_uc=0;
 	dependSelfRegRead_next=dependSelfRegRead & ~resolveDependSelfRegRead;
-	dependSelfRegWrite_next=dependSelfRegWrite; //  & ~doWrite;  :: maybe... I'm going to check this later
+	dependSelfRegWrite_next=dependSelfRegWrite;
 	dependSelfSpecial_next=dependSelfSpecial;
 	
 	unique case (effectiveID)
@@ -1027,7 +1027,7 @@ always_comb begin
 		end
 	end
 	5'h1B:begin
-		instruction_jump_address_next={mem_data_out[3],mem_data_out[4]};
+		instruction_jump_address_next={mem_data_out[1],mem_data_out[0]};
 		unique case (state)
 		1:begin
 		end
@@ -1092,7 +1092,9 @@ reg [15:0] wv_5;
 reg [15:0] wv_6;
 reg [15:0] wv_7;
 reg [15:0] wv_8;
-reg [15:0] wv_9;
+
+reg [15:0] mem_data_out_r [4:0];
+always @(posedge main_clk) mem_data_out_r<=mem_data_out;
 
 always_comb begin
 	temporaryB=16'hx;
@@ -1113,19 +1115,18 @@ always @(posedge main_clk) begin
 	wv_2<={15'h0,adderOutput[16]};
 	wv_3<=(effectiveID[3:0]==4'h9)? {divTemp3[15:1],divPartialResult[1]} :mem_data_out[0];
 	wv_4<=(effectiveID[3:0]==4'h9)? divTable0[2][15:0]                   :mem_data_out[1];
-	wv_5<=mem_data_out[2];
-	wv_6<=mul32Temp[15: 0];
-	wv_7<=mul32Temp[31:16];
-	wv_8<=mul16Temp;
-	wv_9<=16'hx;
+	wv_5<=mul32Temp[15: 0];
+	wv_6<=mul32Temp[31:16];
+	wv_7<=mul16Temp;
+	wv_8<=16'hx;
 	case (effectiveID[3:0])
-	4'h0:wv_9<=stack_pointer -4'd2;
-	4'h1:wv_9<=stack_pointer -4'd4;
-	4'h2:wv_9<=stack_pointer +4'd2;
-	4'h3:wv_9<=stack_pointer +4'd4;
-	4'hA:wv_9<=stack_pointer -4'd8;
-	4'hB:wv_9<=(user_reg[4'h0]-4'hA) + mem_data_out[0];
-	4'hF:wv_9<=temporary7;
+	4'h0:wv_8<=stack_pointer -4'd2;
+	4'h1:wv_8<=stack_pointer -4'd4;
+	4'h2:wv_8<=stack_pointer +4'd2;
+	4'h3:wv_8<=stack_pointer +4'd4;
+	4'hA:wv_8<=stack_pointer -4'd8;
+	4'hB:wv_8<=(user_reg[4'h0]+4'hA) + mem_data_out[4];
+	4'hF:wv_8<=temporary7;
 	endcase
 end
 
@@ -1214,7 +1215,7 @@ always_comb begin
 		twv0=wv_0;
 	end
 	5'h17:begin
-		twv0=wv_8;
+		twv0=wv_7;
 	end
 	5'h18:begin
 	end
@@ -1235,7 +1236,7 @@ always_comb begin
 	5'h1E:begin
 	end
 	5'h1F:begin
-		twv0=wv_9;
+		twv0=wv_8;
 	end
 	endcase
 end
@@ -1311,17 +1312,17 @@ always_comb begin
 	5'h17:begin
 	end
 	5'h18:begin
-		writeValues[13]=wv_6;
-		writeValues[14]=wv_7;
+		writeValues[13]=wv_5;
+		writeValues[14]=wv_6;
 	end
 	5'h19:begin
 	end
 	5'h1A:begin
-		writeValues[0]=wv_9;
+		writeValues[0]=wv_8;
 	end
 	5'h1B:begin
-		writeValues[0]=wv_4;
-		writeValues[1]=wv_5;
+		writeValues[0]=mem_data_out_r[3];
+		writeValues[1]=mem_data_out_r[2];
 	end
 	5'h1C:begin
 	end
@@ -1332,7 +1333,7 @@ always_comb begin
 	5'h1F:begin
 	end
 	endcase
-	writeValues[16]=wv_9;
+	writeValues[16]=wv_8;
 	writeValues[16][0]=1'b0;
 end
 
@@ -1507,7 +1508,7 @@ always @(posedge main_clk) begin
 		mem_is_stack_access_requesting<=1;
 		unique case (state)
 		1:begin
-			mem_target_address[15: 0]<=stack_pointer -4'd2; // address probably does not need to be here
+			mem_target_address[15: 0]<=stack_pointer -4'd2;
 			mem_target_address[31:16]<=0;mem_target_address[0]<=0;
 			doWrite[16]<=1'b1;
 			state<=2;
@@ -1529,7 +1530,7 @@ always @(posedge main_clk) begin
 		mem_is_stack_access_requesting<=1;
 		unique case (state)
 		1:begin
-			mem_target_address[15: 0]<=stack_pointer -4'd4; // address probably does not need to be here
+			mem_target_address[15: 0]<=stack_pointer -4'd4;
 			mem_target_address[31:16]<=0;mem_target_address[0]<=0;
 			doWrite[16]<=1'b1;
 			state<=2;
@@ -1549,7 +1550,7 @@ always @(posedge main_clk) begin
 		mem_is_stack_access_requesting<=1;
 		unique case (state)
 		1:begin
-			mem_target_address[15: 0]<=stack_pointer; // address probably does not need to be here
+			mem_target_address[15: 0]<=stack_pointer;
 			mem_target_address[31:16]<=0;mem_target_address[0]<=0;
 
 			doWrite[16]<=1'b1;
@@ -1575,7 +1576,7 @@ always @(posedge main_clk) begin
 		unique case (state)
 		1:begin
 			mem_is_stack_access_requesting<=1;
-			mem_target_address[15: 0]<=stack_pointer; // address probably does not need to be here
+			mem_target_address[15: 0]<=stack_pointer;
 			mem_target_address[31:16]<=0;mem_target_address[0]<=0;
 			doWrite[16]<=1'b1;
 			state<=2;
@@ -1726,7 +1727,7 @@ always @(posedge main_clk) begin
 		unique case (state)
 		1:begin
 			mem_is_stack_access_requesting<=1;
-			mem_target_address[15: 0]<=user_reg[4'h0] -4'h8;
+			mem_target_address[15: 0]<=user_reg[4'h0];
 			mem_target_address[31:16]<=0;mem_target_address[0]<=0;
 			state<=2;
 		end
