@@ -16,10 +16,6 @@ module scheduler(
 	
 	input main_clk
 );
-/*
-reg tick_tock=0;
-always @(posedge main_clk) tick_tock<=!tick_tock;
-*/
 
 reg [7:0] is_new_instruction_entering_this_cycle;
 reg [7:0] instructions_might_be_valid_next=0;
@@ -175,122 +171,119 @@ always_comb begin
 	isAfter_temp=isAfter_true;
 	is_new_instruction_entering_this_cycle=8'h0;
 	setIndexes='{2'hx,2'hx,2'hx,2'hx,2'hx,2'hx,2'hx,2'hx};
-	//count_left=3'hx;
-	//if (!tick_tock) begin
-		count_left=fifo_instruction_cache_consume_count;
-		if (count_left!=3'h0 && !is_instructions_valid[0]) begin
-			is_new_instruction_entering_this_cycle[0]=1'b1;
-			setIndexes[0]=fifo_instruction_cache_consume_count -count_left;
-			count_left=count_left-1'd1;
-			isAfter_temp[0]=8'hFF;
-			isAfter_temp[0][0]=1'b0;
-			isAfter_temp[1][0]=1'b0;
-			isAfter_temp[2][0]=1'b0;
-			isAfter_temp[3][0]=1'b0;
-			isAfter_temp[4][0]=1'b0;
-			isAfter_temp[5][0]=1'b0;
-			isAfter_temp[6][0]=1'b0;
-			isAfter_temp[7][0]=1'b0;
-		end
-		if (count_left!=3'h0 && !is_instructions_valid[1]) begin
-			is_new_instruction_entering_this_cycle[1]=1'b1;
-			setIndexes[1]=fifo_instruction_cache_consume_count -count_left;
-			count_left=count_left-1'd1;
-			isAfter_temp[1]=8'hFF;
-			isAfter_temp[0][1]=1'b0;
-			isAfter_temp[1][1]=1'b0;
-			isAfter_temp[2][1]=1'b0;
-			isAfter_temp[3][1]=1'b0;
-			isAfter_temp[4][1]=1'b0;
-			isAfter_temp[5][1]=1'b0;
-			isAfter_temp[6][1]=1'b0;
-			isAfter_temp[7][1]=1'b0;
-		end
-		if (count_left!=3'h0 && !is_instructions_valid[2]) begin
-			is_new_instruction_entering_this_cycle[2]=1'b1;
-			setIndexes[2]=fifo_instruction_cache_consume_count -count_left;
-			count_left=count_left-1'd1;
-			isAfter_temp[2]=8'hFF;
-			isAfter_temp[0][2]=1'b0;
-			isAfter_temp[1][2]=1'b0;
-			isAfter_temp[2][2]=1'b0;
-			isAfter_temp[3][2]=1'b0;
-			isAfter_temp[4][2]=1'b0;
-			isAfter_temp[5][2]=1'b0;
-			isAfter_temp[6][2]=1'b0;
-			isAfter_temp[7][2]=1'b0;
-		end
-		if (count_left!=3'h0 && !is_instructions_valid[3]) begin
-			is_new_instruction_entering_this_cycle[3]=1'b1;
-			setIndexes[3]=fifo_instruction_cache_consume_count -count_left;
-			count_left=count_left-1'd1;
-			isAfter_temp[3]=8'hFF;
-			isAfter_temp[0][3]=1'b0;
-			isAfter_temp[1][3]=1'b0;
-			isAfter_temp[2][3]=1'b0;
-			isAfter_temp[3][3]=1'b0;
-			isAfter_temp[4][3]=1'b0;
-			isAfter_temp[5][3]=1'b0;
-			isAfter_temp[6][3]=1'b0;
-			isAfter_temp[7][3]=1'b0;
-		end
-		if (count_left!=3'h0 && !is_instructions_valid[4]) begin
-			is_new_instruction_entering_this_cycle[4]=1'b1;
-			setIndexes[4]=fifo_instruction_cache_consume_count -count_left;
-			count_left=count_left-1'd1;
-			isAfter_temp[4]=8'hFF;
-			isAfter_temp[0][4]=1'b0;
-			isAfter_temp[1][4]=1'b0;
-			isAfter_temp[2][4]=1'b0;
-			isAfter_temp[3][4]=1'b0;
-			isAfter_temp[4][4]=1'b0;
-			isAfter_temp[5][4]=1'b0;
-			isAfter_temp[6][4]=1'b0;
-			isAfter_temp[7][4]=1'b0;
-		end
-		if (count_left!=3'h0 && !is_instructions_valid[5]) begin
-			is_new_instruction_entering_this_cycle[5]=1'b1;
-			setIndexes[5]=fifo_instruction_cache_consume_count -count_left;
-			count_left=count_left-1'd1;
-			isAfter_temp[5]=8'hFF;
-			isAfter_temp[0][5]=1'b0;
-			isAfter_temp[1][5]=1'b0;
-			isAfter_temp[2][5]=1'b0;
-			isAfter_temp[3][5]=1'b0;
-			isAfter_temp[4][5]=1'b0;
-			isAfter_temp[5][5]=1'b0;
-			isAfter_temp[6][5]=1'b0;
-			isAfter_temp[7][5]=1'b0;
-		end
-		if (count_left!=3'h0 && !is_instructions_valid[6]) begin
-			is_new_instruction_entering_this_cycle[6]=1'b1;
-			setIndexes[6]=fifo_instruction_cache_consume_count -count_left;
-			count_left=count_left-1'd1;
-			isAfter_temp[6]=8'hFF;
-			isAfter_temp[0][6]=1'b0;
-			isAfter_temp[1][6]=1'b0;
-			isAfter_temp[2][6]=1'b0;
-			isAfter_temp[3][6]=1'b0;
-			isAfter_temp[4][6]=1'b0;
-			isAfter_temp[5][6]=1'b0;
-			isAfter_temp[6][6]=1'b0;
-			isAfter_temp[7][6]=1'b0;
-		end
-		if (count_left!=3'h0 && !is_instructions_valid[7]) begin
-			is_new_instruction_entering_this_cycle[7]=1'b1;
-			setIndexes[7]=fifo_instruction_cache_consume_count -count_left;
-			count_left=count_left-1'd1;
-			isAfter_temp[7]=8'hFF;
-			isAfter_temp[0][7]=1'b0;
-			isAfter_temp[1][7]=1'b0;
-			isAfter_temp[2][7]=1'b0;
-			isAfter_temp[3][7]=1'b0;
-			isAfter_temp[4][7]=1'b0;
-			isAfter_temp[5][7]=1'b0;
-			isAfter_temp[6][7]=1'b0;
-			isAfter_temp[7][7]=1'b0;
-		end
-	//end
+	count_left=fifo_instruction_cache_consume_count;
+	if (count_left!=3'h0 && !is_instructions_valid[0]) begin
+		is_new_instruction_entering_this_cycle[0]=1'b1;
+		setIndexes[0]=fifo_instruction_cache_consume_count -count_left;
+		count_left=count_left-1'd1;
+		isAfter_temp[0]=8'hFF;
+		isAfter_temp[0][0]=1'b0;
+		isAfter_temp[1][0]=1'b0;
+		isAfter_temp[2][0]=1'b0;
+		isAfter_temp[3][0]=1'b0;
+		isAfter_temp[4][0]=1'b0;
+		isAfter_temp[5][0]=1'b0;
+		isAfter_temp[6][0]=1'b0;
+		isAfter_temp[7][0]=1'b0;
+	end
+	if (count_left!=3'h0 && !is_instructions_valid[1]) begin
+		is_new_instruction_entering_this_cycle[1]=1'b1;
+		setIndexes[1]=fifo_instruction_cache_consume_count -count_left;
+		count_left=count_left-1'd1;
+		isAfter_temp[1]=8'hFF;
+		isAfter_temp[0][1]=1'b0;
+		isAfter_temp[1][1]=1'b0;
+		isAfter_temp[2][1]=1'b0;
+		isAfter_temp[3][1]=1'b0;
+		isAfter_temp[4][1]=1'b0;
+		isAfter_temp[5][1]=1'b0;
+		isAfter_temp[6][1]=1'b0;
+		isAfter_temp[7][1]=1'b0;
+	end
+	if (count_left!=3'h0 && !is_instructions_valid[2]) begin
+		is_new_instruction_entering_this_cycle[2]=1'b1;
+		setIndexes[2]=fifo_instruction_cache_consume_count -count_left;
+		count_left=count_left-1'd1;
+		isAfter_temp[2]=8'hFF;
+		isAfter_temp[0][2]=1'b0;
+		isAfter_temp[1][2]=1'b0;
+		isAfter_temp[2][2]=1'b0;
+		isAfter_temp[3][2]=1'b0;
+		isAfter_temp[4][2]=1'b0;
+		isAfter_temp[5][2]=1'b0;
+		isAfter_temp[6][2]=1'b0;
+		isAfter_temp[7][2]=1'b0;
+	end
+	if (count_left!=3'h0 && !is_instructions_valid[3]) begin
+		is_new_instruction_entering_this_cycle[3]=1'b1;
+		setIndexes[3]=fifo_instruction_cache_consume_count -count_left;
+		count_left=count_left-1'd1;
+		isAfter_temp[3]=8'hFF;
+		isAfter_temp[0][3]=1'b0;
+		isAfter_temp[1][3]=1'b0;
+		isAfter_temp[2][3]=1'b0;
+		isAfter_temp[3][3]=1'b0;
+		isAfter_temp[4][3]=1'b0;
+		isAfter_temp[5][3]=1'b0;
+		isAfter_temp[6][3]=1'b0;
+		isAfter_temp[7][3]=1'b0;
+	end
+	if (count_left!=3'h0 && !is_instructions_valid[4]) begin
+		is_new_instruction_entering_this_cycle[4]=1'b1;
+		setIndexes[4]=fifo_instruction_cache_consume_count -count_left;
+		count_left=count_left-1'd1;
+		isAfter_temp[4]=8'hFF;
+		isAfter_temp[0][4]=1'b0;
+		isAfter_temp[1][4]=1'b0;
+		isAfter_temp[2][4]=1'b0;
+		isAfter_temp[3][4]=1'b0;
+		isAfter_temp[4][4]=1'b0;
+		isAfter_temp[5][4]=1'b0;
+		isAfter_temp[6][4]=1'b0;
+		isAfter_temp[7][4]=1'b0;
+	end
+	if (count_left!=3'h0 && !is_instructions_valid[5]) begin
+		is_new_instruction_entering_this_cycle[5]=1'b1;
+		setIndexes[5]=fifo_instruction_cache_consume_count -count_left;
+		count_left=count_left-1'd1;
+		isAfter_temp[5]=8'hFF;
+		isAfter_temp[0][5]=1'b0;
+		isAfter_temp[1][5]=1'b0;
+		isAfter_temp[2][5]=1'b0;
+		isAfter_temp[3][5]=1'b0;
+		isAfter_temp[4][5]=1'b0;
+		isAfter_temp[5][5]=1'b0;
+		isAfter_temp[6][5]=1'b0;
+		isAfter_temp[7][5]=1'b0;
+	end
+	if (count_left!=3'h0 && !is_instructions_valid[6]) begin
+		is_new_instruction_entering_this_cycle[6]=1'b1;
+		setIndexes[6]=fifo_instruction_cache_consume_count -count_left;
+		count_left=count_left-1'd1;
+		isAfter_temp[6]=8'hFF;
+		isAfter_temp[0][6]=1'b0;
+		isAfter_temp[1][6]=1'b0;
+		isAfter_temp[2][6]=1'b0;
+		isAfter_temp[3][6]=1'b0;
+		isAfter_temp[4][6]=1'b0;
+		isAfter_temp[5][6]=1'b0;
+		isAfter_temp[6][6]=1'b0;
+		isAfter_temp[7][6]=1'b0;
+	end
+	if (count_left!=3'h0 && !is_instructions_valid[7]) begin
+		is_new_instruction_entering_this_cycle[7]=1'b1;
+		setIndexes[7]=fifo_instruction_cache_consume_count -count_left;
+		count_left=count_left-1'd1;
+		isAfter_temp[7]=8'hFF;
+		isAfter_temp[0][7]=1'b0;
+		isAfter_temp[1][7]=1'b0;
+		isAfter_temp[2][7]=1'b0;
+		isAfter_temp[3][7]=1'b0;
+		isAfter_temp[4][7]=1'b0;
+		isAfter_temp[5][7]=1'b0;
+		isAfter_temp[6][7]=1'b0;
+		isAfter_temp[7][7]=1'b0;
+	end
 end
 always_comb begin
 	isAfter_next[0][0]=0;
