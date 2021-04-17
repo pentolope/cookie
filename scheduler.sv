@@ -16,15 +16,17 @@ module scheduler(
 	
 	input main_clk
 );
-
+/*
 reg tick_tock=0;
 always @(posedge main_clk) tick_tock<=!tick_tock;
+*/
 
-
+reg [7:0] is_new_instruction_entering_this_cycle;
+reg [7:0] instructions_might_be_valid_next=0;
 reg [7:0] is_instructions_valid=0;
-reg [7:0] is_instructions_valid_prev=0;
 always @(posedge main_clk) is_instructions_valid<=is_instructions_valid_next;
-always @(posedge main_clk) is_instructions_valid_prev<=is_instructions_valid;
+always_comb instructions_might_be_valid_next=is_instructions_valid | is_new_instruction_entering_this_cycle;
+
 
 wire [2:0] popcnt4 [15:0];
 assign popcnt4[4'b0000]=0;
@@ -49,8 +51,8 @@ wire [2:0] popcntConsume_next1;
 wire [3:0] popcntConsume_next2;
 wire [2:0] popcntConsume_next3;
 
-lcell_3 lc_popcnt0(popcntConsume_next0,popcnt4[~is_instructions_valid[3:0]]);
-lcell_3 lc_popcnt1(popcntConsume_next1,popcnt4[~is_instructions_valid[7:4]]);
+lcell_3 lc_popcnt0(popcntConsume_next0,popcnt4[~instructions_might_be_valid_next[3:0]]);
+lcell_3 lc_popcnt1(popcntConsume_next1,popcnt4[~instructions_might_be_valid_next[7:4]]);
 
 assign popcntConsume_next2=popcntConsume_next0 + popcntConsume_next1;
 assign popcntConsume_next3=(popcntConsume_next2>3'd3)?(3'd4):({1'b0,popcntConsume_next2[1:0]});
@@ -59,7 +61,6 @@ reg [2:0] fifo_instruction_cache_consume_count=0;
 reg [2:0] fifo_instruction_cache_consume_count_next;
 assign fifo_instruction_cache_consume_count_extern=fifo_instruction_cache_consume_count;
 
-reg [7:0] is_new_instruction_entering_this_cycle;
 reg [1:0] setIndexes [7:0];
 
 lcell_2 lc0_setIndexes(setIndexes_extern[0],setIndexes[0]);
@@ -73,27 +74,19 @@ lcell_2 lc7_setIndexes(setIndexes_extern[7],setIndexes[7]);
 
 assign is_new_instruction_entering_this_cycle_extern=is_new_instruction_entering_this_cycle;
 
-reg allow_scheduling=0;
 reg [4:0] fifo_instruction_cache_size_after_read=0;
 assign fifo_instruction_cache_size_after_read_extern=fifo_instruction_cache_size_after_read;
 always @(posedge main_clk) begin
-	fifo_instruction_cache_size_after_read<=(fifo_instruction_cache_size_next>=fifo_instruction_cache_consume_count_next)?(fifo_instruction_cache_size_next -fifo_instruction_cache_consume_count_next):fifo_instruction_cache_size_next;
-end
-always @(posedge main_clk) begin
-	// fifo_instruction_cache_size>=fifo_instruction_cache_consume_count can be violated in some rare cases. If that happens, just waste this scheduling cycle and try again next time
-	allow_scheduling<=(!tick_tock && fifo_instruction_cache_size_next>=fifo_instruction_cache_consume_count_next)?1'b1:1'b0;
+	fifo_instruction_cache_size_after_read<=fifo_instruction_cache_size_next -fifo_instruction_cache_consume_count_next;
 end
 
 always_comb begin
-	if (tick_tock || is_performing_jump_next_instant_on) begin
-		fifo_instruction_cache_consume_count_next=0;
+	if (fifo_instruction_cache_size_next > popcntConsume_next3) begin // could also be viewed as `fifo_instruction_cache_size_next >= popcntConsume_next3`
+		fifo_instruction_cache_consume_count_next=popcntConsume_next3;
 	end else begin
-		if (fifo_instruction_cache_size > popcntConsume_next3) begin // could also be viewed as `fifo_instruction_cache_size >= popcntConsume_next3`
-			fifo_instruction_cache_consume_count_next=popcntConsume_next3;
-		end else begin
-			fifo_instruction_cache_consume_count_next=fifo_instruction_cache_size[2:0];
-		end
+		fifo_instruction_cache_consume_count_next=fifo_instruction_cache_size_next[2:0];
 	end
+	fifo_instruction_cache_consume_count_next=fifo_instruction_cache_consume_count_next & {3{!is_performing_jump_next_instant_on}};
 end
 always @(posedge main_clk) begin
 	fifo_instruction_cache_consume_count<=fifo_instruction_cache_consume_count_next;
@@ -182,10 +175,10 @@ always_comb begin
 	isAfter_temp=isAfter_true;
 	is_new_instruction_entering_this_cycle=8'h0;
 	setIndexes='{2'hx,2'hx,2'hx,2'hx,2'hx,2'hx,2'hx,2'hx};
-	count_left=3'hx;
-	if (allow_scheduling) begin
+	//count_left=3'hx;
+	//if (!tick_tock) begin
 		count_left=fifo_instruction_cache_consume_count;
-		if (count_left!=3'h0 && !is_instructions_valid_prev[0]) begin
+		if (count_left!=3'h0 && !is_instructions_valid[0]) begin
 			is_new_instruction_entering_this_cycle[0]=1'b1;
 			setIndexes[0]=fifo_instruction_cache_consume_count -count_left;
 			count_left=count_left-1'd1;
@@ -199,7 +192,7 @@ always_comb begin
 			isAfter_temp[6][0]=1'b0;
 			isAfter_temp[7][0]=1'b0;
 		end
-		if (count_left!=3'h0 && !is_instructions_valid_prev[1]) begin
+		if (count_left!=3'h0 && !is_instructions_valid[1]) begin
 			is_new_instruction_entering_this_cycle[1]=1'b1;
 			setIndexes[1]=fifo_instruction_cache_consume_count -count_left;
 			count_left=count_left-1'd1;
@@ -213,7 +206,7 @@ always_comb begin
 			isAfter_temp[6][1]=1'b0;
 			isAfter_temp[7][1]=1'b0;
 		end
-		if (count_left!=3'h0 && !is_instructions_valid_prev[2]) begin
+		if (count_left!=3'h0 && !is_instructions_valid[2]) begin
 			is_new_instruction_entering_this_cycle[2]=1'b1;
 			setIndexes[2]=fifo_instruction_cache_consume_count -count_left;
 			count_left=count_left-1'd1;
@@ -227,7 +220,7 @@ always_comb begin
 			isAfter_temp[6][2]=1'b0;
 			isAfter_temp[7][2]=1'b0;
 		end
-		if (count_left!=3'h0 && !is_instructions_valid_prev[3]) begin
+		if (count_left!=3'h0 && !is_instructions_valid[3]) begin
 			is_new_instruction_entering_this_cycle[3]=1'b1;
 			setIndexes[3]=fifo_instruction_cache_consume_count -count_left;
 			count_left=count_left-1'd1;
@@ -241,7 +234,7 @@ always_comb begin
 			isAfter_temp[6][3]=1'b0;
 			isAfter_temp[7][3]=1'b0;
 		end
-		if (count_left!=3'h0 && !is_instructions_valid_prev[4]) begin
+		if (count_left!=3'h0 && !is_instructions_valid[4]) begin
 			is_new_instruction_entering_this_cycle[4]=1'b1;
 			setIndexes[4]=fifo_instruction_cache_consume_count -count_left;
 			count_left=count_left-1'd1;
@@ -255,7 +248,7 @@ always_comb begin
 			isAfter_temp[6][4]=1'b0;
 			isAfter_temp[7][4]=1'b0;
 		end
-		if (count_left!=3'h0 && !is_instructions_valid_prev[5]) begin
+		if (count_left!=3'h0 && !is_instructions_valid[5]) begin
 			is_new_instruction_entering_this_cycle[5]=1'b1;
 			setIndexes[5]=fifo_instruction_cache_consume_count -count_left;
 			count_left=count_left-1'd1;
@@ -269,7 +262,7 @@ always_comb begin
 			isAfter_temp[6][5]=1'b0;
 			isAfter_temp[7][5]=1'b0;
 		end
-		if (count_left!=3'h0 && !is_instructions_valid_prev[6]) begin
+		if (count_left!=3'h0 && !is_instructions_valid[6]) begin
 			is_new_instruction_entering_this_cycle[6]=1'b1;
 			setIndexes[6]=fifo_instruction_cache_consume_count -count_left;
 			count_left=count_left-1'd1;
@@ -283,7 +276,7 @@ always_comb begin
 			isAfter_temp[6][6]=1'b0;
 			isAfter_temp[7][6]=1'b0;
 		end
-		if (count_left!=3'h0 && !is_instructions_valid_prev[7]) begin
+		if (count_left!=3'h0 && !is_instructions_valid[7]) begin
 			is_new_instruction_entering_this_cycle[7]=1'b1;
 			setIndexes[7]=fifo_instruction_cache_consume_count -count_left;
 			count_left=count_left-1'd1;
@@ -297,7 +290,7 @@ always_comb begin
 			isAfter_temp[6][7]=1'b0;
 			isAfter_temp[7][7]=1'b0;
 		end
-	end
+	//end
 end
 always_comb begin
 	isAfter_next[0][0]=0;

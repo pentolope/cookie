@@ -6,7 +6,7 @@ from time import sleep
 sep="\\"
 parallel=2
 seed_lower=2
-seed_upper=30
+seed_upper=100
 quartus_dir="%QUARTUS_ROOTDIR%"+sep+"bin64"+sep
 
 def directory_find(origin):

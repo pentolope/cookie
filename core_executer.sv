@@ -1470,7 +1470,6 @@ always @(posedge main_clk) begin
 			mem_is_general_access_requesting<=0;
 			is_instruction_finishing_this_cycle_pulse<=1;
 			state<=0;
-
 		end
 	end
 	5'h0A:begin
