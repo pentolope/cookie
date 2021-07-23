@@ -1199,12 +1199,12 @@ always @(posedge main_clk) begin
 		end
 		125:begin // read crc16 byte 1
 			chip_select_next<=0;
-			storage_bad_status=(walking_crc16_output[15:8]!=final_byte_came_in)?1'b1:1'b0;
+			storage_bad_status<=(walking_crc16_output[15:8]!=final_byte_came_in)?1'b1:1'b0;
 			controller_state_now<=126;
 		end
 		126:begin // read crc16 byte 0
 			chip_select_next<=0; // cs probably not needed
-			storage_bad_status=storage_bad_status || (walking_crc16_output[15:8]!=final_byte_came_in)?1'b1:1'b0;
+			storage_bad_status<=storage_bad_status || (walking_crc16_output[15:8]!=final_byte_came_in)?1'b1:1'b0;
 			controller_state_now<=127;
 		end
 		127:begin // decide read success
