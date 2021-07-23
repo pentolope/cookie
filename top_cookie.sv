@@ -125,7 +125,7 @@ assign reference_clock=MAX10_CLK1_50;
 wire main_clk; // 83.3333MHz
 assign DRAM_CLK=main_clk;
 
-wire vga_clk; // 12.5875MHz
+wire vga_clk; // 25.175MHz
 
 
 ip_pll_internal ip_pll_internal_inst(
@@ -229,7 +229,7 @@ memory_io memory__io(
 	
 	.debug_controller_state_now(debug_controller_state_now),
 	
-	.vga_clk(vga_clk),
+	.VGA_CLK(vga_clk),
 	.main_clk(main_clk)
 );
 

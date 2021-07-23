@@ -1,12 +1,13 @@
 import os
+import sys
 import subprocess
 from glob import glob
 from time import sleep
 
 sep="\\"
-parallel=2
-seed_lower=2
-seed_upper=100
+parallel=int(sys.argv[1])
+seed_lower=int(sys.argv[2])
+seed_upper=int(sys.argv[3])
 quartus_dir="%QUARTUS_ROOTDIR%"+sep+"bin64"+sep
 
 def directory_find(origin):
@@ -99,7 +100,7 @@ if ("set_global_assignment -name SEED 1" in qsf_content) and not bad_initial_see
 		f=open(directory_root+"cookie.qsf","wb")
 		f.write(qsf_content.replace("set_global_assignment -name SEED 1","set_global_assignment -name SEED "+str(seed_value)))
 		f.close()
-	que0=range(seed_lower,seed_upper+1)
+	que0=list(range(seed_lower,seed_upper+1))
 	que1=[]
 	while len(que0)!=0 or len(que1)!=0:
 		l=[]

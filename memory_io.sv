@@ -30,7 +30,7 @@ module memory_io(
 	
 	output [7:0] debug_controller_state_now,
 	
-	input vga_clk,
+	input VGA_CLK,
 	input main_clk
 );
 
@@ -54,25 +54,27 @@ Warning for ignoring IO mapped device's protocols:
 	In the worst of cases, this undefined behavior may result in unexpected result data, dropped requests, or endlessly unresponsive controllers.
 
 Special considerations for VGA's VRAM:
-	The VGA's VRAM will ignore the upper 4 bits of input data.
-	The VGA's VRAM will only accept word writes. It cannot be read and will ignore any byte access.
-	Consequently, the VGA's VRAM will ignore the one's bit of the address.
+	When address 32766 (within it's IO address area) is read with a byte access it will give the frame counter instead of the contents of memory at that location.
+	See `vga_driver.sv` for more information on what address do what.
 
 Special considerations for sd card controller:
-	See sd_card_controller.sv
+	See `sd_card_controller.sv`
 
 Special considerations for ps2 controller:
-	See ps2_controller.sv
+	See `ps2_controller.sv`
 
 Access protocol for VGA's VRAM:
-	Any memory location in the VGA's VRAM may be written with a word at any time.
-	After writing, the new pixel value will be visible on the display as soon as possible.
+	Read and Write is allowed for byte and word access. Anything can be written at any time.
+	Modifying the mode info or font address offset will probably cause temporary visual glitches for 1-2 frames. This is normal and unavoidable since there is not enough memory for double buffering.
+	Modifying other data may cause temporary visual glitches (primarily tearing) for 1 frame. This is normal and unavoidable since there is not enough memory for double buffering.
+	To avoid most visual glitches, modify memory soon after the frame counter is incremented. This is because the frame counter gets incremented immediately after the visual area is streamed over the vga cable. There is about 1.42ms before visual data will begin streaming again.
+	See `vga_driver.sv` for more information on what address do what.
 
 Access protocol for sd card controller:
-	See sd_card_controller.sv
+	See `sd_card_controller.sv`
 
 Access protocol for ps2 controller:
-	See ps2_controller.sv
+	See `ps2_controller.sv`
 
 */
 
@@ -95,7 +97,7 @@ wire [15:0] out_mux [7:0];
 wire [15:0] nearly_data_out_io=out_mux[address_io_rr[25:23]];
 assign data_out_io=control_io_rr[0]?(address_io_rr[0]?{8'h0,nearly_data_out_io[15:8]}:{8'h0,nearly_data_out_io[ 7:0]}):nearly_data_out_io;
 assign out_mux[0]=16'h0; // LEDs on circuit board cannot be read
-assign out_mux[1]=16'h0; // VGA's VRAM cannot be read
+// out_mux[1] is VGA memory
 // out_mux[2] is sd card controller
 // out_mux[3] is ps2 controller
 assign out_mux[4]=16'h0; // not connected
@@ -116,11 +118,13 @@ end
 vga_driver vga_driver_inst(
 	.VGA_B(VGA_B),.VGA_G(VGA_G),.VGA_R(VGA_R),.VGA_HS(VGA_HS),.VGA_VS(VGA_VS),
 	
-	.do_write(control_io[1] && address_io[31] && address_io[25:23]==3'd1 && !control_io[0]),
-	.write_addr(address_io[16:1]),
-	.write_data(data_in_io[11:0]),
+	.io_do_write(control_io[1] && address_io[31] && address_io[25:23]==3'd1),
+	.io_do_byte_op(control_io[0]),
+	.io_addr(address_io[14:0]),
+	.io_write_data(data_in_io_modified),
+	.io_read_data(out_mux[1]),
 	.main_clk(main_clk),
-	.vga_clk(vga_clk)
+	.VGA_CLK(VGA_CLK)
 );
 
 sd_card_controller sd_card_controller_inst(

@@ -20,7 +20,7 @@ create_clock -name {MAX10_CLK1_50} -period 20.000 -waveform { 0.000 10.000 } [ge
 
 create_generated_clock -name {dram_ext_clk} -source [get_pins {ip_pll_internal_inst|altpll_component|auto_generated|pll1|clk[0]}] -master_clock {ip_pll_internal_inst|altpll_component|auto_generated|pll1|clk[0]} [get_ports {DRAM_CLK}] 
 create_generated_clock -name {ip_pll_internal_inst|altpll_component|auto_generated|pll1|clk[0]} -source [get_pins {ip_pll_internal_inst|altpll_component|auto_generated|pll1|inclk[0]}] -duty_cycle 50/1 -multiply_by 5 -divide_by 3 -master_clock {MAX10_CLK1_50} [get_pins {ip_pll_internal_inst|altpll_component|auto_generated|pll1|clk[0]}] 
-create_generated_clock -name {ip_pll_vga_inst|altpll_component|auto_generated|pll1|clk[0]} -source [get_pins {ip_pll_vga_inst|altpll_component|auto_generated|pll1|inclk[0]}] -duty_cycle 50/1 -multiply_by 71 -divide_by 282 -master_clock {MAX10_CLK1_50} [get_pins {ip_pll_vga_inst|altpll_component|auto_generated|pll1|clk[0]}] 
+create_generated_clock -name {ip_pll_vga_inst|altpll_component|auto_generated|pll1|clk[0]} -source [get_pins {ip_pll_vga_inst|altpll_component|auto_generated|pll1|inclk[0]}] -duty_cycle 50/1 -multiply_by 71 -divide_by 141 -master_clock {MAX10_CLK1_50} [get_pins {ip_pll_vga_inst|altpll_component|auto_generated|pll1|clk[0]}] 
 
 
 #**************************************************************
@@ -33,23 +33,26 @@ create_generated_clock -name {ip_pll_vga_inst|altpll_component|auto_generated|pl
 # Set Clock Uncertainty
 #**************************************************************
 
+set_clock_uncertainty -rise_from [get_clocks {ip_pll_vga_inst|altpll_component|auto_generated|pll1|clk[0]}] -rise_to [get_clocks {ip_pll_vga_inst|altpll_component|auto_generated|pll1|clk[0]}]  0.020  
+set_clock_uncertainty -rise_from [get_clocks {ip_pll_vga_inst|altpll_component|auto_generated|pll1|clk[0]}] -fall_to [get_clocks {ip_pll_vga_inst|altpll_component|auto_generated|pll1|clk[0]}]  0.020  
+set_clock_uncertainty -rise_from [get_clocks {ip_pll_vga_inst|altpll_component|auto_generated|pll1|clk[0]}] -rise_to [get_clocks {ip_pll_internal_inst|altpll_component|auto_generated|pll1|clk[0]}]  0.150  
+set_clock_uncertainty -rise_from [get_clocks {ip_pll_vga_inst|altpll_component|auto_generated|pll1|clk[0]}] -fall_to [get_clocks {ip_pll_internal_inst|altpll_component|auto_generated|pll1|clk[0]}]  0.150  
+set_clock_uncertainty -fall_from [get_clocks {ip_pll_vga_inst|altpll_component|auto_generated|pll1|clk[0]}] -rise_to [get_clocks {ip_pll_vga_inst|altpll_component|auto_generated|pll1|clk[0]}]  0.020  
+set_clock_uncertainty -fall_from [get_clocks {ip_pll_vga_inst|altpll_component|auto_generated|pll1|clk[0]}] -fall_to [get_clocks {ip_pll_vga_inst|altpll_component|auto_generated|pll1|clk[0]}]  0.020  
+set_clock_uncertainty -fall_from [get_clocks {ip_pll_vga_inst|altpll_component|auto_generated|pll1|clk[0]}] -rise_to [get_clocks {ip_pll_internal_inst|altpll_component|auto_generated|pll1|clk[0]}]  0.150  
+set_clock_uncertainty -fall_from [get_clocks {ip_pll_vga_inst|altpll_component|auto_generated|pll1|clk[0]}] -fall_to [get_clocks {ip_pll_internal_inst|altpll_component|auto_generated|pll1|clk[0]}]  0.150  
+set_clock_uncertainty -rise_from [get_clocks {ip_pll_internal_inst|altpll_component|auto_generated|pll1|clk[0]}] -rise_to [get_clocks {ip_pll_internal_inst|altpll_component|auto_generated|pll1|clk[0]}]  0.020  
+set_clock_uncertainty -rise_from [get_clocks {ip_pll_internal_inst|altpll_component|auto_generated|pll1|clk[0]}] -fall_to [get_clocks {ip_pll_internal_inst|altpll_component|auto_generated|pll1|clk[0]}]  0.020  
+set_clock_uncertainty -rise_from [get_clocks {ip_pll_internal_inst|altpll_component|auto_generated|pll1|clk[0]}] -rise_to [get_clocks {dram_ext_clk}]  0.110  
+set_clock_uncertainty -rise_from [get_clocks {ip_pll_internal_inst|altpll_component|auto_generated|pll1|clk[0]}] -fall_to [get_clocks {dram_ext_clk}]  0.110  
+set_clock_uncertainty -fall_from [get_clocks {ip_pll_internal_inst|altpll_component|auto_generated|pll1|clk[0]}] -rise_to [get_clocks {ip_pll_internal_inst|altpll_component|auto_generated|pll1|clk[0]}]  0.020  
+set_clock_uncertainty -fall_from [get_clocks {ip_pll_internal_inst|altpll_component|auto_generated|pll1|clk[0]}] -fall_to [get_clocks {ip_pll_internal_inst|altpll_component|auto_generated|pll1|clk[0]}]  0.020  
+set_clock_uncertainty -fall_from [get_clocks {ip_pll_internal_inst|altpll_component|auto_generated|pll1|clk[0]}] -rise_to [get_clocks {dram_ext_clk}]  0.110  
+set_clock_uncertainty -fall_from [get_clocks {ip_pll_internal_inst|altpll_component|auto_generated|pll1|clk[0]}] -fall_to [get_clocks {dram_ext_clk}]  0.110  
 set_clock_uncertainty -rise_from [get_clocks {dram_ext_clk}] -rise_to [get_clocks {ip_pll_internal_inst|altpll_component|auto_generated|pll1|clk[0]}]  0.110  
 set_clock_uncertainty -rise_from [get_clocks {dram_ext_clk}] -fall_to [get_clocks {ip_pll_internal_inst|altpll_component|auto_generated|pll1|clk[0]}]  0.110  
 set_clock_uncertainty -fall_from [get_clocks {dram_ext_clk}] -rise_to [get_clocks {ip_pll_internal_inst|altpll_component|auto_generated|pll1|clk[0]}]  0.110  
 set_clock_uncertainty -fall_from [get_clocks {dram_ext_clk}] -fall_to [get_clocks {ip_pll_internal_inst|altpll_component|auto_generated|pll1|clk[0]}]  0.110  
-set_clock_uncertainty -rise_from [get_clocks {ip_pll_internal_inst|altpll_component|auto_generated|pll1|clk[0]}] -rise_to [get_clocks {dram_ext_clk}]  0.110  
-set_clock_uncertainty -rise_from [get_clocks {ip_pll_internal_inst|altpll_component|auto_generated|pll1|clk[0]}] -fall_to [get_clocks {dram_ext_clk}]  0.110  
-set_clock_uncertainty -rise_from [get_clocks {ip_pll_internal_inst|altpll_component|auto_generated|pll1|clk[0]}] -rise_to [get_clocks {ip_pll_internal_inst|altpll_component|auto_generated|pll1|clk[0]}]  0.020  
-set_clock_uncertainty -rise_from [get_clocks {ip_pll_internal_inst|altpll_component|auto_generated|pll1|clk[0]}] -fall_to [get_clocks {ip_pll_internal_inst|altpll_component|auto_generated|pll1|clk[0]}]  0.020  
-set_clock_uncertainty -fall_from [get_clocks {ip_pll_internal_inst|altpll_component|auto_generated|pll1|clk[0]}] -rise_to [get_clocks {dram_ext_clk}]  0.110  
-set_clock_uncertainty -fall_from [get_clocks {ip_pll_internal_inst|altpll_component|auto_generated|pll1|clk[0]}] -fall_to [get_clocks {dram_ext_clk}]  0.110  
-set_clock_uncertainty -fall_from [get_clocks {ip_pll_internal_inst|altpll_component|auto_generated|pll1|clk[0]}] -rise_to [get_clocks {ip_pll_internal_inst|altpll_component|auto_generated|pll1|clk[0]}]  0.020  
-set_clock_uncertainty -fall_from [get_clocks {ip_pll_internal_inst|altpll_component|auto_generated|pll1|clk[0]}] -fall_to [get_clocks {ip_pll_internal_inst|altpll_component|auto_generated|pll1|clk[0]}]  0.020  
-set_clock_uncertainty -rise_from [get_clocks {ip_pll_vga_inst|altpll_component|auto_generated|pll1|clk[0]}] -rise_to [get_clocks {ip_pll_vga_inst|altpll_component|auto_generated|pll1|clk[0]}]  0.020  
-set_clock_uncertainty -rise_from [get_clocks {ip_pll_vga_inst|altpll_component|auto_generated|pll1|clk[0]}] -fall_to [get_clocks {ip_pll_vga_inst|altpll_component|auto_generated|pll1|clk[0]}]  0.020  
-set_clock_uncertainty -fall_from [get_clocks {ip_pll_vga_inst|altpll_component|auto_generated|pll1|clk[0]}] -rise_to [get_clocks {ip_pll_vga_inst|altpll_component|auto_generated|pll1|clk[0]}]  0.020  
-set_clock_uncertainty -fall_from [get_clocks {ip_pll_vga_inst|altpll_component|auto_generated|pll1|clk[0]}] -fall_to [get_clocks {ip_pll_vga_inst|altpll_component|auto_generated|pll1|clk[0]}]  0.020  
-
 
 #**************************************************************
 # Set Input Delay
@@ -181,6 +184,7 @@ set_output_delay -add_delay -min -clock [get_clocks {dram_ext_clk}]  -2.000 [get
 # Set False Path
 #**************************************************************
 
+set_false_path -from [get_keepers {memory_io:memory__io|vga_driver:vga_driver_inst|vga_memory_system:vga_memory_system_inst|frame_counter_1[*]}] -to [get_keepers {memory_io:memory__io|vga_driver:vga_driver_inst|vga_memory_system:vga_memory_system_inst|frame_counter_2[*]}]
 
 
 #**************************************************************

@@ -1,4 +1,5 @@
-
+from time import time
+START_TIME=time()
 
 ############################################################
 
@@ -33,6 +34,122 @@ f=open('AutoGen0.sv','w')
 f.write('\n'+'\n'.join(outFileList)+'\n')
 f.close()
 del f
+del outFileList
+
+############################################################
+
+from PIL import Image
+img = Image.open('(7, 8) font.png').convert('RGB')
+default_character=[]
+all_characters={}
+this_character=[]
+outFileList=['''DEPTH = 16384; % DEPTH is the number of addresses %
+WIDTH = 16;  % WIDTH is the number of bits of data per word %
+% DEPTH and WIDTH should be entered as decimal numbers %
+ADDRESS_RADIX = HEX;
+DATA_RADIX = HEX; % Enter BIN, DEC, HEX, OCT, or UNS; %
+
+CONTENT
+BEGIN''']
+default_character.append('0'*8)
+for y in range(8):
+	default_character.append('0')
+	for x in range(7):
+		if y==1 or y==6 or x==1 or x==5:
+			default_character.append('1')
+		else:
+			default_character.append('0')
+for i in range(256):
+	all_characters[i]=''.join(default_character)
+for visibleCharPictureIndex in range(95):
+	this_character.append('0'*8)
+	for y in range(8):
+		this_character.append('0')
+		for x in range(7):
+			pixel = img.getpixel((visibleCharPictureIndex*8+x,y))
+			if pixel==(0,0,0):
+				this_character.append('1')
+			elif pixel==(255,255,255):
+				this_character.append('0')
+			else:
+				raise RuntimeError('invalid value in font picture')
+	all_characters[visibleCharPictureIndex+32]=''.join(this_character)
+	this_character=[]
+img.close()
+del img
+values={}
+font_start=14400#14328
+assert ord(' ')==32
+for i in range(0,font_start,3):
+	values[i+0]=32
+	values[i+1]=255
+	values[i+2]=0
+rain=[
+	(2,0,0),
+	(2,1,0),
+	(2,2,0),
+	(1,2,0),
+	(0,2,0),
+	(0,2,1),
+	(0,2,2),
+	(0,1,2),
+	(0,0,2),
+	(1,0,2),
+	(2,0,2),
+	(2,0,1),
+]
+c0=[7,3,0]
+c1=[3,1,0]
+for i,v in enumerate("COOKIE is finding it's recipe..."):
+	values[i * 3 + 0]=ord(v)
+	t=rain[(i+0)%12]
+	t=(c0[t[2]]<<5)+(c0[t[1]]<<2)+(c1[t[0]])
+	assert t>=0
+	assert t<256
+	values[i * 3 + 1]=t
+	t=rain[(i+6)%12]
+	t=(c0[t[2]]<<5)+(c0[t[1]]<<2)+(c1[t[0]])
+	assert t>=0
+	assert t<256
+	values[i * 3 + 2]=t
+for i,v in enumerate("For now, enjoy this font test:"):
+	values[(i+160) * 3 + 0]=ord(v)
+	values[(i+160) * 3 + 1]=(7<<5) | (7<<2)
+	values[(i+160) * 3 + 2]=0
+for i,v in enumerate(''.join(map(chr,range(32,127)))):
+	values[(i+240) * 3 + 0]=ord(v)
+	values[(i+240) * 3 + 1]=7<<2
+	values[(i+240) * 3 + 2]=3
+
+for i in range(256):
+	assert 8 * 9==len(all_characters[i])
+	vb=font_start + 9 * i
+	for vi in range(9):
+		assert not (vb+vi in values.keys())
+		if vb+vi>=32764:
+			raise RuntimeError('font doesn\'t fit')
+		values[vb+vi]=int(all_characters[i][vi * 8:vi * 8 + 8][::-1],2)
+values[32764]=(font_start) & 255
+values[32765]=((font_start) >> 8) & 255
+values[32767]=6 | 16
+for i in sorted(values.keys())[::-1]:
+	assert i<32768
+	assert i>=0
+value_pairs={}
+for i in values.keys():
+	value_pairs[i >> 1]=[0,0]
+for i in values.keys():
+	value_pairs[i >> 1][i & 1]=values[i]
+for i in value_pairs.keys():
+	outFileList.append((hex(i)[2:]+':'+hex((value_pairs[i][1]<<8)|(value_pairs[i][0]))[2:]+';').upper())
+outFileList.append('END;')
+f=open('InitVGA.mif','w')
+f.write('\n'.join(outFileList))
+f.close()
+del f
+del outFileList
+del values
+del value_pairs
 
 ############################################################
 
@@ -465,6 +582,6 @@ BEGIN
 	f.close()
 	del f
 
-print('AutoGen.py : Success')
+print('AutoGen.py : Success [Took '+str(time()-START_TIME)+' Seconds]')
 
 

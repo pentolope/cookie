@@ -326,10 +326,10 @@ initial begin
 end
 
 initial begin
-	#12;
+	#11;
 	forever begin
 		vga_clk=~vga_clk;
-		#143; // approximate ratio
+		#66; // approximate ratio
 	end
 end
 
@@ -397,7 +397,7 @@ memory_io memory__io(
 	
 	.debug_controller_state_now(debug_controller_state_now),
 	
-	.vga_clk(vga_clk),
+	.VGA_CLK(vga_clk),
 	.main_clk(main_clk)
 );
 
