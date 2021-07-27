@@ -8,6 +8,13 @@ sep="\\"
 parallel=int(sys.argv[1])
 seed_lower=int(sys.argv[2])
 seed_upper=int(sys.argv[3])
+if sys.argv[4].lower()=='true':
+	do_clean=True
+elif sys.argv[4].lower()=='false':
+	do_clean=False
+else:
+	print('Error: sys.argv[4] must be either true or false')
+	quit()
 quartus_dir="%QUARTUS_ROOTDIR%"+sep+"bin64"+sep
 
 def directory_find(origin):
@@ -84,8 +91,9 @@ if ("set_global_assignment -name SEED 1" in qsf_content) and not bad_initial_see
 		run_script.append('echo run_script_'+str(seed_value)+' is copying result file')
 		run_script.append('cd ..')
 		run_script.append('copy /B "seed_'+str(seed_value)+sep+'output_files'+sep+'cookie.sta.summary" /B "cookie_'+str(seed_value)+'.sta.summary" >NUL')
-		#run_script.append('echo run_script_'+str(seed_value)+' is cleaning up')
-		#run_script.append('rmdir /S /Q "seed_'+str(seed_value)+'"')
+		if do_clean:
+			run_script.append('echo run_script_'+str(seed_value)+' is cleaning up')
+			run_script.append('rmdir /S /Q "seed_'+str(seed_value)+'"')
 		run_script.append('cd ..')
 		run_script.append('echo run_script_'+str(seed_value)+' is finished with this seed')
 		run_script.append('exit')
