@@ -53,6 +53,7 @@ if ("set_global_assignment -name SEED 1" in qsf_content) and not bad_initial_see
 	if len(glob("seed_search"+sep))!=0:
 		print("Removing previous seed search...")
 		subprocess.call("rmdir /S /Q seed_search",shell=True)
+	os.system("title SeedSearch Starting")
 	print("Finding files...")
 	directory_structure=directory_filter(directory_filter(initial_directory_find(),"simulation"+sep),"output_files"+sep)
 	directory_list=list(filter(lambda y:y!="output_files"+sep,filter(lambda x:x!="simulation"+sep,directory_extract(directory_structure))))
@@ -108,6 +109,7 @@ if ("set_global_assignment -name SEED 1" in qsf_content) and not bad_initial_see
 		f=open(directory_root+"cookie.qsf","wb")
 		f.write(qsf_content.replace("set_global_assignment -name SEED 1","set_global_assignment -name SEED "+str(seed_value)))
 		f.close()
+	total_count=(seed_upper+1)-seed_lower
 	que0=list(range(seed_lower,seed_upper+1))
 	que1=[]
 	while len(que0)!=0 or len(que1)!=0:
@@ -127,7 +129,9 @@ if ("set_global_assignment -name SEED 1" in qsf_content) and not bad_initial_see
 			que1.append(i)
 			print('Executing seed '+str(i))
 			subprocess.call('start /low /b "" "seed_search'+sep+'run_script_'+str(i)+'.bat"',shell=True)
+			os.system("title SeedSearch "+str(total_count-len(que0))+"/"+str(total_count))
 		sleep(2)
+	os.system("title SeedSearch Finishing")
 	print('Collecting results...')
 	final_slack_seed_values=[]
 	for seed_value in range(seed_lower,seed_upper+1):
@@ -163,6 +167,7 @@ if ("set_global_assignment -name SEED 1" in qsf_content) and not bad_initial_see
 		f.close()
 	else:
 		print("No slack data found!")
+	os.system("title SeedSearch Done")
 else:
 	print("Please set the set the seed value in the .qsf to 1 before running this script.")
 
