@@ -43,7 +43,7 @@ img = Image.open('(7, 8) font.png').convert('RGB')
 default_character=[]
 all_characters={}
 this_character=[]
-outFileList=['''DEPTH = 16384; % DEPTH is the number of addresses %
+outFileList=['''DEPTH = 10240; % DEPTH is the number of addresses %
 WIDTH = 16;  % WIDTH is the number of bits of data per word %
 % DEPTH and WIDTH should be entered as decimal numbers %
 ADDRESS_RADIX = HEX;
@@ -126,14 +126,14 @@ for i in range(256):
 	vb=font_start + 9 * i
 	for vi in range(9):
 		assert not (vb+vi in values.keys())
-		if vb+vi>=32764:
+		if vb+vi>=20476:
 			raise RuntimeError('font doesn\'t fit')
 		values[vb+vi]=int(all_characters[i][vi * 8:vi * 8 + 8][::-1],2)
-values[32764]=(font_start) & 255
-values[32765]=((font_start) >> 8) & 255
-values[32767]=6 | 16
+values[20476]=(font_start) & 255
+values[20477]=((font_start) >> 8) & 255
+values[20479]=6 | 16
 for i in sorted(values.keys())[::-1]:
-	assert i<32768
+	assert i<20480
 	assert i>=0
 value_pairs={}
 for i in values.keys():

@@ -64,7 +64,7 @@ end
 
 reg override_to_frame_counter=0;
 reg [15:0] io_read_data_r=0;
-always @(posedge main_clk) override_to_frame_counter<=(io_addr==15'd32766 && io_do_byte_op==1'b1)?1'b1:1'b0;
+always @(posedge main_clk) override_to_frame_counter<=(io_addr==15'd20478 && io_do_byte_op==1'b1)?1'b1:1'b0;
 always @(posedge main_clk) begin
 	if (override_to_frame_counter) begin
 		io_read_data_r<={frame_counter_4,frame_counter_4};
@@ -129,9 +129,9 @@ reg [14:0] font_base_addr_async;
 always @(posedge VGA_CLK) font_base_addr_r<=font_base_addr_async;
 
 wire [14:0] extended_addresses [4:0];
-assign extended_addresses[0]=15'd32767;
-assign extended_addresses[1]=15'd32765;
-assign extended_addresses[2]=15'd32764;
+assign extended_addresses[0]=15'd20479;
+assign extended_addresses[1]=15'd20477;
+assign extended_addresses[2]=15'd20476;
 assign extended_addresses[3]=raw_mode_addr_in;
 
 reg [1:0] extended_addresses_index;
@@ -210,7 +210,7 @@ module vga_driver(
 );
 
 /*
-mode_info (at address 32767):
+mode_info (at address 20479):
 
 mode_info[3:0]+5'd3== the height of the font, also known as the number of rows per character.
 mode_info[3:0]== If 0, treat memory space as raw colors on a 160*120 screen (with each logical pixel spanning 4x4 real pixels). Otherwise, treat memory space as data for text mode.
@@ -220,14 +220,14 @@ mode_info[6]== (currently unused)
 mode_info[7]== (currently unused)
 */
 /*
-Frame counter can be read at 32766 (must perform byte read). It cannot be written to. Attempting to write to it will write to the underlying memory location, which is not where the value of the frame counter is stored.
+Frame counter can be read at 20478 (must perform byte read). It cannot be written to. Attempting to write to it will write to the underlying memory location, which is not where the value of the frame counter is stored.
 */
 /*
-Font memory address offset can be set at address 32764,32765  (it is a 15 bit value, little endian as always).
+Font memory address offset can be set at address 20476,20477  (it is a 15 bit value, little endian as always).
 */
 /*
-If I ever wanted to give this a further update, I could make text mode double buffered because there is enough memory for that. 
-I would just have to have a place in memory to put an offset to the part of the buffer which will act as the character/color definition area.
+If I ever wanted to give this a further update, I might be able to make text mode double buffered because there might be enough memory for that. 
+I would have to have a place in memory to put an offset to the part of the buffer which will act as the character/color definition area.
 This idea is currently NOT implemented.
 */
 

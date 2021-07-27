@@ -102,8 +102,8 @@ module vga_memory (
 		altsyncram_component.init_file = "InitVGA.mif",
 		altsyncram_component.intended_device_family = "MAX 10",
 		altsyncram_component.lpm_type = "altsyncram",
-		altsyncram_component.numwords_a = 16384,
-		altsyncram_component.numwords_b = 16384,
+		altsyncram_component.numwords_a = 10240,
+		altsyncram_component.numwords_b = 10240,
 		altsyncram_component.operation_mode = "DUAL_PORT",
 		altsyncram_component.outdata_aclr_b = "NONE",
 		altsyncram_component.outdata_reg_b = "UNREGISTERED",
@@ -151,7 +151,7 @@ endmodule
 // Retrieval info: PRIVATE: JTAG_ENABLED NUMERIC "0"
 // Retrieval info: PRIVATE: JTAG_ID STRING "NONE"
 // Retrieval info: PRIVATE: MAXIMUM_DEPTH NUMERIC "0"
-// Retrieval info: PRIVATE: MEMSIZE NUMERIC "262144"
+// Retrieval info: PRIVATE: MEMSIZE NUMERIC "163840"
 // Retrieval info: PRIVATE: MEM_IN_BITS NUMERIC "0"
 // Retrieval info: PRIVATE: MIFfilename STRING "InitVGA.mif"
 // Retrieval info: PRIVATE: OPERATION_MODE NUMERIC "2"
@@ -190,8 +190,8 @@ endmodule
 // Retrieval info: CONSTANT: INIT_FILE STRING "InitVGA.mif"
 // Retrieval info: CONSTANT: INTENDED_DEVICE_FAMILY STRING "MAX 10"
 // Retrieval info: CONSTANT: LPM_TYPE STRING "altsyncram"
-// Retrieval info: CONSTANT: NUMWORDS_A NUMERIC "16384"
-// Retrieval info: CONSTANT: NUMWORDS_B NUMERIC "16384"
+// Retrieval info: CONSTANT: NUMWORDS_A NUMERIC "10240"
+// Retrieval info: CONSTANT: NUMWORDS_B NUMERIC "10240"
 // Retrieval info: CONSTANT: OPERATION_MODE STRING "DUAL_PORT"
 // Retrieval info: CONSTANT: OUTDATA_ACLR_B STRING "NONE"
 // Retrieval info: CONSTANT: OUTDATA_REG_B STRING "UNREGISTERED"

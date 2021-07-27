@@ -81,7 +81,7 @@ https://fpgasoftware.intel.com/eula.
 		(line (pt 256 88)(pt 168 88)(line_width 3))
 	)
 	(drawing
-		(text "16384 Word(s)" (rect 133 27 267 253)(font "Arial" )(vertical))
+		(text "10240 Word(s)" (rect 133 27 267 253)(font "Arial" )(vertical))
 		(text "RAM" (rect 148 13 250 189)(font "Arial" )(vertical))
 		(text "Block Type: M9K" (rect 40 153 185 321)(font "Arial" ))
 		(line (pt 128 24)(pt 168 24))
