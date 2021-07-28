@@ -19,8 +19,8 @@ FUNCTION ip_cache_data
 	byteena_a[15..0],
 	clock,
 	data[127..0],
-	rdaddress[10..0],
-	wraddress[10..0],
+	rdaddress[12..0],
+	wraddress[12..0],
 	wren
 )
 

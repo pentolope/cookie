@@ -459,12 +459,12 @@ for ii0p,ii1 in enumerate(assembleFileContentsString.split('\n')):
 				walkingPointer=walkingPointer+assemblerInstructions[ii3[0]][1]
 
 
-assemblerCacheWayInfo=[[-1,-1,-1,-1] for x in range(2 ** 9)]
+assemblerCacheWayInfo=[[-1,-1,-1,-1] for x in range(2 ** 11)]
 
 for ii0 in assemblerMemoryLocations.keys():
 	addressLow=ii0 % 16
-	addressMiddle=(ii0 // 16) % (2 ** 9)
-	addressUpper=(ii0 // 16) // (2 ** 9)
+	addressMiddle=(ii0 // 16) % (2 ** 11)
+	addressUpper=(ii0 // 16) // (2 ** 11)
 	placed=False
 	for ii1 in range(4):
 		if not placed:
@@ -493,28 +493,28 @@ assert sorted(assemblerMemoryPreliminaryData.keys())==sorted(assemblerMemoryLoca
 
 for ii0 in assemblerMemoryPreliminaryData.keys():
 	addressLow=ii0 % 16
-	addressMiddle=(ii0 // 16) % (2 ** 9)
-	addressUpper=(ii0 // 16) // (2 ** 9)
+	addressMiddle=(ii0 // 16) % (2 ** 11)
+	addressUpper=(ii0 // 16) // (2 ** 11)
 	placed=False
 	for ii1 in range(4):
 		if not placed:
 			if assemblerCacheWayInfo[addressMiddle][ii1]==addressUpper:
 				placed=True
-				assemblerMemoryData[((ii1*(2**9))+addressMiddle)*16+addressLow]=assemblerMemoryPreliminaryData[ii0]
+				assemblerMemoryData[((ii1*(2**11))+addressMiddle)*16+addressLow]=assemblerMemoryPreliminaryData[ii0]
 	assert placed
 
 for ii0 in assemblerMemoryPreliminaryData.keys():
 	addressLow=ii0 % 16
-	addressMiddle=(ii0 // 16) % (2 ** 9)
-	addressUpper=(ii0 // 16) // (2 ** 9)
+	addressMiddle=(ii0 // 16) % (2 ** 11)
+	addressUpper=(ii0 // 16) // (2 ** 11)
 	for ii1 in range(4):
 		if assemblerCacheWayInfo[addressMiddle][ii1]!=-1:
 			for ii2 in range(16):
-				if not (((ii1*(2**9))+addressMiddle)*16+ii2 in assemblerMemoryData.keys()):
-					assemblerMemoryData[((ii1*(2**9))+addressMiddle)*16+ii2]='00'
+				if not (((ii1*(2**11))+addressMiddle)*16+ii2 in assemblerMemoryData.keys()):
+					assemblerMemoryData[((ii1*(2**11))+addressMiddle)*16+ii2]='00'
 
 for ii0 in range(4):
-	for ii1 in range(2**9):
+	for ii1 in range(2**11):
 		ii2=0
 		while ii2 in assemblerCacheWayInfo[ii1]:ii2=ii2+1
 		if assemblerCacheWayInfo[ii1][ii0]==-1:
@@ -525,7 +525,7 @@ for ii0 in range(4):
 
 outFileList=[]
 
-outFileList.append("DEPTH = 2048; % DEPTH is the number of addresses %")
+outFileList.append("DEPTH = 8192; % DEPTH is the number of addresses %")
 outFileList.append("WIDTH = 128;  % WIDTH is the number of bits of data per word %")
 outFileList.append("% DEPTH and WIDTH should be entered as decimal numbers %")
 outFileList.append("ADDRESS_RADIX = HEX;")
@@ -565,7 +565,7 @@ f.close()
 del f
 
 for ii0 in range(4):
-	acc='''DEPTH = 512; % DEPTH is the number of addresses %
+	acc='''DEPTH = 2048; % DEPTH is the number of addresses %
 WIDTH = 13;  % WIDTH is the number of bits of data per word %
 % DEPTH and WIDTH should be entered as decimal numbers %
 ADDRESS_RADIX = HEX;
@@ -574,7 +574,7 @@ DATA_RADIX = HEX; % Enter BIN, DEC, HEX, OCT, or UNS; %
 CONTENT
 BEGIN
 '''.split('\n')
-	for ii1 in range(2**9):
+	for ii1 in range(2**11):
 		acc.append(hex(ii1)[2:].upper()+":"+hex(assemblerCacheWayInfo[ii1][ii0])[2:].upper()+";")
 	acc.append("END;")
 	f=open('InitWay'+str(ii0)+'.mif','w')

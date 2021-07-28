@@ -3,8 +3,8 @@
 module cache_LRU_sub_read_through_write(
 input  main_clk,
 input  [4:0] perm_in,
-input  [8:0] read_addr,
-input  [8:0] write_addr,
+input  [10:0] read_addr,
+input  [10:0] write_addr,
 input  enable_write,
 output [4:0] perm_out
 );
@@ -48,10 +48,10 @@ reg  [1:0] used_index_delayed;
 reg  enable_write_r=0;
 reg  enable_write_delayed=0;
 wire enable_write_delayed_w;assign enable_write_delayed_w=enable_write_delayed;
-reg  [8:0] read_addr=0;
-wire [8:0] read_addr_w;assign read_addr_w=read_addr;
-reg  [8:0] write_addr=0;
-wire [8:0] write_addr_w;assign write_addr_w=write_addr;
+reg  [10:0] read_addr=0;
+wire [10:0] read_addr_w;assign read_addr_w=read_addr;
+reg  [10:0] write_addr=0;
+wire [10:0] write_addr_w;assign write_addr_w=write_addr;
 wire [4:0] raw_perm_out;
 wire [4:0] raw_perm_in;
 reg  [1:0] least_used_index_calc_r;
@@ -87,7 +87,7 @@ endmodule
 module cache_LRU( // partially tested, but would be two cycles faster (so that dram controller could be a little faster when already prefetched)
 	output [1:0] least_used_index,
 
-	input  [8:0] addr,
+	input  [10:0] addr,
 	input  [1:0] used_index,
 	input  enable_write,
 	input  main_clk
@@ -95,8 +95,8 @@ module cache_LRU( // partially tested, but would be two cycles faster (so that d
 
 reg  [1:0] used_index_delayed;
 reg  enable_write_delayed=0;
-wire [8:0] read_addr;assign read_addr=addr;
-reg  [8:0] write_addr=0;
+wire [10:0] read_addr;assign read_addr=addr;
+reg  [10:0] write_addr=0;
 wire [4:0] raw_perm_out;
 wire [4:0] raw_perm_in;
 wire [1:0] least_used_index_calc;

@@ -1,7 +1,7 @@
 `timescale 1 ps / 1 ps
 
 module cache_way(
-	output [12:0] out_addr_at_in_way_index, // `address[25:13]` for the way located by `in_way_index` and `target_address[12: 4]`
+	output [10:0] out_addr_at_in_way_index, // `address[25:15]` for the way located by `in_way_index` and `target_address[14: 4]`
 	
 	output out_soft_fault,
 	output out_hard_fault,
@@ -41,19 +41,19 @@ assign out_any_fault=any_fault;
 
 
 reg [1:0] out_fault_modification=0;
-reg [12:0] saved_target=0;
+reg [10:0] saved_target=0;
 reg [3:0] saved_bypass_data=0;
 reg [1:0] in_way_index_r=0;
 
-reg [12:0] raw_out0_r=0;
-reg [12:0] raw_out1_r=0;
-reg [12:0] raw_out2_r=0;
-reg [12:0] raw_out3_r=0;
+reg [10:0] raw_out0_r=0;
+reg [10:0] raw_out1_r=0;
+reg [10:0] raw_out2_r=0;
+reg [10:0] raw_out3_r=0;
 
-wire [12:0] raw_out0;
-wire [12:0] raw_out1;
-wire [12:0] raw_out2;
-wire [12:0] raw_out3;
+wire [10:0] raw_out0;
+wire [10:0] raw_out1;
+wire [10:0] raw_out2;
+wire [10:0] raw_out3;
 
 wire [3:0] match;
 wire [1:0] calc_way_index;
@@ -65,7 +65,7 @@ assign out_way_index=was_hard_fault_starting?calc_way_index_r:calc_way_index;
 always @(posedge main_clk) begin
 	in_way_index_r<=in_way_index;
 	calc_way_index_r<=calc_way_index;
-	saved_target<=target_address[25:13];
+	saved_target<=target_address[25:15];
 	out_fault_modification<=0;
 	if (is_hyper_fetch) out_fault_modification<=2;
 	if (is_no_access) out_fault_modification<=1;
@@ -81,47 +81,47 @@ always @(posedge main_clk) begin
 end
 
 lcell_13 lc_out_addr_at_in_way_index(out_addr_at_in_way_index,
-	((in_way_index_r==2'd0)?raw_out0_r:13'd0) | 
-	((in_way_index_r==2'd1)?raw_out1_r:13'd0) | 
-	((in_way_index_r==2'd2)?raw_out2_r:13'd0) | 
-	((in_way_index_r==2'd3)?raw_out3_r:13'd0)
+	((in_way_index_r==2'd0)?raw_out0_r:11'd0) | 
+	((in_way_index_r==2'd1)?raw_out1_r:11'd0) | 
+	((in_way_index_r==2'd2)?raw_out2_r:11'd0) | 
+	((in_way_index_r==2'd3)?raw_out3_r:11'd0)
 );
 
-// [25:13]
-// [12: 4]
+// [25:15]
+// [14: 4]
 
 ip_cache_addr_way0 ip_cache_addr_way0_inst(
 	main_clk,
-	target_address[25:13],
-	target_address[12: 4],
-	target_address[12: 4],
+	target_address[25:15],
+	target_address[14: 4],
+	target_address[14: 4],
 	do_write && (in_way_index_r==2'd0),
 	raw_out0
 );
 
 ip_cache_addr_way1 ip_cache_addr_way1_inst(
 	main_clk,
-	target_address[25:13],
-	target_address[12: 4],
-	target_address[12: 4],
+	target_address[25:15],
+	target_address[14: 4],
+	target_address[14: 4],
 	do_write && (in_way_index_r==2'd1),
 	raw_out1
 );
 
 ip_cache_addr_way2 ip_cache_addr_way2_inst(
 	main_clk,
-	target_address[25:13],
-	target_address[12: 4],
-	target_address[12: 4],
+	target_address[25:15],
+	target_address[14: 4],
+	target_address[14: 4],
 	do_write && (in_way_index_r==2'd2),
 	raw_out2
 );
 
 ip_cache_addr_way3 ip_cache_addr_way3_inst(
 	main_clk,
-	target_address[25:13],
-	target_address[12: 4],
-	target_address[12: 4],
+	target_address[25:15],
+	target_address[14: 4],
+	target_address[14: 4],
 	do_write && (in_way_index_r==2'd3),
 	raw_out3
 );

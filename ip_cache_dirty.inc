@@ -18,8 +18,8 @@ FUNCTION ip_cache_dirty
 (
 	clock,
 	data[0..0],
-	rdaddress[10..0],
-	wraddress[10..0],
+	rdaddress[12..0],
+	wraddress[12..0],
 	wren
 )
 

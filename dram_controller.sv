@@ -1,9 +1,9 @@
 `timescale 1 ps / 1 ps
 
 module dram_controller(
-	input  [12:0] addr_req_read_dram_side_dram,
-	input  [12:0] addr_req_write_dram_side_dram,
-	input  [ 8:0] addr_req_common_side_dram,
+	input  [10:0] addr_req_read_dram_side_dram,
+	input  [10:0] addr_req_write_dram_side_dram,
+	input  [10:0] addr_req_common_side_dram,
 	output [127:0] lane_from_dram_to_cache_side_dram,
 	input  [127:0] lane_from_cache_to_dram_side_dram,
 	input  dram_controller_entry_dirty_side_dram,
@@ -119,13 +119,13 @@ reg [127:0] lane_prefetched=0;
 reg prefeched_is_valid=0;
 
 reg [21:0]  addr_for_read=0;
-reg [12:0]  addr_for_write_upper=0;
+reg [10:0]  addr_for_write_upper=0;
 wire [21:0]  addr_for_write;
-assign addr_for_write={addr_for_write_upper,addr_for_read[8:0]};
+assign addr_for_write={addr_for_write_upper,addr_for_read[10:0]};
 reg  write_needed_because_dirty=0;
 
 
-// have address line up like this: {col[6:4],row[12:7],col[3:0],row[6:0],bank[1:0]}=={addr_req_rwr[12:0],addr_req_common[8:0]}
+// have address line up like this: {col[6:4],row[12:7],col[3:0],row[6:0],bank[1:0]}=={addr_req_rwr[10:0],addr_req_common[10:0]}
 // means that same bank will always be accessed for a read/write pair. this costs some efficiency, though it does make the controller somewhat easier.
 // all nearby addresses (for prefetch) are avalible through accessing alternative banks, increasing efficiency (prefetch could always occur at nearly no cycle cost)
 // the most likely faults would occur on banks not accessed recently (except possible collision from prefetch), increasing efficiency for turnaround time

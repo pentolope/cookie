@@ -16,15 +16,18 @@
 
 FUNCTION vga_memory 
 (
+	address_a[13..0],
+	address_b[13..0],
 	byteena_a[1..0],
-	data[15..0],
-	rdaddress[13..0],
-	rdclock,
-	wraddress[13..0],
-	wrclock,
-	wren
+	clock_a,
+	clock_b,
+	data_a[15..0],
+	data_b[15..0],
+	wren_a,
+	wren_b
 )
 
 RETURNS (
-	q[15..0]
+	q_a[15..0],
+	q_b[15..0]
 );

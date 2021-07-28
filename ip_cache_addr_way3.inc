@@ -17,12 +17,12 @@
 FUNCTION ip_cache_addr_way3 
 (
 	clock,
-	data[12..0],
-	rdaddress[8..0],
-	wraddress[8..0],
+	data[10..0],
+	rdaddress[10..0],
+	wraddress[10..0],
 	wren
 )
 
 RETURNS (
-	q[12..0]
+	q[10..0]
 );

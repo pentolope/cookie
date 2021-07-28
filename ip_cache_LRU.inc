@@ -18,8 +18,8 @@ FUNCTION ip_cache_LRU
 (
 	clock,
 	data[4..0],
-	rdaddress[8..0],
-	wraddress[8..0],
+	rdaddress[10..0],
+	wraddress[10..0],
 	wren
 )
 

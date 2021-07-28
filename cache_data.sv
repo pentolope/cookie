@@ -9,7 +9,7 @@ module cache_data(
 	input  [15:0] access_in_full_data [3:0],
 	input  [127:0] raw_in_full_data,
 	
-	input  [8:0] target_segment,
+	input  [10:0] target_segment,
 	input  [1:0] target_way,
 	
 	input  do_partial_write,

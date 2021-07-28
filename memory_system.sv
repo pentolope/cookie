@@ -53,7 +53,7 @@ reg cd_is_byte_op=0;
 reg cd_is_write_op=0;
 reg [2:0] cd_access_length=0;
 
-wire [12:0] addr_at_in_way_index;
+wire [10:0] addr_at_in_way_index;
 wire soft_fault;
 wire hard_fault;
 wire any_fault; // includes no access faulting
@@ -63,7 +63,7 @@ wire was_hard_faulting;
 reg signal_dram_of_hard_fault=0;
 always @(posedge main_clk) signal_dram_of_hard_fault<=was_hard_fault_starting;
 
-wire [8:0] cd_target_segment;
+wire [10:0] cd_target_segment;
 wire [1:0] cd_target_way;
 wire [1:0] lru_least_used_way;
 wire enable_data_and_lru;
@@ -92,7 +92,7 @@ end
 
 
 assign cd_target_way=change_way_for_data?lru_least_used_way:cd_way;
-assign cd_target_segment=cd_target_address[12:4];
+assign cd_target_segment=cd_target_address[14:4];
 
 assign enable_data_and_lru=!any_fault;
 
@@ -190,9 +190,9 @@ end
 
 
 dram_controller dram_controller_inst(
-	cd_target_address[25:13],
+	cd_target_address[25:15],
 	addr_at_in_way_index,
-	cd_target_address[12: 4],
+	cd_target_address[14: 4],
 	cd_raw_in_full_data,
 	cd_raw_out_full_data,
 	cd_out_dirty,

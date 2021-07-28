@@ -74,27 +74,20 @@ always @(posedge main_clk) begin
 end
 assign io_read_data=io_read_data_r;
 
-vga_memory vga_memory_inst0(
-	byte_enable,
-	io_write_data,
-	io_addr[14:1],
-	main_clk,
-	io_addr[14:1],
-	main_clk,
-	io_do_write,
-	raw_read0
+vga_memory vga_memory_inst(
+	.address_a(io_addr[14:1]),
+	.address_b(read_addr_async[14:1]),
+	.byteena_a(byte_enable),
+	.clock_a(main_clk),
+	.clock_b(VGA_CLK),
+	.data_a(io_write_data),
+	.data_b(16'h0),
+	.wren_a(io_do_write),
+	.wren_b(1'd0),
+	.q_a(raw_read0),
+	.q_b(raw_read1)
 );
 
-vga_memory vga_memory_inst1(
-	byte_enable,
-	io_write_data,
-	read_addr_async[14:1],
-	VGA_CLK,
-	io_addr[14:1],
-	main_clk,
-	io_do_write,
-	raw_read1
-);
 
 reg [7:0] character_code_async;
 reg [7:0] background_color_async;

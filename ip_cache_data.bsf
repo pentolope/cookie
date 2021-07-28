@@ -34,8 +34,8 @@ https://fpgasoftware.intel.com/eula.
 	(port
 		(pt 0 48)
 		(input)
-		(text "wraddress[10..0]" (rect 0 0 99 14)(font "Arial" (font_size 8)))
-		(text "wraddress[10..0]" (rect 4 30 118 47)(font "Arial" (font_size 8)))
+		(text "wraddress[12..0]" (rect 0 0 99 14)(font "Arial" (font_size 8)))
+		(text "wraddress[12..0]" (rect 4 30 118 47)(font "Arial" (font_size 8)))
 		(line (pt 0 48)(pt 112 48)(line_width 3))
 	)
 	(port
@@ -48,8 +48,8 @@ https://fpgasoftware.intel.com/eula.
 	(port
 		(pt 0 88)
 		(input)
-		(text "rdaddress[10..0]" (rect 0 0 94 14)(font "Arial" (font_size 8)))
-		(text "rdaddress[10..0]" (rect 4 70 116 87)(font "Arial" (font_size 8)))
+		(text "rdaddress[12..0]" (rect 0 0 94 14)(font "Arial" (font_size 8)))
+		(text "rdaddress[12..0]" (rect 4 70 116 87)(font "Arial" (font_size 8)))
 		(line (pt 0 88)(pt 112 88)(line_width 3))
 	)
 	(port
@@ -74,7 +74,7 @@ https://fpgasoftware.intel.com/eula.
 		(line (pt 256 88)(pt 168 88)(line_width 3))
 	)
 	(drawing
-		(text "2048 Word(s)" (rect 133 27 263 245)(font "Arial" )(vertical))
+		(text "8192 Word(s)" (rect 133 27 263 245)(font "Arial" )(vertical))
 		(text "RAM" (rect 148 13 250 189)(font "Arial" )(vertical))
 		(text "Block Type: M9K" (rect 40 137 185 289)(font "Arial" ))
 		(line (pt 128 24)(pt 168 24))

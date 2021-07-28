@@ -41,11 +41,11 @@ module ip_cache_addr_way2 (
 	q);
 
 	input	  clock;
-	input	[12:0]  data;
-	input	[8:0]  rdaddress;
-	input	[8:0]  wraddress;
+	input	[10:0]  data;
+	input	[10:0]  rdaddress;
+	input	[10:0]  wraddress;
 	input	  wren;
-	output	[12:0]  q;
+	output	[10:0]  q;
 `ifndef ALTERA_RESERVED_QIS
 // synopsys translate_off
 `endif
@@ -90,7 +90,7 @@ endmodule
 // Retrieval info: PRIVATE: JTAG_ENABLED NUMERIC "0"
 // Retrieval info: PRIVATE: JTAG_ID STRING "NONE"
 // Retrieval info: PRIVATE: MAXIMUM_DEPTH NUMERIC "0"
-// Retrieval info: PRIVATE: MEMSIZE NUMERIC "6656"
+// Retrieval info: PRIVATE: MEMSIZE NUMERIC "22528"
 // Retrieval info: PRIVATE: MEM_IN_BITS NUMERIC "0"
 // Retrieval info: PRIVATE: MIFfilename STRING "InitWay2.mif"
 // Retrieval info: PRIVATE: OPERATION_MODE NUMERIC "2"
@@ -110,10 +110,10 @@ endmodule
 // Retrieval info: PRIVATE: USE_DIFF_CLKEN NUMERIC "0"
 // Retrieval info: PRIVATE: UseDPRAM NUMERIC "1"
 // Retrieval info: PRIVATE: VarWidth NUMERIC "0"
-// Retrieval info: PRIVATE: WIDTH_READ_A NUMERIC "13"
-// Retrieval info: PRIVATE: WIDTH_READ_B NUMERIC "13"
-// Retrieval info: PRIVATE: WIDTH_WRITE_A NUMERIC "13"
-// Retrieval info: PRIVATE: WIDTH_WRITE_B NUMERIC "13"
+// Retrieval info: PRIVATE: WIDTH_READ_A NUMERIC "11"
+// Retrieval info: PRIVATE: WIDTH_READ_B NUMERIC "11"
+// Retrieval info: PRIVATE: WIDTH_WRITE_A NUMERIC "11"
+// Retrieval info: PRIVATE: WIDTH_WRITE_B NUMERIC "11"
 // Retrieval info: PRIVATE: WRADDR_ACLR_B NUMERIC "0"
 // Retrieval info: PRIVATE: WRADDR_REG_B NUMERIC "0"
 // Retrieval info: PRIVATE: WRCTRL_ACLR_B NUMERIC "0"
@@ -128,35 +128,35 @@ endmodule
 // Retrieval info: CONSTANT: INIT_FILE STRING "InitWay2.mif"
 // Retrieval info: CONSTANT: INTENDED_DEVICE_FAMILY STRING "MAX 10"
 // Retrieval info: CONSTANT: LPM_TYPE STRING "altsyncram"
-// Retrieval info: CONSTANT: NUMWORDS_A NUMERIC "512"
-// Retrieval info: CONSTANT: NUMWORDS_B NUMERIC "512"
+// Retrieval info: CONSTANT: NUMWORDS_A NUMERIC "2048"
+// Retrieval info: CONSTANT: NUMWORDS_B NUMERIC "2048"
 // Retrieval info: CONSTANT: OPERATION_MODE STRING "DUAL_PORT"
 // Retrieval info: CONSTANT: OUTDATA_ACLR_B STRING "NONE"
 // Retrieval info: CONSTANT: OUTDATA_REG_B STRING "UNREGISTERED"
 // Retrieval info: CONSTANT: POWER_UP_UNINITIALIZED STRING "FALSE"
 // Retrieval info: CONSTANT: RAM_BLOCK_TYPE STRING "M9K"
 // Retrieval info: CONSTANT: READ_DURING_WRITE_MODE_MIXED_PORTS STRING "OLD_DATA"
-// Retrieval info: CONSTANT: WIDTHAD_A NUMERIC "9"
-// Retrieval info: CONSTANT: WIDTHAD_B NUMERIC "9"
-// Retrieval info: CONSTANT: WIDTH_A NUMERIC "13"
-// Retrieval info: CONSTANT: WIDTH_B NUMERIC "13"
+// Retrieval info: CONSTANT: WIDTHAD_A NUMERIC "11"
+// Retrieval info: CONSTANT: WIDTHAD_B NUMERIC "11"
+// Retrieval info: CONSTANT: WIDTH_A NUMERIC "11"
+// Retrieval info: CONSTANT: WIDTH_B NUMERIC "11"
 // Retrieval info: CONSTANT: WIDTH_BYTEENA_A NUMERIC "1"
 // Retrieval info: USED_PORT: clock 0 0 0 0 INPUT VCC "clock"
-// Retrieval info: USED_PORT: data 0 0 13 0 INPUT NODEFVAL "data[12..0]"
-// Retrieval info: USED_PORT: q 0 0 13 0 OUTPUT NODEFVAL "q[12..0]"
-// Retrieval info: USED_PORT: rdaddress 0 0 9 0 INPUT NODEFVAL "rdaddress[8..0]"
-// Retrieval info: USED_PORT: wraddress 0 0 9 0 INPUT NODEFVAL "wraddress[8..0]"
+// Retrieval info: USED_PORT: data 0 0 11 0 INPUT NODEFVAL "data[10..0]"
+// Retrieval info: USED_PORT: q 0 0 11 0 OUTPUT NODEFVAL "q[10..0]"
+// Retrieval info: USED_PORT: rdaddress 0 0 11 0 INPUT NODEFVAL "rdaddress[10..0]"
+// Retrieval info: USED_PORT: wraddress 0 0 11 0 INPUT NODEFVAL "wraddress[10..0]"
 // Retrieval info: USED_PORT: wren 0 0 0 0 INPUT GND "wren"
-// Retrieval info: CONNECT: @address_a 0 0 9 0 wraddress 0 0 9 0
-// Retrieval info: CONNECT: @address_b 0 0 9 0 rdaddress 0 0 9 0
+// Retrieval info: CONNECT: @address_a 0 0 11 0 wraddress 0 0 11 0
+// Retrieval info: CONNECT: @address_b 0 0 11 0 rdaddress 0 0 11 0
 // Retrieval info: CONNECT: @clock0 0 0 0 0 clock 0 0 0 0
-// Retrieval info: CONNECT: @data_a 0 0 13 0 data 0 0 13 0
+// Retrieval info: CONNECT: @data_a 0 0 11 0 data 0 0 11 0
 // Retrieval info: CONNECT: @wren_a 0 0 0 0 wren 0 0 0 0
-// Retrieval info: CONNECT: q 0 0 13 0 @q_b 0 0 13 0
+// Retrieval info: CONNECT: q 0 0 11 0 @q_b 0 0 11 0
 // Retrieval info: GEN_FILE: TYPE_NORMAL ip_cache_addr_way2.v TRUE
 // Retrieval info: GEN_FILE: TYPE_NORMAL ip_cache_addr_way2.inc TRUE
 // Retrieval info: GEN_FILE: TYPE_NORMAL ip_cache_addr_way2.cmp TRUE
 // Retrieval info: GEN_FILE: TYPE_NORMAL ip_cache_addr_way2.bsf TRUE
-// Retrieval info: GEN_FILE: TYPE_NORMAL ip_cache_addr_way2_inst.v TRUE
+// Retrieval info: GEN_FILE: TYPE_NORMAL ip_cache_addr_way2_inst.v FALSE
 // Retrieval info: GEN_FILE: TYPE_NORMAL ip_cache_addr_way2_bb.v TRUE
 // Retrieval info: LIB_FILE: altera_mf
