@@ -44,6 +44,19 @@ lcell lc5 (.in(i[5]),.out(o[5]));
 lcell lc6 (.in(i[6]),.out(o[6]));
 lcell lc7 (.in(i[7]),.out(o[7]));
 endmodule
+module lcell_11(output [10:0] o,input  [10:0] i);
+lcell lc0 (.in(i[0]),.out(o[0]));
+lcell lc1 (.in(i[1]),.out(o[1]));
+lcell lc2 (.in(i[2]),.out(o[2]));
+lcell lc3 (.in(i[3]),.out(o[3]));
+lcell lc4 (.in(i[4]),.out(o[4]));
+lcell lc5 (.in(i[5]),.out(o[5]));
+lcell lc6 (.in(i[6]),.out(o[6]));
+lcell lc7 (.in(i[7]),.out(o[7]));
+lcell lc8 (.in(i[8]),.out(o[8]));
+lcell lc9 (.in(i[9]),.out(o[9]));
+lcell lc10 (.in(i[10]),.out(o[10]));
+endmodule
 module lcell_13(output [12:0] o,input  [12:0] i);
 lcell lc0 (.in(i[0]),.out(o[0]));
 lcell lc1 (.in(i[1]),.out(o[1]));

@@ -56,7 +56,7 @@ assign mem_void_hyper_instruction_fetch=void_hyper_instruction_fetch;
 reg [4:0] hyper_instruction_fetch_size;
 
 reg is_instruction_cache_requesting=0;
-reg [25:0] instruction_fetch_address=0;
+reg [25:0] instruction_fetch_address=26'h7FE0;
 
 reg is_performing_jump_state=0;
 wire is_performing_jump=is_performing_jump_instant_on?1'b1:is_performing_jump_state;

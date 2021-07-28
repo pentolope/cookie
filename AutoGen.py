@@ -319,31 +319,31 @@ assemblerInstructions['SPSS']=(('%',),2,a_t2) #stack pointer subtract (and) set
 assemblerInstructions['RET' ]=(tuple([]),2,a_tR) #ret
 assemblerInstructions['CALL']=(('%','%'),2,a_t2) #call
 
-assemblerMemoryLocations[ 0]=('LDLO','0','00')
-assemblerMemoryLocations[ 1]=True
-assemblerMemoryLocations[ 2]=('LDLO','1','00')
-assemblerMemoryLocations[ 3]=True
-assemblerMemoryLocations[ 4]=('LDLO','2','00')
-assemblerMemoryLocations[ 5]=True
-assemblerMemoryLocations[ 6]=('SPSS','2')
-assemblerMemoryLocations[ 7]=True
-assemblerMemoryLocations[ 8]=('SPSS','2')
-assemblerMemoryLocations[ 9]=True
-assemblerMemoryLocations[10]=('LDLO','2','02')
-assemblerMemoryLocations[11]=True
-assemblerMemoryLocations[12]=('SPSS','2')
-assemblerMemoryLocations[13]=True
-assemblerMemoryLocations[14]=('LDLA','2','3','00000000')
-assemblerMemoryLocations[15]=True
+assemblerMemoryLocations[ 0+0x7FE0]=('LDLO','0','00')
+assemblerMemoryLocations[ 1+0x7FE0]=True
+assemblerMemoryLocations[ 2+0x7FE0]=('LDLO','1','00')
+assemblerMemoryLocations[ 3+0x7FE0]=True
+assemblerMemoryLocations[ 4+0x7FE0]=('LDLO','2','00')
+assemblerMemoryLocations[ 5+0x7FE0]=True
+assemblerMemoryLocations[ 6+0x7FE0]=('SPSS','2')
+assemblerMemoryLocations[ 7+0x7FE0]=True
+assemblerMemoryLocations[ 8+0x7FE0]=('SPSS','2')
+assemblerMemoryLocations[ 9+0x7FE0]=True
+assemblerMemoryLocations[10+0x7FE0]=('LDLO','2','02')
+assemblerMemoryLocations[11+0x7FE0]=True
+assemblerMemoryLocations[12+0x7FE0]=('SPSS','2')
+assemblerMemoryLocations[13+0x7FE0]=True
+assemblerMemoryLocations[14+0x7FE0]=('LDLA','2','3','00000000')
+assemblerMemoryLocations[15+0x7FE0]=True
 
-assemblerMemoryLocations[16]=True
-assemblerMemoryLocations[17]=True
-assemblerMemoryLocations[18]=True
-assemblerMemoryLocations[19]=True
-assemblerMemoryLocations[20]=True
-assemblerMemoryLocations[21]=True
-assemblerMemoryLocations[22]=('AJMP','2','3')
-assemblerMemoryLocations[23]=True
+assemblerMemoryLocations[16+0x7FE0]=True
+assemblerMemoryLocations[17+0x7FE0]=True
+assemblerMemoryLocations[18+0x7FE0]=True
+assemblerMemoryLocations[19+0x7FE0]=True
+assemblerMemoryLocations[20+0x7FE0]=True
+assemblerMemoryLocations[21+0x7FE0]=True
+assemblerMemoryLocations[22+0x7FE0]=('AJMP','2','3')
+assemblerMemoryLocations[23+0x7FE0]=True
 
 
 f=open('boot.asm','r')
@@ -566,7 +566,7 @@ del f
 
 for ii0 in range(4):
 	acc='''DEPTH = 2048; % DEPTH is the number of addresses %
-WIDTH = 13;  % WIDTH is the number of bits of data per word %
+WIDTH = 11;  % WIDTH is the number of bits of data per word %
 % DEPTH and WIDTH should be entered as decimal numbers %
 ADDRESS_RADIX = HEX;
 DATA_RADIX = HEX; % Enter BIN, DEC, HEX, OCT, or UNS; %

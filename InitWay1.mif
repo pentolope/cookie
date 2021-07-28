@@ -1,6 +1,6 @@
 
 DEPTH = 2048; % DEPTH is the number of addresses %
-WIDTH = 13;  % WIDTH is the number of bits of data per word %
+WIDTH = 11;  % WIDTH is the number of bits of data per word %
 % DEPTH and WIDTH should be entered as decimal numbers %
 ADDRESS_RADIX = HEX;
 DATA_RADIX = HEX; % Enter BIN, DEC, HEX, OCT, or UNS; %

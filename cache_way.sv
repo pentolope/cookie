@@ -80,7 +80,7 @@ always @(posedge main_clk) begin
 	end
 end
 
-lcell_13 lc_out_addr_at_in_way_index(out_addr_at_in_way_index,
+lcell_11 lc_out_addr_at_in_way_index(out_addr_at_in_way_index,
 	((in_way_index_r==2'd0)?raw_out0_r:11'd0) | 
 	((in_way_index_r==2'd1)?raw_out1_r:11'd0) | 
 	((in_way_index_r==2'd2)?raw_out2_r:11'd0) | 
