@@ -87,7 +87,7 @@ always @(posedge main_clk) begin
 end
 
 reg external_clock_pulldown_r=0;
-reg external_data_pulldown_r=0; // due to how the pulldown works, the data should be inverted when writting through this
+reg external_data_pulldown_r=0; // due to how the pulldown works, the data should be inverted when writing through this
 assign external_clock_pulldown=external_clock_pulldown_r;
 assign external_data_pulldown=external_data_pulldown_r;
 reg external_clock_in_r=0;
