@@ -365,7 +365,7 @@ for ii0p,ii1 in enumerate(assembleFileContentsString.split('\n')):
 				if len(ii3[0][1:])!=8:
 					print('Syntax Error [label prefix ":" must take 8 hex digits] on line '+str(ii0)+' ~'+ii2+'~')
 					assert False
-				if ii3[0][1:] in assemblerLabelLocations.keys():
+				if ii3[0][1:] in assemblerLabelLocations:
 					print('Label Error [label "'+ii3[1][1:]+'" already declared] on line '+str(ii0)+' ~'+ii2+'~')
 					assert False
 				p=hex(walkingPointer)[2:]
@@ -391,10 +391,10 @@ for ii0p,ii1 in enumerate(assembleFileContentsString.split('\n')):
 						print('Allignment Error [data word attempted to be written at address that is misalligned] on line '+str(ii0)+' ~'+ii2+'~')
 						assert False
 					p=walkingPointer
-					if p   in assemblerMemoryLocations.keys():
+					if p   in assemblerMemoryLocations:
 						print('Overwrite Error [address collision at '+hex(p  )+'] on line '+str(ii0)+' ~'+ii2+'~')
 						assert False
-					if p+1 in assemblerMemoryLocations.keys():
+					if p+1 in assemblerMemoryLocations:
 						print('Overwrite Error [address collision at '+hex(p+1)+'] on line '+str(ii0)+' ~'+ii2+'~')
 						assert False
 					assemblerMemoryLocations[p  ]=ii3[1][1:][2:4]
@@ -408,7 +408,7 @@ for ii0p,ii1 in enumerate(assembleFileContentsString.split('\n')):
 						print('Syntax Error [prefix "$" must take 2 hex digits] on line '+str(ii0)+' ~'+ii2+'~')
 						assert False
 					p=walkingPointer
-					if p   in assemblerMemoryLocations.keys():
+					if p   in assemblerMemoryLocations:
 						print('Overwrite Error [address collision at '+hex(p  )+'] on line '+str(ii0)+' ~'+ii2+'~')
 						assert False
 					assemblerMemoryLocations[p  ]=ii3[1][1:]
@@ -417,7 +417,7 @@ for ii0p,ii1 in enumerate(assembleFileContentsString.split('\n')):
 					print('Syntax Error [unknown directive] on line '+str(ii0)+' ~'+ii2+'~')
 					assert False
 			else:
-				if not (ii3[0] in assemblerInstructions.keys()):
+				if not (ii3[0] in assemblerInstructions):
 					print('Syntax Error [unknown instruction] on line '+str(ii0)+' ~'+ii2+'~')
 					assert False
 				if len(ii3[1:])!=len(assemblerInstructions[ii3[0]][0]):
@@ -451,7 +451,7 @@ for ii0p,ii1 in enumerate(assembleFileContentsString.split('\n')):
 					assert False
 				for ii4 in range(assemblerInstructions[ii3[0]][1]):
 					p=ii4+walkingPointer
-					if p in assemblerMemoryLocations.keys():
+					if p in assemblerMemoryLocations:
 						print('Overwrite Error [address collision at '+hex(p)+'] on line '+str(ii0)+' ~'+ii2+'~')
 						assert False
 					assemblerMemoryLocations[p]=True
@@ -510,7 +510,7 @@ for ii0 in assemblerMemoryPreliminaryData.keys():
 	for ii1 in range(4):
 		if assemblerCacheWayInfo[addressMiddle][ii1]!=-1:
 			for ii2 in range(16):
-				if not (((ii1*(2**11))+addressMiddle)*16+ii2 in assemblerMemoryData.keys()):
+				if not (((ii1*(2**11))+addressMiddle)*16+ii2 in assemblerMemoryData):
 					assemblerMemoryData[((ii1*(2**11))+addressMiddle)*16+ii2]='00'
 
 for ii0 in range(4):
