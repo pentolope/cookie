@@ -1,5 +1,6 @@
 from time import time
 START_TIME=time()
+import os
 
 ############################################################
 
@@ -345,123 +346,142 @@ assemblerMemoryLocations[21+0x7FE0]=True
 assemblerMemoryLocations[22+0x7FE0]=('AJMP','2','3')
 assemblerMemoryLocations[23+0x7FE0]=True
 
-
-f=open('boot.asm','r')
-assembleFileContentsString=f.read()+'\n'
-f.close()
-del f
-
-assembleFileContentsList=[]
-for ii0p,ii1 in enumerate(assembleFileContentsString.split('\n')):
-	ii0=ii0p+1
-	ii2=(ii1.split(';')[0]).replace('	',' ').replace('_','').strip(' ').upper()
-	if len(ii2)!=0:
-		ii3=tuple(filter(lambda x:len(x)!=0,ii2.split(' ')))
-		if len(ii3)!=0:
-			if walkingPointer==-1 and ii3[0]!='.ORG':
-				print('Initial Error [".org" must be used prior to placing instructions/data/label] on line '+str(ii0)+' ~'+ii2+'~')
-				assert False
-			if ii3[0][0]==':':
-				if len(ii3[0][1:])!=8:
-					print('Syntax Error [label prefix ":" must take 8 hex digits] on line '+str(ii0)+' ~'+ii2+'~')
+hasAsmFile=os.path.isfile('boot.asm')
+hasBinFile=os.path.isfile('boot.bin')
+if hasAsmFile and hasBinFile:
+	print('Warning: both "boot.asm" and "boot.bin" exist. Using only "boot.asm" even though both exist.')
+if hasAsmFile:
+	f=open('boot.asm','r')
+	assembleFileContentsString=f.read()+'\n'
+	f.close()
+	del f
+	for ii0p,ii1 in enumerate(assembleFileContentsString.split('\n')):
+		ii0=ii0p+1
+		ii2=(ii1.split(';')[0]).replace('	',' ').replace('_','').strip(' ').upper()
+		if len(ii2)!=0:
+			ii3=tuple(filter(lambda x:len(x)!=0,ii2.split(' ')))
+			if len(ii3)!=0:
+				if walkingPointer==-1 and ii3[0]!='.ORG':
+					print('Initial Error [".org" must be used prior to placing instructions/data/label] on line '+str(ii0)+' ~'+ii2+'~')
 					assert False
-				if ii3[0][1:] in assemblerLabelLocations:
-					print('Label Error [label "'+ii3[1][1:]+'" already declared] on line '+str(ii0)+' ~'+ii2+'~')
-					assert False
-				p=hex(walkingPointer)[2:]
-				while len(p)<8:p='0'+p
-				assemblerLabelLocations[ii3[0][1:]]=p
-			elif ii3[0][0]=='.':
-				if ii3[0]=='.ORG':
-					if len(ii3)!=2 or ii3[1][0]!='!':
-						print('Syntax Error [".org" takes one argument of "!" prefix] on line '+str(ii0)+' ~'+ii2+'~')
+				if ii3[0][0]==':':
+					if len(ii3[0][1:])!=8:
+						print('Syntax Error [label prefix ":" must take 8 hex digits] on line '+str(ii0)+' ~'+ii2+'~')
 						assert False
-					if len(ii3[1][1:])!=8:
-						print('Syntax Error [prefix "!" must take 8 hex digits] on line '+str(ii0)+' ~'+ii2+'~')
+					if ii3[0][1:] in assemblerLabelLocations:
+						print('Label Error [label "'+ii3[1][1:]+'" already declared] on line '+str(ii0)+' ~'+ii2+'~')
 						assert False
-					walkingPointer=int(ii3[1][1:],base=16)
-				elif ii3[0]=='.DATAW':
-					if len(ii3)!=2 or ii3[1][0]!='#':
-						print('Syntax Error [".dataw" takes one argument of "#" prefix] on line '+str(ii0)+' ~'+ii2+'~')
+					p=hex(walkingPointer)[2:]
+					while len(p)<8:p='0'+p
+					assemblerLabelLocations[ii3[0][1:]]=p
+				elif ii3[0][0]=='.':
+					if ii3[0]=='.ORG':
+						if len(ii3)!=2 or ii3[1][0]!='!':
+							print('Syntax Error [".org" takes one argument of "!" prefix] on line '+str(ii0)+' ~'+ii2+'~')
+							assert False
+						if len(ii3[1][1:])!=8:
+							print('Syntax Error [prefix "!" must take 8 hex digits] on line '+str(ii0)+' ~'+ii2+'~')
+							assert False
+						walkingPointer=int(ii3[1][1:],base=16)
+					elif ii3[0]=='.DATAW':
+						if len(ii3)!=2 or ii3[1][0]!='#':
+							print('Syntax Error [".dataw" takes one argument of "#" prefix] on line '+str(ii0)+' ~'+ii2+'~')
+							assert False
+						if len(ii3[1][1:])!=4:
+							print('Syntax Error [prefix "#" must take 4 hex digits] on line '+str(ii0)+' ~'+ii2+'~')
+							assert False
+						if walkingPointer%2!=0:
+							print('Allignment Error [data word attempted to be written at address that is misalligned] on line '+str(ii0)+' ~'+ii2+'~')
+							assert False
+						p=walkingPointer
+						if p   in assemblerMemoryLocations:
+							print('Overwrite Error [address collision at '+hex(p  )+'] on line '+str(ii0)+' ~'+ii2+'~')
+							assert False
+						if p+1 in assemblerMemoryLocations:
+							print('Overwrite Error [address collision at '+hex(p+1)+'] on line '+str(ii0)+' ~'+ii2+'~')
+							assert False
+						assemblerMemoryLocations[p  ]=ii3[1][1:][2:4]
+						assemblerMemoryLocations[p+1]=ii3[1][1:][0:2]
+						walkingPointer=walkingPointer+2
+					elif ii3[0]=='.DATAB':
+						if len(ii3)!=2 or ii3[1][0]!='$':
+							print('Syntax Error [".datab" takes one argument of "$" prefix] on line '+str(ii0)+' ~'+ii2+'~')
+							assert False
+						if len(ii3[1][1:])!=2:
+							print('Syntax Error [prefix "$" must take 2 hex digits] on line '+str(ii0)+' ~'+ii2+'~')
+							assert False
+						p=walkingPointer
+						if p   in assemblerMemoryLocations:
+							print('Overwrite Error [address collision at '+hex(p  )+'] on line '+str(ii0)+' ~'+ii2+'~')
+							assert False
+						assemblerMemoryLocations[p  ]=ii3[1][1:]
+						walkingPointer=walkingPointer+1
+					else:
+						print('Syntax Error [unknown directive] on line '+str(ii0)+' ~'+ii2+'~')
 						assert False
-					if len(ii3[1][1:])!=4:
-						print('Syntax Error [prefix "#" must take 4 hex digits] on line '+str(ii0)+' ~'+ii2+'~')
-						assert False
-					if walkingPointer%2!=0:
-						print('Allignment Error [data word attempted to be written at address that is misalligned] on line '+str(ii0)+' ~'+ii2+'~')
-						assert False
-					p=walkingPointer
-					if p   in assemblerMemoryLocations:
-						print('Overwrite Error [address collision at '+hex(p  )+'] on line '+str(ii0)+' ~'+ii2+'~')
-						assert False
-					if p+1 in assemblerMemoryLocations:
-						print('Overwrite Error [address collision at '+hex(p+1)+'] on line '+str(ii0)+' ~'+ii2+'~')
-						assert False
-					assemblerMemoryLocations[p  ]=ii3[1][1:][2:4]
-					assemblerMemoryLocations[p+1]=ii3[1][1:][0:2]
-					walkingPointer=walkingPointer+2
-				elif ii3[0]=='.DATAB':
-					if len(ii3)!=2 or ii3[1][0]!='$':
-						print('Syntax Error [".datab" takes one argument of "$" prefix] on line '+str(ii0)+' ~'+ii2+'~')
-						assert False
-					if len(ii3[1][1:])!=2:
-						print('Syntax Error [prefix "$" must take 2 hex digits] on line '+str(ii0)+' ~'+ii2+'~')
-						assert False
-					p=walkingPointer
-					if p   in assemblerMemoryLocations:
-						print('Overwrite Error [address collision at '+hex(p  )+'] on line '+str(ii0)+' ~'+ii2+'~')
-						assert False
-					assemblerMemoryLocations[p  ]=ii3[1][1:]
-					walkingPointer=walkingPointer+1
 				else:
-					print('Syntax Error [unknown directive] on line '+str(ii0)+' ~'+ii2+'~')
-					assert False
-			else:
-				if not (ii3[0] in assemblerInstructions):
-					print('Syntax Error [unknown instruction] on line '+str(ii0)+' ~'+ii2+'~')
-					assert False
-				if len(ii3[1:])!=len(assemblerInstructions[ii3[0]][0]):
-					print('Syntax Error [invalid number of arguments] on line '+str(ii0)+' ~'+ii2+'~')
-					assert False
-				args=[]
-				for ii4 in range(len(ii3[1:])):
-					p=ii3[1:][ii4][0]
-					if p!=assemblerInstructions[ii3[0]][0][ii4]:
-						print('Syntax Error [invalid prefix] on line '+str(ii0)+' ~'+ii2+'~')
+					if not (ii3[0] in assemblerInstructions):
+						print('Syntax Error [unknown instruction] on line '+str(ii0)+' ~'+ii2+'~')
 						assert False
-					arg=ii3[1:][ii4][1:]
-					if p=='%' and len(arg)!=1:
-						print('Syntax Error [prefix "%" must take 1 hex digit] on line '+str(ii0)+' ~'+ii2+'~')
+					if len(ii3[1:])!=len(assemblerInstructions[ii3[0]][0]):
+						print('Syntax Error [invalid number of arguments] on line '+str(ii0)+' ~'+ii2+'~')
 						assert False
-					if p=='$' and len(arg)!=2:
-						print('Syntax Error [prefix "$" must take 2 hex digits] on line '+str(ii0)+' ~'+ii2+'~')
+					args=[]
+					for ii4 in range(len(ii3[1:])):
+						p=ii3[1:][ii4][0]
+						if p!=assemblerInstructions[ii3[0]][0][ii4]:
+							print('Syntax Error [invalid prefix] on line '+str(ii0)+' ~'+ii2+'~')
+							assert False
+						arg=ii3[1:][ii4][1:]
+						if p=='%' and len(arg)!=1:
+							print('Syntax Error [prefix "%" must take 1 hex digit] on line '+str(ii0)+' ~'+ii2+'~')
+							assert False
+						if p=='$' and len(arg)!=2:
+							print('Syntax Error [prefix "$" must take 2 hex digits] on line '+str(ii0)+' ~'+ii2+'~')
+							assert False
+						if p=='#' and len(arg)!=4:
+							print('Syntax Error [prefix "#" must take 4 hex digits] on line '+str(ii0)+' ~'+ii2+'~')
+							assert False
+						if p=='!' and len(arg)!=8:
+							print('Syntax Error [prefix "!" must take 8 hex digits] on line '+str(ii0)+' ~'+ii2+'~')
+							assert False
+						if p=='@' and len(arg)!=8:
+							print('Syntax Error [prefix "@" must take 8 hex digits] on line '+str(ii0)+' ~'+ii2+'~')
+							assert False
+						args.append(arg)
+					if walkingPointer%2!=0:
+						print('Allignment Error [instruction attempted to be written at address that is misalligned] on line '+str(ii0)+' ~'+ii2+'~')
 						assert False
-					if p=='#' and len(arg)!=4:
-						print('Syntax Error [prefix "#" must take 4 hex digits] on line '+str(ii0)+' ~'+ii2+'~')
-						assert False
-					if p=='!' and len(arg)!=8:
-						print('Syntax Error [prefix "!" must take 8 hex digits] on line '+str(ii0)+' ~'+ii2+'~')
-						assert False
-					if p=='@' and len(arg)!=8:
-						print('Syntax Error [prefix "@" must take 8 hex digits] on line '+str(ii0)+' ~'+ii2+'~')
-						assert False
-					args.append(arg)
-				if walkingPointer%2!=0:
-					print('Allignment Error [instruction attempted to be written at address that is misalligned] on line '+str(ii0)+' ~'+ii2+'~')
-					assert False
-				for ii4 in range(assemblerInstructions[ii3[0]][1]):
-					p=ii4+walkingPointer
-					if p in assemblerMemoryLocations:
-						print('Overwrite Error [address collision at '+hex(p)+'] on line '+str(ii0)+' ~'+ii2+'~')
-						assert False
-					assemblerMemoryLocations[p]=True
-				assemblerMemoryLocations[walkingPointer]=tuple([ii3[0]]+args)
-				walkingPointer=walkingPointer+assemblerInstructions[ii3[0]][1]
-
+					for ii4 in range(assemblerInstructions[ii3[0]][1]):
+						p=ii4+walkingPointer
+						if p in assemblerMemoryLocations:
+							print('Overwrite Error [address collision at '+hex(p)+'] on line '+str(ii0)+' ~'+ii2+'~')
+							assert False
+						assemblerMemoryLocations[p]=True
+					assemblerMemoryLocations[walkingPointer]=tuple([ii3[0]]+args)
+					walkingPointer=walkingPointer+assemblerInstructions[ii3[0]][1]
+else:
+	f=open('boot.bin','rb')
+	binaryFileContent=map(ord,f.read())
+	f.close()
+	del f
+	startLocation=(binaryFileContent[0]<<(8*0))|(binaryFileContent[1]<<(8*1))|(binaryFileContent[2]<<(8*2))|(binaryFileContent[3]<<(8*3))
+	for ii0,ii1 in enumerate(binaryFileContent[4:]):
+		ii2=ii0+startLocation
+		if ii2 in assemblerMemoryLocations:
+			print('Overwrite Error [address collision at '+hex(ii2)+']')
+			assert False
+		s=(hex(ii1)[2:]).upper()
+		while len(s)<2:s='0'+s
+		assemblerMemoryLocations[ii2]=s
+	del s
 
 assemblerCacheWayInfo=[[-1,-1,-1,-1] for x in range(2 ** 11)]
 
 for ii0 in assemblerMemoryLocations.keys():
+	if ii0>=2**26:
+		print('Overflow Error [address beyond upper limit of memory '+hex(startLocation)+']')
+		assert False
 	addressLow=ii0 % 16
 	addressMiddle=(ii0 // 16) % (2 ** 11)
 	addressUpper=(ii0 // 16) // (2 ** 11)
@@ -474,7 +494,7 @@ for ii0 in assemblerMemoryLocations.keys():
 				placed=True
 				assemblerCacheWayInfo[addressMiddle][ii1]=addressUpper
 	if not placed:
-		print('Cache Error [cache cannot hold entire "boot.asm" file, either due to the 4 way association limit or the cache is not large enough]')
+		print('Cache Error [cache cannot hold entire boot file, either due to the 4 way association limit or the cache is not large enough]')
 		assert False
 
 for ii0 in assemblerMemoryLocations.keys():
