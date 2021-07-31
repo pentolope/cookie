@@ -1522,8 +1522,8 @@ always @(posedge main_clk) begin
 		end
 	end
 	5'h11:begin
-		mem_data_in[0]<=vr0;
-		mem_data_in[1]<=vr1;
+		mem_data_in[0]<=vr1;
+		mem_data_in[1]<=vr0;
 		mem_is_access_write<=1;
 		mem_stack_access_size<=1;
 		mem_is_stack_access_requesting<=1;

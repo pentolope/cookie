@@ -247,7 +247,9 @@ def a_t2(dataIn):
 		dataIn=dataIn+('',)
 	d={
 	'PUSH':'F0'+'0'      +dataIn[1],
+	'PSH2':'F1'+dataIn[2]+dataIn[1],
 	'POP' :'F2'+'0'      +dataIn[1],
+	'POP2':'F3'+dataIn[2]+dataIn[1],
 	'MOV' :'F4'+dataIn[2]+dataIn[1],
 	'BSWP':'F5'+dataIn[2]+dataIn[1],
 	'SHFT':'F6'+dataIn[2]+dataIn[1],
@@ -302,6 +304,8 @@ assemblerInstructions['CJMP']=(('%','%','%'),2,a_t1) #conditional jump if(r2 == 
 
 assemblerInstructions['PUSH']=(('%',),2,a_t2) #push 1 word to stack
 assemblerInstructions['POP' ]=(('%',),2,a_t2) #pop  1 word from stack
+assemblerInstructions['PSH2']=(('%','%'),2,a_t2) #push 2 words to stack
+assemblerInstructions['POP2']=(('%','%'),2,a_t2) #pop  2 words from stack
 
 assemblerInstructions['MOV' ]=(('%','%'),2,a_t2) #move one register to another
 assemblerInstructions['BSWP']=(('%','%'),2,a_t2) #byte swap
