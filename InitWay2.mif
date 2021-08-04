@@ -7,7 +7,6 @@ DATA_RADIX = HEX; % Enter BIN, DEC, HEX, OCT, or UNS; %
 
 CONTENT
 BEGIN
-
 0:2;
 1:2;
 2:2;
@@ -1726,9 +1725,9 @@ FF:2;
 6B3:1;
 6B4:1;
 6B5:1;
-6B6:1;
-6B7:1;
-6B8:1;
+6B6:2;
+6B7:2;
+6B8:2;
 6B9:2;
 6BA:2;
 6BB:2;

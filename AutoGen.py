@@ -201,11 +201,7 @@ Instructions:
 """
 
 assemblerInstructions={}
-assemblerMemoryPreliminaryData={}
-assemblerMemoryData={}
-assemblerMemoryLocations={}
 assemblerLabelLocations={}
-walkingPointer=-1
 
 def a_tR(dataIn):
 	d={
@@ -324,41 +320,62 @@ assemblerInstructions['SPSS']=(('%',),2,a_t2) #stack pointer subtract (and) set
 assemblerInstructions['RET' ]=(tuple([]),2,a_tR) #ret
 assemblerInstructions['CALL']=(('%','%'),2,a_t2) #call
 
-assemblerMemoryLocations[ 0+0x7FE0]=('LDLO','0','00')
-assemblerMemoryLocations[ 1+0x7FE0]=True
-assemblerMemoryLocations[ 2+0x7FE0]=('LDLO','1','00')
-assemblerMemoryLocations[ 3+0x7FE0]=True
-assemblerMemoryLocations[ 4+0x7FE0]=('LDLO','2','00')
-assemblerMemoryLocations[ 5+0x7FE0]=True
-assemblerMemoryLocations[ 6+0x7FE0]=('SPSS','2')
-assemblerMemoryLocations[ 7+0x7FE0]=True
-assemblerMemoryLocations[ 8+0x7FE0]=('SPSS','2')
-assemblerMemoryLocations[ 9+0x7FE0]=True
-assemblerMemoryLocations[10+0x7FE0]=('LDLO','2','02')
-assemblerMemoryLocations[11+0x7FE0]=True
-assemblerMemoryLocations[12+0x7FE0]=('SPSS','2')
-assemblerMemoryLocations[13+0x7FE0]=True
-assemblerMemoryLocations[14+0x7FE0]=('LDLA','2','3','00000000')
-assemblerMemoryLocations[15+0x7FE0]=True
-
-assemblerMemoryLocations[16+0x7FE0]=True
-assemblerMemoryLocations[17+0x7FE0]=True
-assemblerMemoryLocations[18+0x7FE0]=True
-assemblerMemoryLocations[19+0x7FE0]=True
-assemblerMemoryLocations[20+0x7FE0]=True
-assemblerMemoryLocations[21+0x7FE0]=True
-assemblerMemoryLocations[22+0x7FE0]=('AJMP','2','3')
-assemblerMemoryLocations[23+0x7FE0]=True
-
-hasAsmFile=os.path.isfile('boot.asm')
-hasBinFile=os.path.isfile('boot.bin')
-if hasAsmFile and hasBinFile:
-	print('Warning: both "boot.asm" and "boot.bin" exist. Using only "boot.asm" even though both exist.')
-if hasAsmFile:
-	f=open('boot.asm','r')
+def assembleFunction(assembleFileName,startupType):
+	f=open(assembleFileName,'r')
 	assembleFileContentsString=f.read()+'\n'
 	f.close()
 	del f
+	assemblerLabelLocations.clear()
+	walkingPointer=-1
+	assemblerMemoryLocations={}
+	if startupType==0:
+		assemblerMemoryLocations[ 0+0x7FE0]=('LDLO','0','00')
+		assemblerMemoryLocations[ 1+0x7FE0]=True
+		assemblerMemoryLocations[ 2+0x7FE0]=('LDLO','1','00')
+		assemblerMemoryLocations[ 3+0x7FE0]=True
+		assemblerMemoryLocations[ 4+0x7FE0]=('LDLO','2','00')
+		assemblerMemoryLocations[ 5+0x7FE0]=True
+		assemblerMemoryLocations[ 6+0x7FE0]=('SPSS','2')
+		assemblerMemoryLocations[ 7+0x7FE0]=True
+		assemblerMemoryLocations[ 8+0x7FE0]=('SPSS','2')
+		assemblerMemoryLocations[ 9+0x7FE0]=True
+		assemblerMemoryLocations[10+0x7FE0]=('LDLO','2','02')
+		assemblerMemoryLocations[11+0x7FE0]=True
+		assemblerMemoryLocations[12+0x7FE0]=('SPSS','2')
+		assemblerMemoryLocations[13+0x7FE0]=True
+		assemblerMemoryLocations[14+0x7FE0]=('LDLA','2','3','00000000')
+		assemblerMemoryLocations[15+0x7FE0]=True
+
+		assemblerMemoryLocations[16+0x7FE0]=True
+		assemblerMemoryLocations[17+0x7FE0]=True
+		assemblerMemoryLocations[18+0x7FE0]=True
+		assemblerMemoryLocations[19+0x7FE0]=True
+		assemblerMemoryLocations[20+0x7FE0]=True
+		assemblerMemoryLocations[21+0x7FE0]=True
+		assemblerMemoryLocations[22+0x7FE0]=('AJMP','2','3')
+		assemblerMemoryLocations[23+0x7FE0]=True
+	if startupType==1:
+		assemblerMemoryLocations[ 0+0x7FE0]=('LDLA','2','3','00000000')
+		assemblerMemoryLocations[ 1+0x7FE0]=True
+		assemblerMemoryLocations[ 2+0x7FE0]=True
+		assemblerMemoryLocations[ 3+0x7FE0]=True
+		assemblerMemoryLocations[ 4+0x7FE0]=True
+		assemblerMemoryLocations[ 5+0x7FE0]=True
+		assemblerMemoryLocations[ 6+0x7FE0]=True
+		assemblerMemoryLocations[ 7+0x7FE0]=True
+		assemblerMemoryLocations[ 8+0x7FE0]=('AJMP','2','3')
+		assemblerMemoryLocations[ 9+0x7FE0]=True
+	if startupType==2:
+		assemblerMemoryLocations[ 0+0x10000]=('LDLA','2','3','00000000')
+		assemblerMemoryLocations[ 1+0x10000]=True
+		assemblerMemoryLocations[ 2+0x10000]=True
+		assemblerMemoryLocations[ 3+0x10000]=True
+		assemblerMemoryLocations[ 4+0x10000]=True
+		assemblerMemoryLocations[ 5+0x10000]=True
+		assemblerMemoryLocations[ 6+0x10000]=True
+		assemblerMemoryLocations[ 7+0x10000]=True
+		assemblerMemoryLocations[ 8+0x10000]=('AJMP','2','3')
+		assemblerMemoryLocations[ 9+0x10000]=True
 	for ii0p,ii1 in enumerate(assembleFileContentsString.split('\n')):
 		ii0=ii0p+1
 		ii2=(ii1.split(';')[0]).replace('	',' ').replace('_','').strip(' ').upper()
@@ -464,28 +481,47 @@ if hasAsmFile:
 						assemblerMemoryLocations[p]=True
 					assemblerMemoryLocations[walkingPointer]=tuple([ii3[0]]+args)
 					walkingPointer=walkingPointer+assemblerInstructions[ii3[0]][1]
-else:
-	f=open('boot.bin','rb')
-	binaryFileContent=map(ord,f.read())
-	f.close()
-	del f
-	startLocation=(binaryFileContent[0]<<(8*0))|(binaryFileContent[1]<<(8*1))|(binaryFileContent[2]<<(8*2))|(binaryFileContent[3]<<(8*3))
-	for ii0,ii1 in enumerate(binaryFileContent[4:]):
-		ii2=ii0+startLocation
-		if ii2 in assemblerMemoryLocations:
-			print('Overwrite Error [address collision at '+hex(ii2)+']')
-			assert False
-		s=(hex(ii1)[2:]).upper()
-		while len(s)<2:s='0'+s
-		assemblerMemoryLocations[ii2]=s
-	del s
+	assemblerMemoryPreliminaryData={}
+	for ii0 in assemblerMemoryLocations.keys():
+		item=assemblerMemoryLocations[ii0]
+		if item!=True:
+			if type(item)==type(''):
+				assemblerMemoryPreliminaryData[ii0]=item
+			else:
+				assert type(item)==type(tuple([]))
+				data=((assemblerInstructions[item[0]][2])(item))[::-1]
+				assert len(data)==2*assemblerInstructions[item[0]][1]
+				for ii1 in range(assemblerInstructions[item[0]][1]):
+					assemblerMemoryPreliminaryData[ii0+ii1]=data[ii1*2+1]+data[ii1*2+0]
+	return assemblerMemoryLocations,assemblerMemoryPreliminaryData
+
+assemblerMemoryLocations1,assemblerMemoryPreliminaryData1=assembleFunction('boot1.asm',1)
+assemblerMemoryLocations2,assemblerMemoryPreliminaryData2=assembleFunction('boot2.asm',2)
+
+assemblerMemoryPreliminaryData2min=min(assemblerMemoryPreliminaryData2.keys())
+assemblerMemoryPreliminaryData2max=max(assemblerMemoryPreliminaryData2.keys())
+if assemblerMemoryPreliminaryData2min<0x10000:
+	print('Error in "boot2.asm", no values below 0x10000 may be set')
+	assert False
+if assemblerMemoryPreliminaryData2max>=0x03ffc000:
+	print('Error in "boot2.asm", no values at or above 0x03ffc000 may be set')
+	assert False
+boot_bin_out=[]
+for ii0 in range(0x10000,assemblerMemoryPreliminaryData2max+1):
+	if ii0 in assemblerMemoryPreliminaryData2:
+		v=assemblerMemoryPreliminaryData2[ii0]
+		assert len(v)==2
+		boot_bin_out.append(chr(int(v,base=16)))
+	else:
+		boot_bin_out.append(chr(0))
+f=open('boot.bin','wb')
+f.write(b''.join(boot_bin_out))
+f.close()
 
 assemblerCacheWayInfo=[[-1,-1,-1,-1] for x in range(2 ** 11)]
+assemblerMemoryData={}
 
-for ii0 in assemblerMemoryLocations.keys():
-	if ii0>=2**26:
-		print('Overflow Error [address beyond upper limit of memory '+hex(startLocation)+']')
-		assert False
+for ii0 in assemblerMemoryPreliminaryData1.keys():
 	addressLow=ii0 % 16
 	addressMiddle=(ii0 // 16) % (2 ** 11)
 	addressUpper=(ii0 // 16) // (2 ** 11)
@@ -500,37 +536,13 @@ for ii0 in assemblerMemoryLocations.keys():
 	if not placed:
 		print('Cache Error [cache cannot hold entire boot file, either due to the 4 way association limit or the cache is not large enough]')
 		assert False
-
-for ii0 in assemblerMemoryLocations.keys():
-	item=assemblerMemoryLocations[ii0]
-	if item!=True:
-		if type(item)==type(''):
-			assemblerMemoryPreliminaryData[ii0]=item
-		else:
-			assert type(item)==type(tuple([]))
-			data=((assemblerInstructions[item[0]][2])(item))[::-1]
-			assert len(data)==2*assemblerInstructions[item[0]][1]
-			for ii1 in range(assemblerInstructions[item[0]][1]):
-				assemblerMemoryPreliminaryData[ii0+ii1]=data[ii1*2+1]+data[ii1*2+0]
-
-assert sorted(assemblerMemoryPreliminaryData.keys())==sorted(assemblerMemoryLocations.keys())
-
-for ii0 in assemblerMemoryPreliminaryData.keys():
-	addressLow=ii0 % 16
-	addressMiddle=(ii0 // 16) % (2 ** 11)
-	addressUpper=(ii0 // 16) // (2 ** 11)
 	placed=False
 	for ii1 in range(4):
 		if not placed:
 			if assemblerCacheWayInfo[addressMiddle][ii1]==addressUpper:
 				placed=True
-				assemblerMemoryData[((ii1*(2**11))+addressMiddle)*16+addressLow]=assemblerMemoryPreliminaryData[ii0]
+				assemblerMemoryData[((ii1*(2**11))+addressMiddle)*16+addressLow]=assemblerMemoryPreliminaryData1[ii0]
 	assert placed
-
-for ii0 in assemblerMemoryPreliminaryData.keys():
-	addressLow=ii0 % 16
-	addressMiddle=(ii0 // 16) % (2 ** 11)
-	addressUpper=(ii0 // 16) // (2 ** 11)
 	for ii1 in range(4):
 		if assemblerCacheWayInfo[addressMiddle][ii1]!=-1:
 			for ii2 in range(16):
@@ -544,42 +556,20 @@ for ii0 in range(4):
 		if assemblerCacheWayInfo[ii1][ii0]==-1:
 			assemblerCacheWayInfo[ii1][ii0]=ii2
 
+outFileList='''DEPTH = 8192; % DEPTH is the number of addresses %
+WIDTH = 128;  % WIDTH is the number of bits of data per word %
+% DEPTH and WIDTH should be entered as decimal numbers %
+ADDRESS_RADIX = HEX;
+DATA_RADIX = HEX; % Enter BIN, DEC, HEX, OCT, or UNS; %
 
-
-
-outFileList=[]
-
-outFileList.append("DEPTH = 8192; % DEPTH is the number of addresses %")
-outFileList.append("WIDTH = 128;  % WIDTH is the number of bits of data per word %")
-outFileList.append("% DEPTH and WIDTH should be entered as decimal numbers %")
-outFileList.append("ADDRESS_RADIX = HEX;")
-outFileList.append("DATA_RADIX = HEX; % Enter BIN, DEC, HEX, OCT, or UNS; %")
-
-outFileList.append("CONTENT")
-outFileList.append("BEGIN")
-#for ii0 in range(2048):
-#	tt0=[]
-#	for ii1 in range(8):
-#		tt0.append(hex(ii1%2)[2:].upper())
-#	for ii1 in range(8):
-#		for ii2 in range(4):
-#			if len(tt0[ii1])!=4:
-#				assert len(tt0[ii1])<4
-#				tt0[ii1]='0'+tt0[ii1]
-#	outFileList.append(""+hex(ii0)[2:].upper()+": "+''.join(tt0)+";")
+CONTENT
+BEGIN'''.split('\n')
 
 for ii0 in sorted(filter(lambda x:x%16==0,assemblerMemoryData.keys())):
 	acc=''
 	for ii1 in range(16)[::-1]:
 		acc+=assemblerMemoryData[ii0+ii1]
 	outFileList.append(hex(ii0 // 16)[2:].upper()+":"+acc.replace(' ','')+";")
-
-
-#outFileList.append(hex(0)[2:].upper()+":"+"A755 A755 A755 A755 A755 A675 0016 0017".replace(' ','')+";")
-
-#outFileList.append(hex(1)[2:].upper()+":"+"FE89 1008 0008 1009 0009 0000 0000 0000".replace(' ','')+";")
-
-
 
 outFileList.append("END;")
 
@@ -596,8 +586,7 @@ ADDRESS_RADIX = HEX;
 DATA_RADIX = HEX; % Enter BIN, DEC, HEX, OCT, or UNS; %
 
 CONTENT
-BEGIN
-'''.split('\n')
+BEGIN'''.split('\n')
 	for ii1 in range(2**11):
 		acc.append(hex(ii1)[2:].upper()+":"+hex(assemblerCacheWayInfo[ii1][ii0])[2:].upper()+";")
 	acc.append("END;")

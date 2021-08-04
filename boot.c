@@ -490,7 +490,7 @@ static bool open_file_system(uint8_t partition_index){
 
 // returns 1 on failure, 0 on success
 static bool perform_file_system_init(){
-	for (uint8_t partition_index=0;partition_index<4;partition_index++){ // 4
+	for (uint8_t partition_index=0;partition_index<4;partition_index++){
 		if (!open_file_system(partition_index)){
 			return 0;
 		}
@@ -500,7 +500,7 @@ static bool perform_file_system_init(){
 
 
 // give_message() can only write one message to the screen because it doesn't keep track of the line
-void give_message(const char* s){
+static void give_message(const char* s){
 	for (uint16_t i=0;i<80;i++){
 		uint32_t a;
 		if (s[i]==0){
@@ -520,10 +520,15 @@ void give_message(const char* s){
 	}
 }
 
+static void _exec_springboard(){
+	__FUNCTION_RET_INSTRUCTION_ADDRESS=0x10000lu;
+}
+
+
 int main(){
+	Start:;
 	uint8_t tb;
 	while ((tb=*((volatile uint8_t*)(0x80000000lu|0x1000000lu|0x04lu)))!=4){
-		*(volatile uint8_t*)((0x80800000lu+(1+80u*10u)*3lu)+0)=tb+'0';
 		if (tb==5){
 			give_message("Bootloader Error: SD/MMC reader failed to initialize it's card");
 			while (1){}
@@ -551,11 +556,7 @@ int main(){
 		*(uint8_t*)dest = (uint8_t)v;
 		++dest;
 	}
-	if ((dest & 3)!=0){
-		dest = dest + (4 - (dest & 3));
-	}
-	*(uint32_t*)0 = dest;
 	give_message("Bootloader Finished");
-	// exec springboard would be next, but I want to get this part working before I continue
-	while (1){}
+	_exec_springboard();
+	goto Start; // this should not be reached
 }
