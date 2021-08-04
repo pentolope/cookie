@@ -1101,7 +1101,7 @@ always_comb begin
 	unique case (effectiveID[1:0])
 	0:temporaryB=vr1;
 	1:temporaryB={vr1[7:0],vr1[15:8]};
-	2:temporaryB={1'b0,vr1[14:0]};
+	2:temporaryB={1'b0,vr1[15:1]};
 	3:temporaryB=16'hx;
 	endcase
 end

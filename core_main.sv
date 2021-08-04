@@ -38,6 +38,25 @@ reg [15:0] stack_pointer=0;
 
 reg [15:0] user_reg [15:0]='{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
 
+always @(posedge main_clk) begin
+	if (^user_reg[0]===1'bx) $stop;
+	if (^user_reg[1]===1'bx) $stop;
+	if (^user_reg[2]===1'bx) $stop;
+	if (^user_reg[3]===1'bx) $stop;
+	if (^user_reg[4]===1'bx) $stop;
+	if (^user_reg[5]===1'bx) $stop;
+	if (^user_reg[6]===1'bx) $stop;
+	if (^user_reg[7]===1'bx) $stop;
+	if (^user_reg[8]===1'bx) $stop;
+	if (^user_reg[9]===1'bx) $stop;
+	if (^user_reg[10]===1'bx) $stop;
+	if (^user_reg[11]===1'bx) $stop;
+	if (^user_reg[12]===1'bx) $stop;
+	if (^user_reg[13]===1'bx) $stop;
+	if (^user_reg[14]===1'bx) $stop;
+	if (^user_reg[15]===1'bx) $stop;
+	if (^stack_pointer===1'bx) $stop;
+end
 
 wire [16:0] executer0DoWrite;
 wire [15:0] executer0WriteValues [16:0];

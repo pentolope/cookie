@@ -150,10 +150,10 @@ always_comb begin
 	stack_access_size0[1]=3'd7-target_address_executer[1][3:1];
 	stack_access_size0[2]=3'd7-target_address_executer[2][3:1];
 	stack_access_size0[3]=3'd7-target_address_executer[3][3:1];
-	stack_access_size1[0]=stack_access_size[0]-stack_access_size0[0];
-	stack_access_size1[1]=stack_access_size[1]-stack_access_size0[1];
-	stack_access_size1[2]=stack_access_size[2]-stack_access_size0[2];
-	stack_access_size1[3]=stack_access_size[3]-stack_access_size0[3];
+	stack_access_size1[0]=(stack_access_size[0]-stack_access_size0[0])-3'b1;
+	stack_access_size1[1]=(stack_access_size[1]-stack_access_size0[1])-3'b1;
+	stack_access_size1[2]=(stack_access_size[2]-stack_access_size0[2])-3'b1;
+	stack_access_size1[3]=(stack_access_size[3]-stack_access_size0[3])-3'b1;
 	
 	target_address_executer_alt[0]=target_address_executer[0][30:0]+5'd16;
 	target_address_executer_alt[1]=target_address_executer[1][30:0]+5'd16;
@@ -206,10 +206,10 @@ always_comb begin
 	stack_access_size0[5]=3'd7-target_address_executer[5][3:1];
 	stack_access_size0[6]=3'd7-target_address_executer[6][3:1];
 	stack_access_size0[7]=3'd7-target_address_executer[7][3:1];
-	stack_access_size1[4]=stack_access_size[4]-stack_access_size0[4];
-	stack_access_size1[5]=stack_access_size[5]-stack_access_size0[5];
-	stack_access_size1[6]=stack_access_size[6]-stack_access_size0[6];
-	stack_access_size1[7]=stack_access_size[7]-stack_access_size0[7];
+	stack_access_size1[4]=(stack_access_size[4]-stack_access_size0[4])-3'b1;
+	stack_access_size1[5]=(stack_access_size[5]-stack_access_size0[5])-3'b1;
+	stack_access_size1[6]=(stack_access_size[6]-stack_access_size0[6])-3'b1;
+	stack_access_size1[7]=(stack_access_size[7]-stack_access_size0[7])-3'b1;
 	
 	target_address_executer_alt[4]=target_address_executer[4][30:0]+5'd16;
 	target_address_executer_alt[5]=target_address_executer[5][30:0]+5'd16;
@@ -479,8 +479,8 @@ always @(posedge main_clk) begin
 	end
 	
 	if (next_new_index>=5'd24) begin
-		tt_access_index[tick_tock_phase0[0]]<=next_new_index -5'd8;
-		tt_access_index[tick_tock_phase0[0] ^ 1'b1]<=next_new_index;
+		tt_access_index[tick_tock_phase0[0]]<=next_new_index;
+		tt_access_index[tick_tock_phase0[0] ^ 1'b1]<=next_new_index -5'd8;
 	end else if (next_new_index!=5'd0) begin
 		tt_access_index[tick_tock_phase0[0]]<=next_new_index;
 	end

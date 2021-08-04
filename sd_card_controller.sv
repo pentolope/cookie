@@ -672,7 +672,6 @@ always @(posedge main_clk) begin
 		end
 		50:begin
 			// card initialization complete.
-			// todo: determine physical size of card and write to mmio memory, then indicate that the controller is ready
 			// send cmd 9 to determine card size
 			command_id<=9;
 			command_arg<=0;
@@ -1166,6 +1165,7 @@ always @(posedge main_clk) begin
 				address_controller_at_mmio<=0;
 				walking_crc16_register<=0;
 				crc_byte<=0;
+				general_use_counter<=0;
 				address_controller_at_mmio[11:8]<=transfer_section_list[ 3: 0];
 				transfer_section_list[ 3: 0]<=transfer_section_list[ 7: 4];
 				transfer_section_list[ 7: 4]<=transfer_section_list[11: 8];
@@ -1188,7 +1188,7 @@ always @(posedge main_clk) begin
 			crc_byte<=final_byte_came_in;
 			walking_crc16_register<=walking_crc16_output;
 			general_use_counter<=general_use_counter+1'b1;
-			address_controller_at_mmio[7:0]<=general_use_counter+1'b1;
+			address_controller_at_mmio[7:0]<=general_use_counter;
 			data_write_controller_at_mmio<={final_byte_came_in,crc_byte};
 			write_enable_controller_at_mmio<=1;
 			if (general_use_counter==8'hFF) begin
@@ -1204,7 +1204,7 @@ always @(posedge main_clk) begin
 		end
 		126:begin // read crc16 byte 0
 			chip_select_next<=0; // cs probably not needed
-			storage_bad_status<=storage_bad_status || (walking_crc16_output[15:8]!=final_byte_came_in)?1'b1:1'b0;
+			storage_bad_status<=storage_bad_status || (walking_crc16_output[7:0]!=final_byte_came_in)?1'b1:1'b0;
 			controller_state_now<=127;
 		end
 		127:begin // decide read success

@@ -8,6 +8,7 @@ waveAdds=[
 '-radix hexadecimal /sim_enviroment/core__main/new_instruction_table',
 '-radix hexadecimal /sim_enviroment/core__main/new_instruction_address_table',
 '-radix hexadecimal /sim_enviroment/core__main/mem_data_out_type_0',
+'-radix hexadecimal /sim_enviroment/core__main/mem_data_out_type_1',
 '/sim_enviroment/core__main/main_clk',
 
 '-radix hexadecimal /sim_enviroment/core__main/instruction_cache_inst/instruction_cache_mux_inst/fifo_instruction_cache_data',
