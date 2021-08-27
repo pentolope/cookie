@@ -84,18 +84,78 @@ assign hyper_jump_guess_source_table_alt[ 2]=hyper_instruction_fetch_storage[ 2]
 assign hyper_jump_guess_source_table_alt[ 1]=hyper_instruction_fetch_storage[ 1][7:0];
 assign hyper_jump_guess_source_table_alt[ 0]=hyper_instruction_fetch_storage[ 0][7:0];
 
-assign hyper_jump_guess_address_table_alt[15]={hyper_instruction_fetch_storage[14][11:4],hyper_instruction_fetch_storage[13][11:4],hyper_instruction_fetch_storage[12][11:4],hyper_instruction_fetch_storage[11][11:4]};
-assign hyper_jump_guess_address_table_alt[14]={hyper_instruction_fetch_storage[13][11:4],hyper_instruction_fetch_storage[12][11:4],hyper_instruction_fetch_storage[11][11:4],hyper_instruction_fetch_storage[10][11:4]};
-assign hyper_jump_guess_address_table_alt[13]={hyper_instruction_fetch_storage[12][11:4],hyper_instruction_fetch_storage[11][11:4],hyper_instruction_fetch_storage[10][11:4],hyper_instruction_fetch_storage[ 9][11:4]};
-assign hyper_jump_guess_address_table_alt[12]={hyper_instruction_fetch_storage[11][11:4],hyper_instruction_fetch_storage[10][11:4],hyper_instruction_fetch_storage[ 9][11:4],hyper_instruction_fetch_storage[ 8][11:4]};
-assign hyper_jump_guess_address_table_alt[11]={hyper_instruction_fetch_storage[10][11:4],hyper_instruction_fetch_storage[ 9][11:4],hyper_instruction_fetch_storage[ 8][11:4],hyper_instruction_fetch_storage[ 7][11:4]};
-assign hyper_jump_guess_address_table_alt[10]={hyper_instruction_fetch_storage[ 9][11:4],hyper_instruction_fetch_storage[ 8][11:4],hyper_instruction_fetch_storage[ 7][11:4],hyper_instruction_fetch_storage[ 6][11:4]};
-assign hyper_jump_guess_address_table_alt[ 9]={hyper_instruction_fetch_storage[ 8][11:4],hyper_instruction_fetch_storage[ 7][11:4],hyper_instruction_fetch_storage[ 6][11:4],hyper_instruction_fetch_storage[ 5][11:4]};
-assign hyper_jump_guess_address_table_alt[ 8]={hyper_instruction_fetch_storage[ 7][11:4],hyper_instruction_fetch_storage[ 6][11:4],hyper_instruction_fetch_storage[ 5][11:4],hyper_instruction_fetch_storage[ 4][11:4]};
-assign hyper_jump_guess_address_table_alt[ 7]={hyper_instruction_fetch_storage[ 6][11:4],hyper_instruction_fetch_storage[ 5][11:4],hyper_instruction_fetch_storage[ 4][11:4],hyper_instruction_fetch_storage[ 3][11:4]};
-assign hyper_jump_guess_address_table_alt[ 6]={hyper_instruction_fetch_storage[ 5][11:4],hyper_instruction_fetch_storage[ 4][11:4],hyper_instruction_fetch_storage[ 3][11:4],hyper_instruction_fetch_storage[ 2][11:4]};
-assign hyper_jump_guess_address_table_alt[ 5]={hyper_instruction_fetch_storage[ 4][11:4],hyper_instruction_fetch_storage[ 3][11:4],hyper_instruction_fetch_storage[ 2][11:4],hyper_instruction_fetch_storage[ 1][11:4]};
-assign hyper_jump_guess_address_table_alt[ 4]={hyper_instruction_fetch_storage[ 3][11:4],hyper_instruction_fetch_storage[ 2][11:4],hyper_instruction_fetch_storage[ 1][11:4],hyper_instruction_fetch_storage[ 0][11:4]};
+assign hyper_jump_guess_address_table_alt[15]={
+	hyper_instruction_fetch_storage[14][11:4],
+	hyper_instruction_fetch_storage[12][11:4],
+	hyper_instruction_fetch_storage[13][11:4],
+	hyper_instruction_fetch_storage[11][11:4]
+};
+assign hyper_jump_guess_address_table_alt[14]={
+	hyper_instruction_fetch_storage[13][11:4],
+	hyper_instruction_fetch_storage[11][11:4],
+	hyper_instruction_fetch_storage[12][11:4],
+	hyper_instruction_fetch_storage[10][11:4]
+};
+assign hyper_jump_guess_address_table_alt[13]={
+	hyper_instruction_fetch_storage[12][11:4],
+	hyper_instruction_fetch_storage[10][11:4],
+	hyper_instruction_fetch_storage[11][11:4],
+	hyper_instruction_fetch_storage[ 9][11:4]
+};
+assign hyper_jump_guess_address_table_alt[12]={
+	hyper_instruction_fetch_storage[11][11:4],
+	hyper_instruction_fetch_storage[ 9][11:4],
+	hyper_instruction_fetch_storage[10][11:4],
+	hyper_instruction_fetch_storage[ 8][11:4]
+};
+assign hyper_jump_guess_address_table_alt[11]={
+	hyper_instruction_fetch_storage[10][11:4],
+	hyper_instruction_fetch_storage[ 8][11:4],
+	hyper_instruction_fetch_storage[ 9][11:4],
+	hyper_instruction_fetch_storage[ 7][11:4]
+};
+assign hyper_jump_guess_address_table_alt[10]={
+	hyper_instruction_fetch_storage[ 9][11:4],
+	hyper_instruction_fetch_storage[ 7][11:4],
+	hyper_instruction_fetch_storage[ 8][11:4],
+	hyper_instruction_fetch_storage[ 6][11:4]
+};
+assign hyper_jump_guess_address_table_alt[ 9]={
+	hyper_instruction_fetch_storage[ 8][11:4],
+	hyper_instruction_fetch_storage[ 6][11:4],
+	hyper_instruction_fetch_storage[ 7][11:4],
+	hyper_instruction_fetch_storage[ 5][11:4]
+};
+assign hyper_jump_guess_address_table_alt[ 8]={
+	hyper_instruction_fetch_storage[ 7][11:4],
+	hyper_instruction_fetch_storage[ 5][11:4],
+	hyper_instruction_fetch_storage[ 6][11:4],
+	hyper_instruction_fetch_storage[ 4][11:4]
+};
+assign hyper_jump_guess_address_table_alt[ 7]={
+	hyper_instruction_fetch_storage[ 6][11:4],
+	hyper_instruction_fetch_storage[ 4][11:4],
+	hyper_instruction_fetch_storage[ 5][11:4],
+	hyper_instruction_fetch_storage[ 3][11:4]
+};
+assign hyper_jump_guess_address_table_alt[ 6]={
+	hyper_instruction_fetch_storage[ 5][11:4],
+	hyper_instruction_fetch_storage[ 3][11:4],
+	hyper_instruction_fetch_storage[ 4][11:4],
+	hyper_instruction_fetch_storage[ 2][11:4]
+};
+assign hyper_jump_guess_address_table_alt[ 5]={
+	hyper_instruction_fetch_storage[ 4][11:4],
+	hyper_instruction_fetch_storage[ 2][11:4],
+	hyper_instruction_fetch_storage[ 3][11:4],
+	hyper_instruction_fetch_storage[ 1][11:4]
+};
+assign hyper_jump_guess_address_table_alt[ 4]={
+	hyper_instruction_fetch_storage[ 3][11:4],
+	hyper_instruction_fetch_storage[ 1][11:4],
+	hyper_instruction_fetch_storage[ 2][11:4],
+	hyper_instruction_fetch_storage[ 0][11:4]
+};
 assign hyper_jump_guess_address_table_alt[ 3]={8'hx,8'hx,8'hx,8'hx};
 assign hyper_jump_guess_address_table_alt[ 2]={8'hx,8'hx,8'hx,8'hx};
 assign hyper_jump_guess_address_table_alt[ 1]={8'hx,8'hx,8'hx,8'hx};

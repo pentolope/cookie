@@ -208,14 +208,54 @@ always @(posedge main_clk) begin
 				hyper_jump_guess_source_table[2]<=mem_data_out_type_0[2][7:0];
 				hyper_jump_guess_source_table[1]<=mem_data_out_type_0[1][7:0];
 				hyper_jump_guess_source_table[0]<=mem_data_out_type_0[0][7:0];
-				hyper_jump_guess_address_table[7]<={mem_data_out_type_0[6][11:4],mem_data_out_type_0[5][11:4],mem_data_out_type_0[4][11:4],mem_data_out_type_0[3][11:4]};
-				hyper_jump_guess_address_table[6]<={mem_data_out_type_0[5][11:4],mem_data_out_type_0[4][11:4],mem_data_out_type_0[3][11:4],mem_data_out_type_0[2][11:4]};
-				hyper_jump_guess_address_table[5]<={mem_data_out_type_0[4][11:4],mem_data_out_type_0[3][11:4],mem_data_out_type_0[2][11:4],mem_data_out_type_0[1][11:4]};
-				hyper_jump_guess_address_table[4]<={mem_data_out_type_0[3][11:4],mem_data_out_type_0[2][11:4],mem_data_out_type_0[1][11:4],mem_data_out_type_0[0][11:4]};
-				hyper_jump_guess_address_table[3]<={mem_data_out_type_0[2][11:4],mem_data_out_type_0[1][11:4],mem_data_out_type_0[0][11:4],fifo_instruction_cache_data_at_write_addr_m1[11:4]};
-				hyper_jump_guess_address_table[2]<={mem_data_out_type_0[1][11:4],mem_data_out_type_0[0][11:4],fifo_instruction_cache_data_at_write_addr_m1[11:4],fifo_instruction_cache_data_at_write_addr_m2[11:4]};
-				hyper_jump_guess_address_table[1]<={mem_data_out_type_0[0][11:4],fifo_instruction_cache_data_at_write_addr_m1[11:4],fifo_instruction_cache_data_at_write_addr_m2[11:4],fifo_instruction_cache_data_at_write_addr_m3[11:4]};
-				hyper_jump_guess_address_table[0]<={fifo_instruction_cache_data_at_write_addr_m1[11:4],fifo_instruction_cache_data_at_write_addr_m2[11:4],fifo_instruction_cache_data_at_write_addr_m3[11:4],fifo_instruction_cache_data_at_write_addr_m4[11:4]};
+				hyper_jump_guess_address_table[7]<={
+					mem_data_out_type_0[6][11:4],
+					mem_data_out_type_0[4][11:4],
+					mem_data_out_type_0[5][11:4],
+					mem_data_out_type_0[3][11:4]
+				};
+				hyper_jump_guess_address_table[6]<={
+					mem_data_out_type_0[5][11:4],
+					mem_data_out_type_0[3][11:4],
+					mem_data_out_type_0[4][11:4],
+					mem_data_out_type_0[2][11:4]
+				};
+				hyper_jump_guess_address_table[5]<={
+					mem_data_out_type_0[4][11:4],
+					mem_data_out_type_0[2][11:4],
+					mem_data_out_type_0[3][11:4],
+					mem_data_out_type_0[1][11:4]
+				};
+				hyper_jump_guess_address_table[4]<={
+					mem_data_out_type_0[3][11:4],
+					mem_data_out_type_0[1][11:4],
+					mem_data_out_type_0[2][11:4],
+					mem_data_out_type_0[0][11:4]
+				};
+				hyper_jump_guess_address_table[3]<={
+					mem_data_out_type_0[2][11:4],
+					mem_data_out_type_0[0][11:4],
+					mem_data_out_type_0[1][11:4],
+					fifo_instruction_cache_data_at_write_addr_m1[11:4]
+				};
+				hyper_jump_guess_address_table[2]<={
+					mem_data_out_type_0[1][11:4],
+					fifo_instruction_cache_data_at_write_addr_m1[11:4],
+					mem_data_out_type_0[0][11:4],
+					fifo_instruction_cache_data_at_write_addr_m2[11:4]
+				};
+				hyper_jump_guess_address_table[1]<={
+					mem_data_out_type_0[0][11:4],
+					fifo_instruction_cache_data_at_write_addr_m2[11:4],
+					fifo_instruction_cache_data_at_write_addr_m1[11:4],
+					fifo_instruction_cache_data_at_write_addr_m3[11:4]
+				};
+				hyper_jump_guess_address_table[0]<={
+					fifo_instruction_cache_data_at_write_addr_m1[11:4],
+					fifo_instruction_cache_data_at_write_addr_m3[11:4],
+					fifo_instruction_cache_data_at_write_addr_m2[11:4],
+					fifo_instruction_cache_data_at_write_addr_m4[11:4]
+				};
 				hyper_jump_potentially_valid_type3<=0;
 				hyper_jump_potentially_valid_type2<=0;
 				hyper_jump_potentially_valid_type1<=0;

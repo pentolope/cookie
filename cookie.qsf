@@ -469,6 +469,7 @@ set_instance_assignment -name PHYSICAL_SYNTHESIS_REGISTER_RETIMING OFF -to *user
 set_instance_assignment -name PHYSICAL_SYNTHESIS_REGISTER_RETIMING OFF -to *stack_pointer[*]
 set_instance_assignment -name QII_AUTO_PACKED_REGISTERS OFF -to *user_reg[*][*]
 set_instance_assignment -name REMOVE_DUPLICATE_REGISTERS OFF -to *tick_tock
+set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top
 set_global_assignment -name QIP_FILE ip_pll_vga.qip
 set_global_assignment -name QIP_FILE ip_pll_internal.qip
 set_global_assignment -name QIP_FILE ip_cache_LRU.qip
@@ -483,4 +484,3 @@ set_global_assignment -name SYSTEMVERILOG_FILE top_cookie.sv
 set_global_assignment -name QIP_FILE sd_card_mmio.qip
 set_global_assignment -name QIP_FILE vga_memory.qip
 set_global_assignment -name QIP_FILE ip_ps2_buffer.qip
-set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top

@@ -19,7 +19,7 @@ create_clock -name {MAX10_CLK1_50} -period 20.000 -waveform { 0.000 10.000 } [ge
 #**************************************************************
 
 create_generated_clock -name {dram_ext_clk} -source [get_pins {ip_pll_internal_inst|altpll_component|auto_generated|pll1|clk[0]}] -master_clock {ip_pll_internal_inst|altpll_component|auto_generated|pll1|clk[0]} [get_ports {DRAM_CLK}] 
-create_generated_clock -name {ip_pll_internal_inst|altpll_component|auto_generated|pll1|clk[0]} -source [get_pins {ip_pll_internal_inst|altpll_component|auto_generated|pll1|inclk[0]}] -duty_cycle 50/1 -multiply_by 5 -divide_by 3 -master_clock {MAX10_CLK1_50} [get_pins {ip_pll_internal_inst|altpll_component|auto_generated|pll1|clk[0]}] 
+create_generated_clock -name {ip_pll_internal_inst|altpll_component|auto_generated|pll1|clk[0]} -source [get_pins {ip_pll_internal_inst|altpll_component|auto_generated|pll1|inclk[0]}] -duty_cycle 50/1 -multiply_by 5 -divide_by 4 -master_clock {MAX10_CLK1_50} [get_pins {ip_pll_internal_inst|altpll_component|auto_generated|pll1|clk[0]}] 
 create_generated_clock -name {ip_pll_vga_inst|altpll_component|auto_generated|pll1|clk[0]} -source [get_pins {ip_pll_vga_inst|altpll_component|auto_generated|pll1|inclk[0]}] -duty_cycle 50/1 -multiply_by 71 -divide_by 141 -master_clock {MAX10_CLK1_50} [get_pins {ip_pll_vga_inst|altpll_component|auto_generated|pll1|clk[0]}] 
 
 
