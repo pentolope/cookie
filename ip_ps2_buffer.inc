@@ -14,14 +14,16 @@
 --https://fpgasoftware.intel.com/eula.
 
 
-component ip_byte_mem
-	PORT
-	(
-		clock		: IN STD_LOGIC  := '1';
-		data		: IN STD_LOGIC_VECTOR (7 DOWNTO 0);
-		rdaddress		: IN STD_LOGIC_VECTOR (7 DOWNTO 0);
-		wraddress		: IN STD_LOGIC_VECTOR (7 DOWNTO 0);
-		wren		: IN STD_LOGIC  := '0';
-		q		: OUT STD_LOGIC_VECTOR (7 DOWNTO 0)
-	);
-end component;
+FUNCTION ip_ps2_buffer 
+(
+	clock,
+	data[8..0],
+	rdreq,
+	wrreq
+)
+
+RETURNS (
+	empty,
+	full,
+	q[8..0]
+);

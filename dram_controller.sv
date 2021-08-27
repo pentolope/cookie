@@ -22,6 +22,7 @@ module dram_controller(
 	output		          		DRAM_RAS_N,
 	output		          		DRAM_UDQM,
 	output		          		DRAM_WE_N,
+	
 	input  main_clk
 );
 
@@ -79,13 +80,11 @@ reg dram_controller_ack_read_pulse_r=0;
 assign dram_controller_ack_read_pulse_side_dram=dram_controller_ack_read_pulse_r;
 
 reg dram_controller_req_read_pending_state=0;
-wire dram_controller_req_read_pending=(dram_controller_ack_read_pulse_side_dram | dram_controller_req_read_pulse_side_dram)?dram_controller_req_read_pulse_side_dram:dram_controller_req_read_pending_state;
+wire dram_controller_req_read_pending=(dram_controller_ack_read_pulse_r | dram_controller_req_read_pulse_side_dram)?dram_controller_req_read_pulse_side_dram:dram_controller_req_read_pending_state;
 
 always @(posedge main_clk) begin
 	dram_controller_req_read_pending_state<=dram_controller_req_read_pending;
 end
-
-
 
 
 reg [9:0] refresh_counter=0;

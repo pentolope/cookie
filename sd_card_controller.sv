@@ -66,7 +66,7 @@ module sd_card_controller(
 	input  [12:0] address_mmio,
 	input  is_mmio_byte,
 	input  is_mmio_write,
-	input  main_clk // 90 MHz
+	input  main_clk // 83 MHz
 );
 
 /*
@@ -98,7 +98,7 @@ Access protocol for sd card controller:
 	
 	The byte at `addr[0000_000000010]` may be written with a 0b or 1b. A change of value at this memory location is a trigger point for the controller to progress between different stages of processing a command.
 		Changing the value from 0b->1b should only be done when `addr[0000_000000100]==100b` . It causes the controller to begin processing a read/write command.
-		Changing the value from 1b->0b should only be done when `addr[0000_000000100]==011b` . It causes the controller to acknowledge the finalization handshake.
+		Changing the value from 1b->0b should only be done when `addr[0000_000000100]==011b || addr[0000_000000100]==110b` . It causes the controller to acknowledge the finalization handshake.
 	
 	The byte at `addr[0000_000000011]` should never be written. It has no purpose.
 	
@@ -163,7 +163,10 @@ wire [15:0] data_read_controller_at_mmio;
 reg  write_enable_controller_at_mmio=0;
 
 
-reg [8:0] clk_div_factor=448; // the actual division factor is twice the value stored in clk_div_factor, because the sd card's clock flips (0->1 or 1->0) when clk_counter>=clk_div_factor.
+reg clk_speed_is_fast=0; // If 0, clock runs at initialization speed. If 1, clock runs at typical speed.
+wire [8:0] clk_div_factor;
+assign clk_div_factor=clk_speed_is_fast ? 9'd4 : 9'd396 ; // the actual division factor is twice the value in clk_div_factor, because the sd card's clock flips (0->1 or 1->0) when clk_counter>=clk_div_factor.
+
 reg [8:0] clk_counter=0;
 reg data_bit_miso=0;
 reg data_bit_mosi=0;
@@ -199,8 +202,7 @@ reg is_command_write=0;
 reg [31:0] target_base_block_address=0;
 reg [31:0] transfer_section_list=0;
 
-reg [4:0] storage_write_responce;
-reg [15:0] storage_status;
+reg [3:0] storage_write_responce;
 reg storage_bad_status;
 
 wire [6:0] walking_crc7_output;
@@ -287,7 +289,7 @@ always @(posedge main_clk) begin
 			is_sd_card_byte_address<=0;
 			is_sd_card_mmc_card<=0;
 			is_sd_card_standard_v1<=0;
-			clk_div_factor<=448;
+			clk_speed_is_fast<=0;
 		end
 		1:begin // power on delay
 			command_id<=0;
@@ -805,7 +807,7 @@ always @(posedge main_clk) begin
 			controller_state_now<=72;
 		end
 		72:begin // increase clock speed
-			clk_div_factor<=4;
+			clk_speed_is_fast<=1;
 			controller_state_now<=73;
 		end
 		73:begin // write word 1 of highest block size into mmio contents
@@ -930,7 +932,6 @@ always @(posedge main_clk) begin
 				// timeout, could not communicate with card
 				controller_state_now<=39;
 			end else if (final_byte_came_in!=8'hFF) begin
-				storage_status[7:0]<=final_byte_came_in;
 				if (final_byte_came_in==8'h00) begin
 					controller_state_now<=92;
 					general_use_counter<=0;
@@ -1042,12 +1043,13 @@ always @(posedge main_clk) begin
 		end
 		105:begin // delay for data responce
 			chip_select_next<=0;
-			controller_state_now<=105;
+			controller_state_now<=106;
 		end
 		106:begin // store write data responce
 			chip_select_next<=0;
 			storage_write_responce[2:0]<=final_byte_came_in[3:1];
 			storage_write_responce[3]<=(!final_byte_came_in[4] && final_byte_came_in[0])?1'b1:1'b0;
+			controller_state_now<=107;
 		end
 		107:begin // wait for busy clear
 			chip_select_next<=0;
@@ -1076,7 +1078,7 @@ always @(posedge main_clk) begin
 			if (storage_write_responce==4'b1101) begin // write rejected due to crc error
 				controller_state_now<=111;
 			end else if (storage_write_responce==4'b1010 && !(storage_bad_status | ((final_byte_came_in!=8'h00)?1'b1:1'b0))) begin // write accepted and responce valid
-				controller_state_now<=113;
+				controller_state_now<=112;
 			end else begin // then either there was a write error (4'b1110) or the responce is invalid. Those cases are treated the same
 				controller_state_now<=111;
 			end
@@ -1092,8 +1094,8 @@ always @(posedge main_clk) begin
 			data_write_controller_at_mmio<=16'b0;
 			write_enable_controller_at_mmio<=1;
 			controller_state_now<=113;
-			target_base_block_address<=target_base_block_address+1'b1;
 			if (transfer_section_list[ 3: 0]!=4'h0) begin
+				target_base_block_address<=target_base_block_address+1'b1;
 				controller_state_now<=114; // then start another write at the next address
 			end
 		end
@@ -1127,7 +1129,6 @@ always @(posedge main_clk) begin
 			end
 		end
 		116:begin // delay before start to write
-			chip_select_next<=0;
 			controller_state_now<=100;
 		end
 		/* 117<->119 are left blank in case I want to add something later */
@@ -1147,7 +1148,6 @@ always @(posedge main_clk) begin
 			end else if (final_byte_came_in!=8'hFF) begin
 				if (final_byte_came_in==8'h00) begin
 					controller_state_now<=122;
-					general_use_counter<=0;
 				end else begin
 					// error of some sort, failure to read
 					controller_state_now<=128;
@@ -1156,11 +1156,10 @@ always @(posedge main_clk) begin
 		end
 		122:begin // wait until data start token
 			chip_select_next<=0;
-			general_use_counter<=general_use_counter+1'b1;
-			if (general_use_counter==8'hFF) begin
-				// timeout, could not communicate with card
-				controller_state_now<=39;
+			if (final_byte_came_in==8'hFF) begin
+				// still waiting... but since the potential delay is so long I can't put in a timeout
 			end else if (final_byte_came_in==8'hFE) begin
+				// got data start token
 				controller_state_now<=123;
 				address_controller_at_mmio<=0;
 				walking_crc16_register<=0;
@@ -1175,6 +1174,8 @@ always @(posedge main_clk) begin
 				transfer_section_list[23:20]<=transfer_section_list[27:24];
 				transfer_section_list[27:24]<=transfer_section_list[31:28];
 				transfer_section_list[31:28]<=0;
+			end else begin
+				controller_state_now<=39; // that's not the data start token or busy token, so it is invalid
 			end
 		end
 		123:begin // read block subroutine (even byte)

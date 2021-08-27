@@ -154,7 +154,10 @@ wire [1:0] control_io;
 wire [15:0] debug_user_reg [15:0];
 wire [15:0] debug_stack_pointer;
 wire [25:0] debug_instruction_fetch_address;
-wire debug_scheduler=1'b0;
+wire [9:0] led_state;
+assign LEDR=led_state;
+
+
 
 core_main core__main(
 	DRAM_ADDR,
@@ -177,17 +180,17 @@ core_main core__main(
 	
 	debug_user_reg,
 	debug_stack_pointer,
-	debug_instruction_fetch_address,
-	debug_scheduler
+	debug_instruction_fetch_address
 );
+
 
 wire [7:0] debug_controller_state_now; // for sd card debug
 
-generate_hex_display_base10 generate_hex_display_inst(
+generate_hex_display_base16 generate_hex_display_inst(
 	hex_display,
-	//{8'h0,debug_controller_state_now}
 	debug_user_reg[SW[3:0]]
 );
+
 
 wire ps2_at0_external_clock_pulldown;
 wire ps2_at0_external_data_pulldown;
@@ -215,7 +218,7 @@ memory_io memory__io(
 	
 	.VGA_B(VGA_B),.VGA_G(VGA_G),.VGA_R(VGA_R),.VGA_HS(VGA_HS),.VGA_VS(VGA_VS),
 	
-	.led_out_state(LEDR),
+	.led_out_state(led_state),
 	
 	.ps2_at0_external_clock_pulldown(ps2_at0_external_clock_pulldown),
 	.ps2_at0_external_data_pulldown(ps2_at0_external_data_pulldown),

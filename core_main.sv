@@ -29,9 +29,7 @@ module core_main(
 	
 	output [15:0] debug_user_reg [15:0],
 	output [15:0] debug_stack_pointer,
-	output [25:0] debug_instruction_fetch_address,
-	input debug_scheduler
-
+	output [25:0] debug_instruction_fetch_address
 );
 
 reg [15:0] stack_pointer=0;

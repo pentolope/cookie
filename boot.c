@@ -94,21 +94,26 @@ struct Cache {
 	uint8_t sector_count;
 	uint8_t sector_walk;
 	uint32_t sector_addresses[CACHE_SIZE];
+	uint8_t sector_io_err_val[CACHE_SIZE];
 } cache={0};
 
 static bool card_to_cache(uint8_t index){
+	cache.sector_io_err_val[index]=0;
+	uint8_t io_err_val=1;
 	*((volatile uint8_t*)(0x80000000lu|0x02lu))=1;
 	if (*((volatile uint8_t*)(0x80000000lu|0x1000000lu|0x04lu))!=4) {goto Fail;}
 	*((volatile uint8_t*)(0x80000000lu|0x1000000lu|0x00lu))=0;
 	*((volatile uint32_t*)(0x80000000lu|0x1000000lu|0x0Clu))=cache.sector_addresses[index];
 	*((volatile uint8_t*)(0x80000000lu|0x1000000lu|0x08lu))=(index+1) & 15;
 	*((volatile uint8_t*)(0x80000000lu|0x1000000lu|0x02lu))=1;
+	io_err_val=2;
 	while (1){
 		uint8_t c=*((volatile uint8_t*)(0x80000000lu|0x1000000lu|0x04lu));
 		if (c==3) break;
 		if (c==0 | c==5 | c==6) {goto Fail;}
 	}
 	*((volatile uint8_t*)(0x80000000lu|0x1000000lu|0x02lu))=0;
+	io_err_val=3;
 	while (1){
 		uint8_t c=*((volatile uint8_t*)(0x80000000lu|0x1000000lu|0x04lu));
 		if (c==4) break;
@@ -118,6 +123,7 @@ static bool card_to_cache(uint8_t index){
 	*((volatile uint8_t*)(0x80000000lu|0x02lu))=0;
 	return 0;
 	Fail:;
+	cache.sector_io_err_val[index]=io_err_val;
 	*((volatile uint8_t*)(0x80000000lu|0x04lu))=1;
 	return 1;
 }
@@ -127,6 +133,9 @@ static bool cache_load(uint32_t sector){
 	uint8_t index;
 	for (index=0;index<cache.sector_count;index++){
 		if (cache.sector_addresses[index]==sector){
+			if (cache.sector_io_err_val[index]!=0){
+				return card_to_cache(index);
+			}
 			return 0;
 		}
 	}
@@ -152,7 +161,7 @@ static bool cache_read_via_sector(uint32_t sector,uint16_t offset,uint32_t size,
 	while (1){
 		lstart:;
 		for (uint8_t i=0;i<cache.sector_count;i++){
-			if (sector==cache.sector_addresses[i]){
+			if (sector==cache.sector_addresses[i] & cache.sector_io_err_val[i]==0){
 				uint32_t s=512u-offset;
 				if (size<s) s=size;
 				memcpy(buffer,CACHE_SECTOR_DATA_ADDRESS(i,offset),s);
@@ -399,28 +408,41 @@ static bool fat_true_seek(struct Folder_File_Object* ffo){
 
 /*
 return values:
--1 means end of file was reached
+-1 means end of file was reached (buffer was not filled)
 -2 means an error occured
-other values are the byte read
+other values are the number of bytes read (up to 512)
 */
-static int fat_read_byte_in_target_file(struct Folder_File_Object* ffo){
-	uint8_t value_read=0;
+static int fat_read_bytes_in_target_file(struct Folder_File_Object* ffo, uint8_t* buffer){
+	uint16_t count;
+	uint32_t file_left;
+	uint32_t temp_walking_offset;
 	if (ffo->target.walking_position >= ffo->target.file_size) return -1;
 	if (ffo->target.walking_cluster==0){
 		// then the walking_cluster needs to be found based on the walking_position
 		if (fat_true_seek(ffo)) return -2;
 	}
 	if (ffo->target.walking_cluster==0) return -2;
-	if (cache_read_at_cluster(ffo->target.walking_cluster,ffo->target.walking_offset_in_cluster,1,&value_read)) return -2;
-	++ffo->target.walking_position;
-	if (++ffo->target.walking_offset_in_cluster>=file_system.cluster_size){
-		ffo->target.walking_offset_in_cluster-=file_system.cluster_size;
+	file_left=ffo->target.file_size - ffo->target.walking_position;
+	if (file_left > 512){
+		count=512;
+	} else {
+		count=file_left;
+	}
+	temp_walking_offset=ffo->target.walking_offset_in_cluster;
+	if (cache_read_at_cluster(ffo->target.walking_cluster,temp_walking_offset,count,buffer)) return -2;
+	ffo->target.walking_position+=count;
+	temp_walking_offset+=count;
+	if (temp_walking_offset>=file_system.cluster_size){
+		temp_walking_offset-=file_system.cluster_size;
+		ffo->target.walking_offset_in_cluster=temp_walking_offset;
 		if (fat_get_next_cluster(&ffo->target.walking_cluster)){
 			ffo->target.walking_cluster = 0;
 			return -2;
 		}
+	} else {
+		ffo->target.walking_offset_in_cluster=temp_walking_offset;
 	}
-	return value_read;
+	return count;
 }
 
 
@@ -430,18 +452,18 @@ static bool open_file_system_no_reset_error(uint8_t partition_index){
 	memset(&file_system,0,sizeof(struct File_System));
 	partition_index &= 3; // force range to be correct
 	uint8_t buffer[37];
-	if (cache_read_via_sector(0,450 + partition_index * 16,12,buffer)){*(volatile uint8_t*)((0x80800000lu+(0+80u*(7u+(unsigned)partition_index))*3lu)+2)=7<<5; return 1;}
-	if (buffer[0]==0){*(volatile uint8_t*)((0x80800000lu+(1+80u*(7u+(unsigned)partition_index))*3lu)+2)=7<<5; return 1;} // no partition at that index
+	if (cache_read_via_sector(0,450 + partition_index * 16,12,buffer)){*(volatile uint8_t*)((0x80800000lu+(0u+80u*(7u+(unsigned)partition_index))*3lu)+2u)=7<<5; return 1;}
+	if (buffer[0]==0){*(volatile uint8_t*)((0x80800000lu+(1u+80u*(7u+(unsigned)partition_index))*3lu)+2u)=7<<5; return 1;} // no partition at that index
 	const uint32_t partition_offset=read4(buffer+4);
 	const uint32_t partition_length=read4(buffer+8);
 	
-	if (cache_read_via_sector(partition_offset,11,37,buffer)){*(volatile uint8_t*)((0x80800000lu+(2+80u*(7u+(unsigned)partition_index))*3lu)+2)=7<<5; return 1;}
+	if (cache_read_via_sector(partition_offset,11,37,buffer)){*(volatile uint8_t*)((0x80800000lu+(2u+80u*(7u+(unsigned)partition_index))*3lu)+2u)=7<<5; return 1;}
 	{
 		const uint16_t bytes_per_sector=read2(buffer);
-		if (bytes_per_sector!=512) return 1; // this implementation only supports sector sizes of 512 bytes
+		if (bytes_per_sector!=512){*(volatile uint8_t*)((0x80800000lu+(3u+80u*(7u+(unsigned)partition_index))*3lu)+2u)=7<<5; return 1;} // this implementation only supports sector sizes of 512 bytes
 	}
 	file_system.sectors_per_cluster=*(buffer+2);
-	if (file_system.sectors_per_cluster==0){*(volatile uint8_t*)((0x80800000lu+(3+80u*(7u+(unsigned)partition_index))*3lu)+2)=7<<5; return 1;}
+	if (file_system.sectors_per_cluster==0){*(volatile uint8_t*)((0x80800000lu+(4u+80u*(7u+(unsigned)partition_index))*3lu)+2u)=7<<5; return 1;}
 	const uint16_t reserved_sectors=read2(buffer+3);
 	const uint8_t fat_copies=*(buffer+5);
 	const uint16_t max_root_entries=read2(buffer+6);
@@ -451,19 +473,19 @@ static bool open_file_system_no_reset_error(uint8_t partition_index){
 	const uint32_t sectors_per_fat32=read4(buffer+25);
 	file_system.root_dir_cluster=read4(buffer+33);
 	if (
-		(sector_count_16==0 & sector_count_32==0) | // bad volume size
-		(sectors_per_fat16!=0 & sectors_per_fat32==0) // not fat16 or fat32
-		) {*(volatile uint8_t*)((0x80800000lu+(4+80u*(7u+(unsigned)partition_index))*3lu)+2)=7<<5; return 1;}
-	const uint32_t sector_count_final=(sector_count_32==0)?sector_count_16:sector_count_32;
-	const uint32_t sectors_per_fat_final=(sectors_per_fat16!=0)?sectors_per_fat16:sectors_per_fat32;
-	const uint16_t max_root_entry_sectors=((uint32_t)max_root_entries * 32 + 511) >> 9;
+		(sector_count_16==0u & sector_count_32==0u) | // bad volume size
+		(sectors_per_fat16!=0u & sectors_per_fat32==0u) // not fat16 or fat32
+		) {*(volatile uint8_t*)((0x80800000lu+(5u+80u*(7u+(unsigned)partition_index))*3lu)+2u)=7<<5; return 1;}
+	const uint32_t sector_count_final=(sector_count_32==0u)?sector_count_16:sector_count_32;
+	const uint32_t sectors_per_fat_final=(sectors_per_fat16!=0u)?sectors_per_fat16:sectors_per_fat32;
+	const uint16_t max_root_entry_sectors=((uint32_t)max_root_entries * 32u + 511u) >> 9;
 	const uint32_t data_sector_count = sector_count_final - reserved_sectors - sectors_per_fat_final * fat_copies - max_root_entry_sectors;
 	file_system.data_cluster_count = data_sector_count / file_system.sectors_per_cluster;
-	file_system.fat16_root_max=(uint32_t)max_root_entry_sectors * 512;
+	file_system.fat16_root_max=(uint32_t)max_root_entry_sectors * 512u;
 	file_system.fat_offset=partition_offset + reserved_sectors;
-	file_system.cluster_size=(uint32_t)file_system.sectors_per_cluster * 512;
+	file_system.cluster_size=(uint32_t)file_system.sectors_per_cluster * 512u;
 	if (file_system.data_cluster_count < 4085LU){
-		*(volatile uint8_t*)((0x80800000lu+(5+80u*(7u+(unsigned)partition_index))*3lu)+2)=7<<5;
+		*(volatile uint8_t*)((0x80800000lu+(6u+80u*(7u+(unsigned)partition_index))*3lu)+2u)=7<<5;
 		return 1; // fat12 not supported
 	} else if (file_system.data_cluster_count < 65525LU){
 		file_system.isFAT16=1;
@@ -474,8 +496,9 @@ static bool open_file_system_no_reset_error(uint8_t partition_index){
 		file_system.isFAT16=0;
 		file_system.root_dir_offset=0;
 		file_system.cluster_zero_offset=file_system.fat_offset + fat_copies * sectors_per_fat_final;
-		if (file_system.root_dir_cluster==0) {*(volatile uint8_t*)((0x80800000lu+(6+80u*(7u+(unsigned)partition_index))*3lu)+2)=7<<5; return 1;} // for fat32, root_dir_cluster should not be 0
+		if (file_system.root_dir_cluster==0) {*(volatile uint8_t*)((0x80800000lu+(7u+80u*(7u+(unsigned)partition_index))*3lu)+2u)=7<<5; return 1;} // for fat32, root_dir_cluster should not be 0
 	}
+	*(volatile uint8_t*)((0x80800000lu+(8u+80u*(7u+(unsigned)partition_index))*3lu)+2u)=7<<2;
 	return 0;
 }
 
@@ -527,6 +550,8 @@ static void _exec_springboard(){
 
 int main(){
 	Start:;
+	uint8_t buffer[512];
+	struct Folder_File_Object ffo;
 	uint8_t tb;
 	while ((tb=*((volatile uint8_t*)(0x80000000lu|0x1000000lu|0x04lu)))!=4){
 		if (tb==5){
@@ -538,14 +563,15 @@ int main(){
 		give_message("Bootloader Error: Could not initialize FAT file system");
 		while (1){}
 	}
-	struct Folder_File_Object ffo;
 	if (fat_find_boot_file(&ffo)){
 		give_message("Bootloader Error: Could not find \"BOOT.BIN\" in the root directory");
 		while (1){}
 	}
+	give_message("Bootloader is reading \"BOOT.BIN\" into RAM");
+	int v;
 	size_t dest=0x10000lu;
 	while (1){
-		int v=fat_read_byte_in_target_file(&ffo);
+		v=fat_read_bytes_in_target_file(&ffo,buffer);
 		if (v==-2){
 			give_message("Bootloader Error: Failed to read \"BOOT.BIN\"");
 			while (1){}
@@ -553,8 +579,8 @@ int main(){
 		if (v==-1){
 			break;
 		}
-		*(uint8_t*)dest = (uint8_t)v;
-		++dest;
+		memcpy((uint8_t*)dest,buffer,v);
+		dest+=v;
 	}
 	give_message("Bootloader Finished");
 	_exec_springboard();

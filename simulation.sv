@@ -310,7 +310,6 @@ wire [1:0] control_io;
 wire [15:0] debug_user_reg [15:0];
 wire [15:0] debug_stack_pointer;
 wire [25:0] debug_instruction_fetch_address;
-wire debug_scheduler=1'b0;
 
 reg main_clk=0;
 reg vga_clk=0;
@@ -371,8 +370,7 @@ core_main core__main(
 	
 	debug_user_reg,
 	debug_stack_pointer,
-	debug_instruction_fetch_address,
-	debug_scheduler
+	debug_instruction_fetch_address
 );
 
 memory_io memory__io(

@@ -66,6 +66,27 @@ module memory_interface(
 	input  main_clk
 );
 
+reg [2:0] hyper_fetch_cooldown_current [1:0]='{0,0};
+reg hyper_fetch_cooldown_activate [1:0];
+reg hyper_fetch_cooldown_zero [1:0];
+
+always_comb hyper_fetch_cooldown_zero[0]=(hyper_fetch_cooldown_current[0]==3'h0 && !hyper_fetch_cooldown_activate[0])? 1'b1:1'b0;
+always_comb hyper_fetch_cooldown_zero[1]=(hyper_fetch_cooldown_current[1]==3'h0 && !hyper_fetch_cooldown_activate[1])? 1'b1:1'b0;
+always @(posedge main_clk) begin
+	if (hyper_fetch_cooldown_current[0]!=3'h0) begin
+		hyper_fetch_cooldown_current[0]<=hyper_fetch_cooldown_current[0]-3'h1;
+	end
+	if (hyper_fetch_cooldown_activate[0]) begin
+		hyper_fetch_cooldown_current[0]<=3'h7;
+	end
+	if (hyper_fetch_cooldown_current[1]!=3'h0) begin
+		hyper_fetch_cooldown_current[1]<=hyper_fetch_cooldown_current[1]-3'h1;
+	end
+	if (hyper_fetch_cooldown_activate[1]) begin
+		hyper_fetch_cooldown_current[1]<=3'h7;
+	end
+end
+
 reg is_instruction_fetch_acknowledged_pulse_delayed=0;
 reg is_hyper_instruction_fetch_0_acknowledged_pulse_delayed=0;
 reg is_hyper_instruction_fetch_1_acknowledged_pulse_delayed=0;
@@ -83,8 +104,8 @@ assign is_general_or_stack_access_acknowledged_pulse_extern=is_general_or_stack_
 assign memory_dependency_clear_extern=memory_dependency_clear;
 
 wire is_instruction_fetch_requesting=is_instruction_fetch_requesting_extern & ~is_instruction_fetch_acknowledged_pulse & ~is_instruction_fetch_acknowledged_pulse_delayed;
-wire is_hyper_instruction_fetch_0_requesting=is_hyper_instruction_fetch_0_requesting_extern & ~is_hyper_instruction_fetch_0_acknowledged_pulse & ~is_hyper_instruction_fetch_0_acknowledged_pulse_delayed;
-wire is_hyper_instruction_fetch_1_requesting=is_hyper_instruction_fetch_1_requesting_extern & ~is_hyper_instruction_fetch_1_acknowledged_pulse & ~is_hyper_instruction_fetch_1_acknowledged_pulse_delayed;
+wire is_hyper_instruction_fetch_0_requesting=is_hyper_instruction_fetch_0_requesting_extern & ~is_hyper_instruction_fetch_0_acknowledged_pulse & ~is_hyper_instruction_fetch_0_acknowledged_pulse_delayed & hyper_fetch_cooldown_zero[0];
+wire is_hyper_instruction_fetch_1_requesting=is_hyper_instruction_fetch_1_requesting_extern & ~is_hyper_instruction_fetch_1_acknowledged_pulse & ~is_hyper_instruction_fetch_1_acknowledged_pulse_delayed & hyper_fetch_cooldown_zero[1];
 wire [7:0] is_stack_access_requesting=is_stack_access_requesting_extern & ~is_general_or_stack_access_acknowledged_pulse;
 wire [7:0] is_general_access_requesting=is_general_access_requesting_extern & ~is_general_or_stack_access_acknowledged_pulse;
 
@@ -346,6 +367,10 @@ mem_inter_mux mem_inter_mux_inst(
 	
 	next_new_index[2:0]
 );
+reg [5:0] tt_access_index_at_phase3;
+always_comb tt_access_index_at_phase3=tt_access_index[tick_tock_phase3[0]];
+reg is_ack_executer_for_mem_access;
+always_comb is_ack_executer_for_mem_access=(tick_tock_phase3!=tick_tock_phase2 && tt_access_index_at_phase3>=5'd8 && tt_access_index_at_phase3<=5'd23)? 1'b1:1'b0;
 
 always_comb begin
 	perform_io_mem_read_output=1'b0;
@@ -354,12 +379,14 @@ always_comb begin
 	is_hyper_instruction_fetch_1_acknowledged_pulse=1'b0;
 	is_general_or_stack_access_acknowledged_pulse=8'b0;
 	is_first_overflowed_stack_ready=8'b0;
+	hyper_fetch_cooldown_activate[0]=1'b0;
+	hyper_fetch_cooldown_activate[1]=1'b0;
 	if (tick_tock_phase3!=tick_tock_phase2) begin
-		unique case (tt_access_index[tick_tock_phase3[0]])
+		unique case (tt_access_index_at_phase3)
 		 0:begin end // yes, 0 is possible, it happens when a hyper instruction fetch is voided
 		 1:is_instruction_fetch_acknowledged_pulse=1'b1;
-		 2:is_hyper_instruction_fetch_0_acknowledged_pulse=!soft_fault && !void_hyper_instruction_fetch;
-		 3:is_hyper_instruction_fetch_1_acknowledged_pulse=!soft_fault && !void_hyper_instruction_fetch;
+		 2:begin is_hyper_instruction_fetch_0_acknowledged_pulse=!soft_fault && !void_hyper_instruction_fetch; hyper_fetch_cooldown_activate[0]=soft_fault;end
+		 3:begin is_hyper_instruction_fetch_1_acknowledged_pulse=!soft_fault && !void_hyper_instruction_fetch; hyper_fetch_cooldown_activate[1]=soft_fault;end
 
 		 8:is_general_or_stack_access_acknowledged_pulse[0]=1'b1;
 		 9:is_general_or_stack_access_acknowledged_pulse[1]=1'b1;
@@ -388,7 +415,7 @@ always_comb begin
 		30:is_first_overflowed_stack_ready[6]=1'b1;
 		31:is_first_overflowed_stack_ready[7]=1'b1;
 		endcase
-	end else if (state_for_io==3'd5) begin
+	end else if ((state_for_io==3'd5) && !is_waiting_on_second_overflowed_stack) begin
 		perform_io_mem_read_output=1'b1;
 		is_general_or_stack_access_acknowledged_pulse[executer_index_for_io]=1'b1;
 	end
@@ -406,13 +433,13 @@ end
 always @(posedge main_clk) begin
 	tick_tock_phase3<=tick_tock_phase2;
 	
-	is_waiting_on_second_overflowed_stack<=(is_general_or_stack_access_acknowledged_pulse!=8'd0)?1'b0:(is_waiting_on_second_overflowed_stack || (is_first_overflowed_stack_ready!=8'd0));
+	is_waiting_on_second_overflowed_stack<=(is_ack_executer_for_mem_access)? 1'b0:(is_waiting_on_second_overflowed_stack || (is_first_overflowed_stack_ready!=8'd0));
 	
-	if ((is_general_or_stack_access_acknowledged_pulse!=8'd0) || (is_first_overflowed_stack_ready!=8'd0)) begin
+	if (is_ack_executer_for_mem_access || (is_first_overflowed_stack_ready!=8'd0)) begin
 		cd_access_out_full_data_saved<=cd_access_out_full_data;
 	end
 	
-	if ((is_general_or_stack_access_acknowledged_pulse!=8'd0) && is_waiting_on_second_overflowed_stack) begin
+	if (is_ack_executer_for_mem_access && is_waiting_on_second_overflowed_stack) begin
 		unique case (tt_access_length[tick_tock_phase3[0]][1:0])
 		0:cd_access_out_full_data_saved[7:1]<=cd_access_out_full_data_saved[6:0];
 		1:cd_access_out_full_data_saved[7:2]<=cd_access_out_full_data_saved[5:0];
