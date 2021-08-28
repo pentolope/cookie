@@ -276,6 +276,8 @@ def a_t4(dataIn):
 	real=assemblerLabelLocations[dataIn[3]]
 	r=a_t3(['LDFU',dataIn[2],real[0:4]])+a_t3(['LDFU',dataIn[1],real[4:8]])
 	assert len(r)==16
+	r=r[0:4]+r[8:12]+r[4:8]+r[12:16] # rearrangement of dword load
+	assert len(r)==16
 	return r
 
 
