@@ -10,3 +10,7 @@ seed_search/*
 greybox_tmp/*
 
 simulation/modelsim/*
+
+boot.bin
+boot1.asm
+boot2.asm
