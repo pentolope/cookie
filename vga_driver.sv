@@ -437,9 +437,9 @@ always @(posedge VGA_CLK) begin
 	VGA_B_r[3:2]<=data_at_walk_buff[1:0];
 	VGA_B_r[1:0]<=data_at_walk_buff[1:0];
 	VGA_G_r[3:1]<=data_at_walk_buff[4:2];
-	VGA_G_r[0]<=data_at_walk_buff[2];
+	VGA_G_r[0]<=(data_at_walk_buff[2] || data_at_walk_buff[1:0]==2'b11)? 1'b1:1'b0;
 	VGA_R_r[3:1]<=data_at_walk_buff[7:5];
-	VGA_R_r[0]<=data_at_walk_buff[5];
+	VGA_R_r[0]<=(data_at_walk_buff[5] || data_at_walk_buff[1:0]==2'b11)? 1'b1:1'b0;
 end
 always @(posedge VGA_CLK) begin
 	update_mode_info<=0;
