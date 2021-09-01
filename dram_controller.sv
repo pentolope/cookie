@@ -92,10 +92,9 @@ reg refresh_req=0;
 reg refresh_ack=0;
 always @(posedge main_clk) begin
 	refresh_counter<=refresh_counter+1'd1;
-	// send refresh every 976 cycles. However, because of potential delays, it is sent slightly more frequently (960 cycles).
-	// this needs to be recalculated
+	// send refresh every 651 cycles. However, because of potential delays, it is sent slightly more frequently.
 	if (refresh_ack) refresh_req<=0;
-	if (refresh_counter==10'd660) begin // temp change to 660 for testing
+	if (refresh_counter==10'd620) begin
 		refresh_req<=1;
 		refresh_counter<=0;
 	end
@@ -244,10 +243,10 @@ always @(posedge main_clk) begin
 		end
 	end
 	2:begin
-		bank_status_general[0]<=7;// the delay required is 8, but 7 is set on purpose. 
-		bank_status_general[1]<=7;// 8-1 is because of how delays work using this system of decrementing.
-		bank_status_general[2]<=7;// setting a 7 causes the system to wait for 8 cycles beyond the current cycle, because the current cycle is not counted
-		bank_status_general[3]<=7;// :::::::this delay needs to be recalculated
+		bank_status_general[0]<=5;
+		bank_status_general[1]<=5;
+		bank_status_general[2]<=5;
+		bank_status_general[3]<=5;
 		DRAM_CAS_r<=0;
 		DRAM_RAS_r<=0;
 		controller_state<=1;
@@ -388,7 +387,7 @@ always @(posedge main_clk) begin
 			DRAM_DQ_rOUT<=lane_from_cache_to_dram[ 15:  0];
 		end else begin
 			controller_state<=1;
-			bank_status_general[dram_addr_bank_for_prefetch_from_saved]<=7; // delay here is just a placeholder
+			bank_status_general[dram_addr_bank_for_prefetch_from_saved]<=5;
 		end
 	end
 	28:begin
@@ -435,7 +434,7 @@ always @(posedge main_clk) begin
 	end
 	34:begin
 		controller_state<=1;
-		bank_status_general[dram_addr_bank_for_write_from_saved]<=7; // delay here is just a placeholder
+		bank_status_general[dram_addr_bank_for_write_from_saved]<=5;
 		
 		DRAM_DQM_r<=0;
 		DRAM_DQ_oe_r<=1;
@@ -523,7 +522,7 @@ always @(posedge main_clk) begin
 	end
 	52:begin
 		controller_state<=1;
-		bank_status_general[dram_addr_bank_for_write_from_saved]<=7; // delay here is just a placeholder
+		bank_status_general[dram_addr_bank_for_write_from_saved]<=5;
 		
 		DRAM_DQM_r<=0;
 		DRAM_DQ_oe_r<=1;

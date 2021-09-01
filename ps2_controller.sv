@@ -88,7 +88,7 @@ reg microsecond_tick=0; // length of one main_clk pulse every 1 microsecond
 always @(posedge main_clk) begin
 	microsecond_counter<=microsecond_counter+1'b1;
 	microsecond_tick<=0;
-	if (microsecond_counter==7'd61) begin//82
+	if (microsecond_counter==7'd82) begin//61 when at lower clock speed
 		microsecond_tick<=1;
 		microsecond_counter<=0;
 	end
