@@ -11,7 +11,6 @@ module dram_controller(
 	input  dram_controller_req_read_pulse_side_dram, // single cycle pulse
 	output dram_controller_ack_read_pulse_side_dram, // single cycle pulse
 	
-	
 	output		    [12:0]		DRAM_ADDR,
 	output		     [1:0]		DRAM_BA,
 	output		          		DRAM_CAS_N,
@@ -25,6 +24,7 @@ module dram_controller(
 	
 	input  main_clk
 );
+
 
 reg DRAM_DQ_oe_r=0; // 0==high-z  ;  1==driven by DRAM_DQ_rOUT
 reg [12:0] DRAM_ADDR_r=0;
@@ -63,10 +63,6 @@ reg [2:0] bank_status_general [3:0]='{0,0,0,0}; // the value here is a cooldown/
 
 reg [15:0] initializer_countdown_internal=16'hFFFF;
 
-//reg [15:0] initializer_countdown_internal=16'h8070; // this is for simulation to make it turn on faster
-
-
-
 reg [14:0] initializer_countdown=15'h3FFF;
 
 always @(posedge main_clk) begin
@@ -86,15 +82,14 @@ always @(posedge main_clk) begin
 	dram_controller_req_read_pending_state<=dram_controller_req_read_pending;
 end
 
-
 reg [9:0] refresh_counter=0;
 reg refresh_req=0;
 reg refresh_ack=0;
 always @(posedge main_clk) begin
 	refresh_counter<=refresh_counter+1'd1;
-	// send refresh every 651 cycles. However, because of potential delays, it is sent slightly more frequently.
+	// send refresh every 651 cycles. However, because of potential delays, it is sent slightly more frequently (620 cycles).
 	if (refresh_ack) refresh_req<=0;
-	if (refresh_counter==10'd620) begin
+	if (refresh_counter==10'd465) begin// when at lower clock speed, do 465
 		refresh_req<=1;
 		refresh_counter<=0;
 	end
@@ -233,7 +228,7 @@ always @(posedge main_clk) begin
 				prefeched_is_valid<=0;
 			end else if (bank_status_general[dram_addr_bank_for_read_from_unsaved]==0) begin
 				controller_state<=4;
-				prefeched_is_valid<=1; // prefetch will occur, bank is garenteed to be ready when it is needed (todo: check that)
+				prefeched_is_valid<=1; // prefetch will occur, bank is garenteed to be ready when it is needed
 				addr_prefetched<=addr_prefetch_next;
 				addr_for_read<=addr_req_read;
 				DRAM_RAS_r<=0;// activate command
@@ -253,7 +248,6 @@ always @(posedge main_clk) begin
 	end
 	4:begin
 		controller_state<=5;
-		
 		addr_for_write_upper<=addr_req_write_dram_side_dram;
 		write_needed_because_dirty<=dram_controller_entry_dirty_side_dram;
 		lane_from_cache_to_dram<=lane_from_cache_to_dram_side_dram;

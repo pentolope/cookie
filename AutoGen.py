@@ -2,6 +2,27 @@ from time import time
 START_TIME=time()
 import os
 
+def file_write_if_needed(fileName,isBinary,expectedContent):
+	require=False
+	try:
+		if isBinary:
+			f=open(fileName,'rb')
+		else:
+			f=open(fileName,'r')
+		require=expectedContent!=f.read()
+		f.close()
+	except FileNotFoundError: 
+		require=True
+	except:
+		raise
+	if require:
+		if isBinary:
+			f=open(fileName,'wb')
+		else:
+			f=open(fileName,'w')
+		f.write(expectedContent)
+		f.close()
+
 ############################################################
 
 
@@ -29,13 +50,10 @@ for ii0 in range(24):
 outFileList.append("assign least_used_index_calc=lookup0[raw_perm_out];")
 outFileList.append("assign raw_perm_in=lookup1[{raw_perm_out,used_index_delayed}];")
 
-del perms
+file_write_if_needed('AutoGen0.sv',False,'\n'+'\n'.join(outFileList)+'\n')
 
-f=open('AutoGen0.sv','w')
-f.write('\n'+'\n'.join(outFileList)+'\n')
-f.close()
-del f
 del outFileList
+del perms
 
 ############################################################
 
@@ -79,7 +97,7 @@ for visibleCharPictureIndex in range(95):
 img.close()
 del img
 values={}
-font_start=14400#14328
+font_start=14400
 assert ord(' ')==32
 for i in range(0,font_start,3):
 	values[i+0]=32
@@ -144,10 +162,9 @@ for i in values.keys():
 for i in value_pairs.keys():
 	outFileList.append((hex(i)[2:]+':'+hex((value_pairs[i][1]<<8)|(value_pairs[i][0]))[2:]+';').upper())
 outFileList.append('END;')
-f=open('InitVGA.mif','w')
-f.write('\n'.join(outFileList))
-f.close()
-del f
+
+file_write_if_needed('InitVGA.mif',False,'\n'.join(outFileList))
+
 del outFileList
 del values
 del value_pairs
@@ -513,12 +530,11 @@ for ii0 in range(0x10000,assemblerMemoryPreliminaryData2max+1):
 	if ii0 in assemblerMemoryPreliminaryData2:
 		v=assemblerMemoryPreliminaryData2[ii0]
 		assert len(v)==2
-		boot_bin_out.append(chr(int(v,base=16)))
+		boot_bin_out.append(bytes([int(v,base=16)]))
 	else:
-		boot_bin_out.append(chr(0))
-f=open('boot.bin','wb')
-f.write(b''.join(boot_bin_out))
-f.close()
+		boot_bin_out.append(bytes([0]))
+
+file_write_if_needed('boot.bin',True,b''.join(boot_bin_out))
 
 assemblerCacheWayInfo=[[-1,-1,-1,-1] for x in range(2 ** 11)]
 assemblerMemoryData={}
@@ -527,6 +543,7 @@ for ii0 in assemblerMemoryPreliminaryData1.keys():
 	addressLow=ii0 % 16
 	addressMiddle=(ii0 // 16) % (2 ** 11)
 	addressUpper=(ii0 // 16) // (2 ** 11)
+	assert (addressUpper%(2**11))==addressUpper # otherwise the address is too large
 	placed=False
 	for ii1 in range(4):
 		if not placed:
@@ -575,10 +592,7 @@ for ii0 in sorted(filter(lambda x:x%16==0,assemblerMemoryData.keys())):
 
 outFileList.append("END;")
 
-f=open('InitCacheData.mif','w')
-f.write('\n'+'\n'.join(outFileList)+'\n')
-f.close()
-del f
+file_write_if_needed('InitCacheData.mif',False,'\n'+'\n'.join(outFileList)+'\n')
 
 for ii0 in range(4):
 	acc='''DEPTH = 2048; % DEPTH is the number of addresses %
@@ -592,10 +606,7 @@ BEGIN'''.split('\n')
 	for ii1 in range(2**11):
 		acc.append(hex(ii1)[2:].upper()+":"+hex(assemblerCacheWayInfo[ii1][ii0])[2:].upper()+";")
 	acc.append("END;")
-	f=open('InitWay'+str(ii0)+'.mif','w')
-	f.write('\n'+'\n'.join(acc)+'\n')
-	f.close()
-	del f
+	file_write_if_needed('InitWay'+str(ii0)+'.mif',False,'\n'+'\n'.join(acc)+'\n')
 
 print('AutoGen.py : Success [Took '+str(time()-START_TIME)+' Seconds]')
 

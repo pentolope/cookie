@@ -547,9 +547,11 @@ static void _exec_springboard(){
 	__FUNCTION_RET_INSTRUCTION_ADDRESS=0x10000lu;
 }
 
+static void empty_function(){} // this is used to fulfill requirements about executing modified memory
 
 int main(){
 	Start:;
+	give_message("Bootloader Starting");
 	uint8_t buffer[512];
 	struct Folder_File_Object ffo;
 	uint8_t tb;
@@ -583,6 +585,10 @@ int main(){
 		dest+=v;
 	}
 	give_message("Bootloader Finished");
+	empty_function();
+	empty_function();
+	empty_function();
+	empty_function();
 	_exec_springboard();
 	goto Start; // this should not be reached
 }

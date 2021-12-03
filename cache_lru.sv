@@ -33,58 +33,7 @@ ip_cache_LRU ip_cache_LRU_inst(
 endmodule
 
 
-
-module cache_LRU_old( // more tested
-	output [1:0] least_used_index,
-
-	input  [8:0] addr,
-	input  [1:0] used_index,
-	input  enable_write,
-	input  main_clk
-);
-
-reg  [1:0] used_index_r;
-reg  [1:0] used_index_delayed;
-reg  enable_write_r=0;
-reg  enable_write_delayed=0;
-wire enable_write_delayed_w;assign enable_write_delayed_w=enable_write_delayed;
-reg  [10:0] read_addr=0;
-wire [10:0] read_addr_w;assign read_addr_w=read_addr;
-reg  [10:0] write_addr=0;
-wire [10:0] write_addr_w;assign write_addr_w=write_addr;
-wire [4:0] raw_perm_out;
-wire [4:0] raw_perm_in;
-reg  [1:0] least_used_index_calc_r;
-assign least_used_index=least_used_index_calc_r;
-wire [1:0] least_used_index_calc;
-
-
-`include "AutoGen0.sv"
-
-
-always @(posedge main_clk) begin
-	enable_write_r<=enable_write;
-	enable_write_delayed<=enable_write_r;
-	used_index_r<=used_index;
-	used_index_delayed<=used_index_r;
-	read_addr<=addr;
-	write_addr<=read_addr;
-	least_used_index_calc_r<=least_used_index_calc;
-end
-
-cache_LRU_sub_read_through_write cache_LRU_sub_read_through_write_inst(
-	main_clk,
-	raw_perm_in,
-	read_addr_w,
-	write_addr_w,
-	enable_write_delayed_w,
-	raw_perm_out
-);
-
-endmodule
-
-
-module cache_LRU( // partially tested, but would be two cycles faster (so that dram controller could be a little faster when already prefetched)
+module cache_LRU(
 	output [1:0] least_used_index,
 
 	input  [10:0] addr,

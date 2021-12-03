@@ -8,40 +8,45 @@ module core_executer(
 	input is_new_instruction_entering_this_cycle,
 	output is_instruction_valid_extern,
 	output is_instruction_valid_next_extern,
+	output could_instruction_be_valid_next_extern,
 	
 	input [15:0] instructionIn_extern,
 	input [ 4:0] instructionInID_extern,
 	input [25:0] instructionAddressIn_extern,
 	
-	input [16:0] generatedDependSelfRegRead,
-	input [16:0] generatedDependSelfRegWrite,
+	input [15:0] generated_rename_state_in,
+	input [15:0] generated_rename_state_out,
+	output [15:0] external_rename_state_out,
+	
+	input [32:0] generatedDependSelfRegRead,
+	input [32:0] generatedDependSelfRegWrite,
 	input [2:0] generatedDependSelfSpecial, // .[0]=jump  , .[1]=mem read  , .[2]=mem write
 	
-	output [16:0] dependSelfRegRead_extern,
-	output [16:0] dependSelfRegWrite_extern,
+	output [32:0] dependSelfRegRead_extern,
+	output [32:0] dependSelfRegWrite_extern,
 	output [2:0] dependSelfSpecial_extern,
 	
-	output [16:0] dependSelfRegRead_next_extern,
-	output [16:0] dependSelfRegWrite_next_extern,
+	output [32:0] dependSelfRegRead_next_extern,
+	output [32:0] dependSelfRegWrite_next_extern,
 	output [2:0] dependSelfSpecial_next_extern,
+	output [2:0] dependSelfSpecial_estimate_extern,
 	
-	input [16:0] dependOtherRegRead [7:0],
-	input [16:0] dependOtherRegWrite [7:0],
+	input [32:0] dependOtherRegRead [7:0],
+	input [32:0] dependOtherRegWrite [7:0],
 	input [2:0] dependOtherSpecial [7:0],
 
-	input [16:0] dependOtherRegRead_next [7:0],
-	input [16:0] dependOtherRegWrite_next [7:0],
+	input [32:0] dependOtherRegRead_next [7:0],
+	input [32:0] dependOtherRegWrite_next [7:0],
 	input [2:0] dependOtherSpecial_next [7:0],
+	input [2:0] dependOtherSpecial_estimate [7:0],
 	
 	input [7:0] isAfter,
 	input [7:0] isAfter_next,
 	
-	input [15:0] instant_user_reg [15:0],
+	input [15:0] instant_core_values [32:0],
 	
-	input [15:0] instant_stack_pointer,
-	
-	output [16:0] doWrite_extern, // doWrite[16] is stack pointer's doWrite
-	output [15:0] writeValues_extern [16:0],
+	output [32:0] doWrite_extern, // doWrite[32] is stack pointer's doWrite
+	output [15:0] writeValues_extern [32:0],
 	
 	output [ 2:0] mem_stack_access_size_extern,
 	output [31:0] mem_target_address_extern,
@@ -53,6 +58,7 @@ module core_executer(
 	output mem_is_general_access_byte_operation_extern,
 	output mem_is_general_access_requesting_extern,
 	output mem_is_stack_access_requesting_extern,
+	output mem_is_stack_access_overflowing_extern,
 	
 	input  mem_is_access_acknowledged_pulse,
 	input [7:0] memory_dependency_clear,
@@ -66,49 +72,83 @@ module core_executer(
 	input main_clk
 );
 
+reg [15:0] rename_state_in=0;
+reg [15:0] rename_state_out=0;
+
+assign external_rename_state_out=rename_state_out;
+
 reg [16:0] doWrite=0;
 reg [15:0] writeValues [16:0];
+reg [15:0] writeValues_a [16:0];
+wire [15:0] writeValues_e [16:0];
 reg is_instruction_finishing_this_cycle_pulse=0;
-assign doWrite_extern=doWrite;
+assign doWrite_extern[32]=doWrite[16];
+assign doWrite_extern[ 1: 0]=doWrite[1:0];
+assign doWrite_extern[17:16]=2'b0;
+assign doWrite_extern[15: 2]=doWrite[15:2] & ~(rename_state_out[15:2]);
+assign doWrite_extern[31:18]=doWrite[15:2] &  (rename_state_out[15:2]);
+
 assign is_instruction_finishing_this_cycle_pulse_extern=is_instruction_finishing_this_cycle_pulse;
 
-lcell_16 lc_wv0(writeValues_extern[0],writeValues[0]);
-lcell_16 lc_wv1(writeValues_extern[1],writeValues[1]);
-lcell_16 lc_wv2(writeValues_extern[2],writeValues[2]);
-lcell_16 lc_wv3(writeValues_extern[3],writeValues[3]);
-lcell_16 lc_wv4(writeValues_extern[4],writeValues[4]);
-lcell_16 lc_wv5(writeValues_extern[5],writeValues[5]);
-lcell_16 lc_wv6(writeValues_extern[6],writeValues[6]);
-lcell_16 lc_wv7(writeValues_extern[7],writeValues[7]);
-lcell_16 lc_wv8(writeValues_extern[8],writeValues[8]);
-lcell_16 lc_wv9(writeValues_extern[9],writeValues[9]);
-lcell_16 lc_wv10(writeValues_extern[10],writeValues[10]);
-lcell_16 lc_wv11(writeValues_extern[11],writeValues[11]);
-lcell_16 lc_wv12(writeValues_extern[12],writeValues[12]);
-lcell_16 lc_wv13(writeValues_extern[13],writeValues[13]);
-lcell_16 lc_wv14(writeValues_extern[14],writeValues[14]);
-lcell_16 lc_wv15(writeValues_extern[15],writeValues[15]);
-lcell_16 lc_wv16(writeValues_extern[16],writeValues[16]);
+lcell_16 lc_wv0(writeValues_e[0],writeValues[0]);
+lcell_16 lc_wv1(writeValues_e[1],writeValues[1]);
+lcell_16 lc_wv2(writeValues_e[2],writeValues[2]);
+lcell_16 lc_wv3(writeValues_e[3],writeValues[3]);
+lcell_16 lc_wv4(writeValues_e[4],writeValues[4]);
+lcell_16 lc_wv5(writeValues_e[5],writeValues[5]);
+lcell_16 lc_wv6(writeValues_e[6],writeValues[6]);
+lcell_16 lc_wv7(writeValues_e[7],writeValues[7]);
+lcell_16 lc_wv8(writeValues_e[8],writeValues[8]);
+lcell_16 lc_wv9(writeValues_e[9],writeValues[9]);
+lcell_16 lc_wv10(writeValues_e[10],writeValues[10]);
+lcell_16 lc_wv11(writeValues_e[11],writeValues[11]);
+lcell_16 lc_wv12(writeValues_e[12],writeValues[12]);
+lcell_16 lc_wv13(writeValues_e[13],writeValues[13]);
+lcell_16 lc_wv14(writeValues_e[14],writeValues[14]);
+lcell_16 lc_wv15(writeValues_e[15],writeValues[15]);
+lcell_16 lc_wv16(writeValues_e[16],writeValues[16]);
+assign writeValues_extern[0]=writeValues_e[0];assign writeValues_extern[16]=writeValues_e[0];
+assign writeValues_extern[1]=writeValues_e[1];assign writeValues_extern[17]=writeValues_e[1];
+assign writeValues_extern[2]=writeValues_e[2];assign writeValues_extern[18]=writeValues_e[2];
+assign writeValues_extern[3]=writeValues_e[3];assign writeValues_extern[19]=writeValues_e[3];
+assign writeValues_extern[4]=writeValues_e[4];assign writeValues_extern[20]=writeValues_e[4];
+assign writeValues_extern[5]=writeValues_e[5];assign writeValues_extern[21]=writeValues_e[5];
+assign writeValues_extern[6]=writeValues_e[6];assign writeValues_extern[22]=writeValues_e[6];
+assign writeValues_extern[7]=writeValues_e[7];assign writeValues_extern[23]=writeValues_e[7];
+assign writeValues_extern[8]=writeValues_e[8];assign writeValues_extern[24]=writeValues_e[8];
+assign writeValues_extern[9]=writeValues_e[9];assign writeValues_extern[25]=writeValues_e[9];
+assign writeValues_extern[10]=writeValues_e[10];assign writeValues_extern[26]=writeValues_e[10];
+assign writeValues_extern[11]=writeValues_e[11];assign writeValues_extern[27]=writeValues_e[11];
+assign writeValues_extern[12]=writeValues_e[12];assign writeValues_extern[28]=writeValues_e[12];
+assign writeValues_extern[13]=writeValues_e[13];assign writeValues_extern[29]=writeValues_e[13];
+assign writeValues_extern[14]=writeValues_e[14];assign writeValues_extern[30]=writeValues_e[14];
+assign writeValues_extern[15]=writeValues_e[15];assign writeValues_extern[31]=writeValues_e[15];
 
+assign writeValues_extern[32]=writeValues_e[16];
 
-reg [16:0] dependSelfRegRead=0;
-reg [16:0] dependSelfRegWrite=0;
+reg [32:0] dependSelfRegRead=0;
+reg [32:0] dependSelfRegWrite=0;
 reg [2:0] dependSelfSpecial=0;
 
 assign dependSelfRegRead_extern=dependSelfRegRead;
 assign dependSelfRegWrite_extern=dependSelfRegWrite;
 assign dependSelfSpecial_extern=dependSelfSpecial;
 
-reg [16:0] dependSelfRegRead_next;
-reg [16:0] dependSelfRegWrite_next;
+reg [32:0] dependSelfRegRead_next;
+reg [32:0] dependSelfRegWrite_next;
 reg [2:0] dependSelfSpecial_next;
+reg [2:0] dependSelfSpecial_estimate;
 
 assign dependSelfRegRead_next_extern=dependSelfRegRead_next;
 assign dependSelfRegWrite_next_extern=dependSelfRegWrite_next;
 assign dependSelfSpecial_next_extern=dependSelfSpecial_next;
 
+//assign dependSelfSpecial_estimate_extern=dependSelfSpecial_estimate;// temp
+//assign dependSelfSpecial_estimate_extern=dependSelfSpecial_next;//temp
+assign dependSelfSpecial_estimate_extern[0]=dependSelfSpecial_next[0];
+assign dependSelfSpecial_estimate_extern[2:1]=dependSelfSpecial_estimate[2:1];
 
-reg [16:0] resolveDependSelfRegRead;
+reg [32:0] resolveDependSelfRegRead;
 always_comb begin
 	resolveDependSelfRegRead=0;
 	
@@ -288,19 +328,173 @@ always_comb begin
 		(isAfter[7] && dependOtherRegWrite[7][15])
 		)) resolveDependSelfRegRead[15]=1'b1;
 
-	if (dependSelfRegRead[16] && !(
-		(isAfter[0] && dependOtherRegWrite[0][16]) ||
-		(isAfter[1] && dependOtherRegWrite[1][16]) ||
-		(isAfter[2] && dependOtherRegWrite[2][16]) ||
-		(isAfter[3] && dependOtherRegWrite[3][16]) ||
-		(isAfter[4] && dependOtherRegWrite[4][16]) ||
-		(isAfter[5] && dependOtherRegWrite[5][16]) ||
-		(isAfter[6] && dependOtherRegWrite[6][16]) ||
-		(isAfter[7] && dependOtherRegWrite[7][16])
-		)) resolveDependSelfRegRead[16]=1'b1;
+	if (dependSelfRegRead[18] && !(
+		(isAfter[0] && dependOtherRegWrite[0][18]) ||
+		(isAfter[1] && dependOtherRegWrite[1][18]) ||
+		(isAfter[2] && dependOtherRegWrite[2][18]) ||
+		(isAfter[3] && dependOtherRegWrite[3][18]) ||
+		(isAfter[4] && dependOtherRegWrite[4][18]) ||
+		(isAfter[5] && dependOtherRegWrite[5][18]) ||
+		(isAfter[6] && dependOtherRegWrite[6][18]) ||
+		(isAfter[7] && dependOtherRegWrite[7][18])
+		)) resolveDependSelfRegRead[18]=1'b1;
+
+	if (dependSelfRegRead[19] && !(
+		(isAfter[0] && dependOtherRegWrite[0][19]) ||
+		(isAfter[1] && dependOtherRegWrite[1][19]) ||
+		(isAfter[2] && dependOtherRegWrite[2][19]) ||
+		(isAfter[3] && dependOtherRegWrite[3][19]) ||
+		(isAfter[4] && dependOtherRegWrite[4][19]) ||
+		(isAfter[5] && dependOtherRegWrite[5][19]) ||
+		(isAfter[6] && dependOtherRegWrite[6][19]) ||
+		(isAfter[7] && dependOtherRegWrite[7][19])
+		)) resolveDependSelfRegRead[19]=1'b1;
+
+	if (dependSelfRegRead[20] && !(
+		(isAfter[0] && dependOtherRegWrite[0][20]) ||
+		(isAfter[1] && dependOtherRegWrite[1][20]) ||
+		(isAfter[2] && dependOtherRegWrite[2][20]) ||
+		(isAfter[3] && dependOtherRegWrite[3][20]) ||
+		(isAfter[4] && dependOtherRegWrite[4][20]) ||
+		(isAfter[5] && dependOtherRegWrite[5][20]) ||
+		(isAfter[6] && dependOtherRegWrite[6][20]) ||
+		(isAfter[7] && dependOtherRegWrite[7][20])
+		)) resolveDependSelfRegRead[20]=1'b1;
+
+	if (dependSelfRegRead[21] && !(
+		(isAfter[0] && dependOtherRegWrite[0][21]) ||
+		(isAfter[1] && dependOtherRegWrite[1][21]) ||
+		(isAfter[2] && dependOtherRegWrite[2][21]) ||
+		(isAfter[3] && dependOtherRegWrite[3][21]) ||
+		(isAfter[4] && dependOtherRegWrite[4][21]) ||
+		(isAfter[5] && dependOtherRegWrite[5][21]) ||
+		(isAfter[6] && dependOtherRegWrite[6][21]) ||
+		(isAfter[7] && dependOtherRegWrite[7][21])
+		)) resolveDependSelfRegRead[21]=1'b1;
+
+	if (dependSelfRegRead[22] && !(
+		(isAfter[0] && dependOtherRegWrite[0][22]) ||
+		(isAfter[1] && dependOtherRegWrite[1][22]) ||
+		(isAfter[2] && dependOtherRegWrite[2][22]) ||
+		(isAfter[3] && dependOtherRegWrite[3][22]) ||
+		(isAfter[4] && dependOtherRegWrite[4][22]) ||
+		(isAfter[5] && dependOtherRegWrite[5][22]) ||
+		(isAfter[6] && dependOtherRegWrite[6][22]) ||
+		(isAfter[7] && dependOtherRegWrite[7][22])
+		)) resolveDependSelfRegRead[22]=1'b1;
+
+	if (dependSelfRegRead[23] && !(
+		(isAfter[0] && dependOtherRegWrite[0][23]) ||
+		(isAfter[1] && dependOtherRegWrite[1][23]) ||
+		(isAfter[2] && dependOtherRegWrite[2][23]) ||
+		(isAfter[3] && dependOtherRegWrite[3][23]) ||
+		(isAfter[4] && dependOtherRegWrite[4][23]) ||
+		(isAfter[5] && dependOtherRegWrite[5][23]) ||
+		(isAfter[6] && dependOtherRegWrite[6][23]) ||
+		(isAfter[7] && dependOtherRegWrite[7][23])
+		)) resolveDependSelfRegRead[23]=1'b1;
+
+	if (dependSelfRegRead[24] && !(
+		(isAfter[0] && dependOtherRegWrite[0][24]) ||
+		(isAfter[1] && dependOtherRegWrite[1][24]) ||
+		(isAfter[2] && dependOtherRegWrite[2][24]) ||
+		(isAfter[3] && dependOtherRegWrite[3][24]) ||
+		(isAfter[4] && dependOtherRegWrite[4][24]) ||
+		(isAfter[5] && dependOtherRegWrite[5][24]) ||
+		(isAfter[6] && dependOtherRegWrite[6][24]) ||
+		(isAfter[7] && dependOtherRegWrite[7][24])
+		)) resolveDependSelfRegRead[24]=1'b1;
+
+	if (dependSelfRegRead[25] && !(
+		(isAfter[0] && dependOtherRegWrite[0][25]) ||
+		(isAfter[1] && dependOtherRegWrite[1][25]) ||
+		(isAfter[2] && dependOtherRegWrite[2][25]) ||
+		(isAfter[3] && dependOtherRegWrite[3][25]) ||
+		(isAfter[4] && dependOtherRegWrite[4][25]) ||
+		(isAfter[5] && dependOtherRegWrite[5][25]) ||
+		(isAfter[6] && dependOtherRegWrite[6][25]) ||
+		(isAfter[7] && dependOtherRegWrite[7][25])
+		)) resolveDependSelfRegRead[25]=1'b1;
+
+	if (dependSelfRegRead[26] && !(
+		(isAfter[0] && dependOtherRegWrite[0][26]) ||
+		(isAfter[1] && dependOtherRegWrite[1][26]) ||
+		(isAfter[2] && dependOtherRegWrite[2][26]) ||
+		(isAfter[3] && dependOtherRegWrite[3][26]) ||
+		(isAfter[4] && dependOtherRegWrite[4][26]) ||
+		(isAfter[5] && dependOtherRegWrite[5][26]) ||
+		(isAfter[6] && dependOtherRegWrite[6][26]) ||
+		(isAfter[7] && dependOtherRegWrite[7][26])
+		)) resolveDependSelfRegRead[26]=1'b1;
+
+	if (dependSelfRegRead[27] && !(
+		(isAfter[0] && dependOtherRegWrite[0][27]) ||
+		(isAfter[1] && dependOtherRegWrite[1][27]) ||
+		(isAfter[2] && dependOtherRegWrite[2][27]) ||
+		(isAfter[3] && dependOtherRegWrite[3][27]) ||
+		(isAfter[4] && dependOtherRegWrite[4][27]) ||
+		(isAfter[5] && dependOtherRegWrite[5][27]) ||
+		(isAfter[6] && dependOtherRegWrite[6][27]) ||
+		(isAfter[7] && dependOtherRegWrite[7][27])
+		)) resolveDependSelfRegRead[27]=1'b1;
+
+	if (dependSelfRegRead[28] && !(
+		(isAfter[0] && dependOtherRegWrite[0][28]) ||
+		(isAfter[1] && dependOtherRegWrite[1][28]) ||
+		(isAfter[2] && dependOtherRegWrite[2][28]) ||
+		(isAfter[3] && dependOtherRegWrite[3][28]) ||
+		(isAfter[4] && dependOtherRegWrite[4][28]) ||
+		(isAfter[5] && dependOtherRegWrite[5][28]) ||
+		(isAfter[6] && dependOtherRegWrite[6][28]) ||
+		(isAfter[7] && dependOtherRegWrite[7][28])
+		)) resolveDependSelfRegRead[28]=1'b1;
+
+	if (dependSelfRegRead[29] && !(
+		(isAfter[0] && dependOtherRegWrite[0][29]) ||
+		(isAfter[1] && dependOtherRegWrite[1][29]) ||
+		(isAfter[2] && dependOtherRegWrite[2][29]) ||
+		(isAfter[3] && dependOtherRegWrite[3][29]) ||
+		(isAfter[4] && dependOtherRegWrite[4][29]) ||
+		(isAfter[5] && dependOtherRegWrite[5][29]) ||
+		(isAfter[6] && dependOtherRegWrite[6][29]) ||
+		(isAfter[7] && dependOtherRegWrite[7][29])
+		)) resolveDependSelfRegRead[29]=1'b1;
+
+	if (dependSelfRegRead[30] && !(
+		(isAfter[0] && dependOtherRegWrite[0][30]) ||
+		(isAfter[1] && dependOtherRegWrite[1][30]) ||
+		(isAfter[2] && dependOtherRegWrite[2][30]) ||
+		(isAfter[3] && dependOtherRegWrite[3][30]) ||
+		(isAfter[4] && dependOtherRegWrite[4][30]) ||
+		(isAfter[5] && dependOtherRegWrite[5][30]) ||
+		(isAfter[6] && dependOtherRegWrite[6][30]) ||
+		(isAfter[7] && dependOtherRegWrite[7][30])
+		)) resolveDependSelfRegRead[30]=1'b1;
+
+	if (dependSelfRegRead[31] && !(
+		(isAfter[0] && dependOtherRegWrite[0][31]) ||
+		(isAfter[1] && dependOtherRegWrite[1][31]) ||
+		(isAfter[2] && dependOtherRegWrite[2][31]) ||
+		(isAfter[3] && dependOtherRegWrite[3][31]) ||
+		(isAfter[4] && dependOtherRegWrite[4][31]) ||
+		(isAfter[5] && dependOtherRegWrite[5][31]) ||
+		(isAfter[6] && dependOtherRegWrite[6][31]) ||
+		(isAfter[7] && dependOtherRegWrite[7][31])
+		)) resolveDependSelfRegRead[31]=1'b1;
+
+	if (dependSelfRegRead[32] && !(
+		(isAfter[0] && dependOtherRegWrite[0][32]) ||
+		(isAfter[1] && dependOtherRegWrite[1][32]) ||
+		(isAfter[2] && dependOtherRegWrite[2][32]) ||
+		(isAfter[3] && dependOtherRegWrite[3][32]) ||
+		(isAfter[4] && dependOtherRegWrite[4][32]) ||
+		(isAfter[5] && dependOtherRegWrite[5][32]) ||
+		(isAfter[6] && dependOtherRegWrite[6][32]) ||
+		(isAfter[7] && dependOtherRegWrite[7][32])
+		)) resolveDependSelfRegRead[32]=1'b1;
 end
 
-reg [16:0] unreadyDependSelfRegWrite;
+reg [32:0] unreadyDependSelfRegWrite;
 always_comb begin
 	unreadyDependSelfRegWrite=0;
 	
@@ -480,60 +674,255 @@ always_comb begin
 		(isAfter[7] && (dependOtherRegRead[7][15] || dependOtherRegWrite[7][15]))
 		)) unreadyDependSelfRegWrite[15]=1'b1;
 
-	if (dependSelfRegWrite[16] && (
-		(isAfter[0] && (dependOtherRegRead[0][16] || dependOtherRegWrite[0][16])) ||
-		(isAfter[1] && (dependOtherRegRead[1][16] || dependOtherRegWrite[1][16])) ||
-		(isAfter[2] && (dependOtherRegRead[2][16] || dependOtherRegWrite[2][16])) ||
-		(isAfter[3] && (dependOtherRegRead[3][16] || dependOtherRegWrite[3][16])) ||
-		(isAfter[4] && (dependOtherRegRead[4][16] || dependOtherRegWrite[4][16])) ||
-		(isAfter[5] && (dependOtherRegRead[5][16] || dependOtherRegWrite[5][16])) ||
-		(isAfter[6] && (dependOtherRegRead[6][16] || dependOtherRegWrite[6][16])) ||
-		(isAfter[7] && (dependOtherRegRead[7][16] || dependOtherRegWrite[7][16]))
-		)) unreadyDependSelfRegWrite[16]=1'b1;
+	if (dependSelfRegWrite[18] && (
+		(isAfter[0] && (dependOtherRegRead[0][18] || dependOtherRegWrite[0][18])) ||
+		(isAfter[1] && (dependOtherRegRead[1][18] || dependOtherRegWrite[1][18])) ||
+		(isAfter[2] && (dependOtherRegRead[2][18] || dependOtherRegWrite[2][18])) ||
+		(isAfter[3] && (dependOtherRegRead[3][18] || dependOtherRegWrite[3][18])) ||
+		(isAfter[4] && (dependOtherRegRead[4][18] || dependOtherRegWrite[4][18])) ||
+		(isAfter[5] && (dependOtherRegRead[5][18] || dependOtherRegWrite[5][18])) ||
+		(isAfter[6] && (dependOtherRegRead[6][18] || dependOtherRegWrite[6][18])) ||
+		(isAfter[7] && (dependOtherRegRead[7][18] || dependOtherRegWrite[7][18]))
+		)) unreadyDependSelfRegWrite[18]=1'b1;
+
+	if (dependSelfRegWrite[19] && (
+		(isAfter[0] && (dependOtherRegRead[0][19] || dependOtherRegWrite[0][19])) ||
+		(isAfter[1] && (dependOtherRegRead[1][19] || dependOtherRegWrite[1][19])) ||
+		(isAfter[2] && (dependOtherRegRead[2][19] || dependOtherRegWrite[2][19])) ||
+		(isAfter[3] && (dependOtherRegRead[3][19] || dependOtherRegWrite[3][19])) ||
+		(isAfter[4] && (dependOtherRegRead[4][19] || dependOtherRegWrite[4][19])) ||
+		(isAfter[5] && (dependOtherRegRead[5][19] || dependOtherRegWrite[5][19])) ||
+		(isAfter[6] && (dependOtherRegRead[6][19] || dependOtherRegWrite[6][19])) ||
+		(isAfter[7] && (dependOtherRegRead[7][19] || dependOtherRegWrite[7][19]))
+		)) unreadyDependSelfRegWrite[19]=1'b1;
+
+	if (dependSelfRegWrite[20] && (
+		(isAfter[0] && (dependOtherRegRead[0][20] || dependOtherRegWrite[0][20])) ||
+		(isAfter[1] && (dependOtherRegRead[1][20] || dependOtherRegWrite[1][20])) ||
+		(isAfter[2] && (dependOtherRegRead[2][20] || dependOtherRegWrite[2][20])) ||
+		(isAfter[3] && (dependOtherRegRead[3][20] || dependOtherRegWrite[3][20])) ||
+		(isAfter[4] && (dependOtherRegRead[4][20] || dependOtherRegWrite[4][20])) ||
+		(isAfter[5] && (dependOtherRegRead[5][20] || dependOtherRegWrite[5][20])) ||
+		(isAfter[6] && (dependOtherRegRead[6][20] || dependOtherRegWrite[6][20])) ||
+		(isAfter[7] && (dependOtherRegRead[7][20] || dependOtherRegWrite[7][20]))
+		)) unreadyDependSelfRegWrite[20]=1'b1;
+
+	if (dependSelfRegWrite[21] && (
+		(isAfter[0] && (dependOtherRegRead[0][21] || dependOtherRegWrite[0][21])) ||
+		(isAfter[1] && (dependOtherRegRead[1][21] || dependOtherRegWrite[1][21])) ||
+		(isAfter[2] && (dependOtherRegRead[2][21] || dependOtherRegWrite[2][21])) ||
+		(isAfter[3] && (dependOtherRegRead[3][21] || dependOtherRegWrite[3][21])) ||
+		(isAfter[4] && (dependOtherRegRead[4][21] || dependOtherRegWrite[4][21])) ||
+		(isAfter[5] && (dependOtherRegRead[5][21] || dependOtherRegWrite[5][21])) ||
+		(isAfter[6] && (dependOtherRegRead[6][21] || dependOtherRegWrite[6][21])) ||
+		(isAfter[7] && (dependOtherRegRead[7][21] || dependOtherRegWrite[7][21]))
+		)) unreadyDependSelfRegWrite[21]=1'b1;
+
+	if (dependSelfRegWrite[22] && (
+		(isAfter[0] && (dependOtherRegRead[0][22] || dependOtherRegWrite[0][22])) ||
+		(isAfter[1] && (dependOtherRegRead[1][22] || dependOtherRegWrite[1][22])) ||
+		(isAfter[2] && (dependOtherRegRead[2][22] || dependOtherRegWrite[2][22])) ||
+		(isAfter[3] && (dependOtherRegRead[3][22] || dependOtherRegWrite[3][22])) ||
+		(isAfter[4] && (dependOtherRegRead[4][22] || dependOtherRegWrite[4][22])) ||
+		(isAfter[5] && (dependOtherRegRead[5][22] || dependOtherRegWrite[5][22])) ||
+		(isAfter[6] && (dependOtherRegRead[6][22] || dependOtherRegWrite[6][22])) ||
+		(isAfter[7] && (dependOtherRegRead[7][22] || dependOtherRegWrite[7][22]))
+		)) unreadyDependSelfRegWrite[22]=1'b1;
+
+	if (dependSelfRegWrite[23] && (
+		(isAfter[0] && (dependOtherRegRead[0][23] || dependOtherRegWrite[0][23])) ||
+		(isAfter[1] && (dependOtherRegRead[1][23] || dependOtherRegWrite[1][23])) ||
+		(isAfter[2] && (dependOtherRegRead[2][23] || dependOtherRegWrite[2][23])) ||
+		(isAfter[3] && (dependOtherRegRead[3][23] || dependOtherRegWrite[3][23])) ||
+		(isAfter[4] && (dependOtherRegRead[4][23] || dependOtherRegWrite[4][23])) ||
+		(isAfter[5] && (dependOtherRegRead[5][23] || dependOtherRegWrite[5][23])) ||
+		(isAfter[6] && (dependOtherRegRead[6][23] || dependOtherRegWrite[6][23])) ||
+		(isAfter[7] && (dependOtherRegRead[7][23] || dependOtherRegWrite[7][23]))
+		)) unreadyDependSelfRegWrite[23]=1'b1;
+
+	if (dependSelfRegWrite[24] && (
+		(isAfter[0] && (dependOtherRegRead[0][24] || dependOtherRegWrite[0][24])) ||
+		(isAfter[1] && (dependOtherRegRead[1][24] || dependOtherRegWrite[1][24])) ||
+		(isAfter[2] && (dependOtherRegRead[2][24] || dependOtherRegWrite[2][24])) ||
+		(isAfter[3] && (dependOtherRegRead[3][24] || dependOtherRegWrite[3][24])) ||
+		(isAfter[4] && (dependOtherRegRead[4][24] || dependOtherRegWrite[4][24])) ||
+		(isAfter[5] && (dependOtherRegRead[5][24] || dependOtherRegWrite[5][24])) ||
+		(isAfter[6] && (dependOtherRegRead[6][24] || dependOtherRegWrite[6][24])) ||
+		(isAfter[7] && (dependOtherRegRead[7][24] || dependOtherRegWrite[7][24]))
+		)) unreadyDependSelfRegWrite[24]=1'b1;
+
+	if (dependSelfRegWrite[25] && (
+		(isAfter[0] && (dependOtherRegRead[0][25] || dependOtherRegWrite[0][25])) ||
+		(isAfter[1] && (dependOtherRegRead[1][25] || dependOtherRegWrite[1][25])) ||
+		(isAfter[2] && (dependOtherRegRead[2][25] || dependOtherRegWrite[2][25])) ||
+		(isAfter[3] && (dependOtherRegRead[3][25] || dependOtherRegWrite[3][25])) ||
+		(isAfter[4] && (dependOtherRegRead[4][25] || dependOtherRegWrite[4][25])) ||
+		(isAfter[5] && (dependOtherRegRead[5][25] || dependOtherRegWrite[5][25])) ||
+		(isAfter[6] && (dependOtherRegRead[6][25] || dependOtherRegWrite[6][25])) ||
+		(isAfter[7] && (dependOtherRegRead[7][25] || dependOtherRegWrite[7][25]))
+		)) unreadyDependSelfRegWrite[25]=1'b1;
+
+	if (dependSelfRegWrite[26] && (
+		(isAfter[0] && (dependOtherRegRead[0][26] || dependOtherRegWrite[0][26])) ||
+		(isAfter[1] && (dependOtherRegRead[1][26] || dependOtherRegWrite[1][26])) ||
+		(isAfter[2] && (dependOtherRegRead[2][26] || dependOtherRegWrite[2][26])) ||
+		(isAfter[3] && (dependOtherRegRead[3][26] || dependOtherRegWrite[3][26])) ||
+		(isAfter[4] && (dependOtherRegRead[4][26] || dependOtherRegWrite[4][26])) ||
+		(isAfter[5] && (dependOtherRegRead[5][26] || dependOtherRegWrite[5][26])) ||
+		(isAfter[6] && (dependOtherRegRead[6][26] || dependOtherRegWrite[6][26])) ||
+		(isAfter[7] && (dependOtherRegRead[7][26] || dependOtherRegWrite[7][26]))
+		)) unreadyDependSelfRegWrite[26]=1'b1;
+
+	if (dependSelfRegWrite[27] && (
+		(isAfter[0] && (dependOtherRegRead[0][27] || dependOtherRegWrite[0][27])) ||
+		(isAfter[1] && (dependOtherRegRead[1][27] || dependOtherRegWrite[1][27])) ||
+		(isAfter[2] && (dependOtherRegRead[2][27] || dependOtherRegWrite[2][27])) ||
+		(isAfter[3] && (dependOtherRegRead[3][27] || dependOtherRegWrite[3][27])) ||
+		(isAfter[4] && (dependOtherRegRead[4][27] || dependOtherRegWrite[4][27])) ||
+		(isAfter[5] && (dependOtherRegRead[5][27] || dependOtherRegWrite[5][27])) ||
+		(isAfter[6] && (dependOtherRegRead[6][27] || dependOtherRegWrite[6][27])) ||
+		(isAfter[7] && (dependOtherRegRead[7][27] || dependOtherRegWrite[7][27]))
+		)) unreadyDependSelfRegWrite[27]=1'b1;
+
+	if (dependSelfRegWrite[28] && (
+		(isAfter[0] && (dependOtherRegRead[0][28] || dependOtherRegWrite[0][28])) ||
+		(isAfter[1] && (dependOtherRegRead[1][28] || dependOtherRegWrite[1][28])) ||
+		(isAfter[2] && (dependOtherRegRead[2][28] || dependOtherRegWrite[2][28])) ||
+		(isAfter[3] && (dependOtherRegRead[3][28] || dependOtherRegWrite[3][28])) ||
+		(isAfter[4] && (dependOtherRegRead[4][28] || dependOtherRegWrite[4][28])) ||
+		(isAfter[5] && (dependOtherRegRead[5][28] || dependOtherRegWrite[5][28])) ||
+		(isAfter[6] && (dependOtherRegRead[6][28] || dependOtherRegWrite[6][28])) ||
+		(isAfter[7] && (dependOtherRegRead[7][28] || dependOtherRegWrite[7][28]))
+		)) unreadyDependSelfRegWrite[28]=1'b1;
+
+	if (dependSelfRegWrite[29] && (
+		(isAfter[0] && (dependOtherRegRead[0][29] || dependOtherRegWrite[0][29])) ||
+		(isAfter[1] && (dependOtherRegRead[1][29] || dependOtherRegWrite[1][29])) ||
+		(isAfter[2] && (dependOtherRegRead[2][29] || dependOtherRegWrite[2][29])) ||
+		(isAfter[3] && (dependOtherRegRead[3][29] || dependOtherRegWrite[3][29])) ||
+		(isAfter[4] && (dependOtherRegRead[4][29] || dependOtherRegWrite[4][29])) ||
+		(isAfter[5] && (dependOtherRegRead[5][29] || dependOtherRegWrite[5][29])) ||
+		(isAfter[6] && (dependOtherRegRead[6][29] || dependOtherRegWrite[6][29])) ||
+		(isAfter[7] && (dependOtherRegRead[7][29] || dependOtherRegWrite[7][29]))
+		)) unreadyDependSelfRegWrite[29]=1'b1;
+
+	if (dependSelfRegWrite[30] && (
+		(isAfter[0] && (dependOtherRegRead[0][30] || dependOtherRegWrite[0][30])) ||
+		(isAfter[1] && (dependOtherRegRead[1][30] || dependOtherRegWrite[1][30])) ||
+		(isAfter[2] && (dependOtherRegRead[2][30] || dependOtherRegWrite[2][30])) ||
+		(isAfter[3] && (dependOtherRegRead[3][30] || dependOtherRegWrite[3][30])) ||
+		(isAfter[4] && (dependOtherRegRead[4][30] || dependOtherRegWrite[4][30])) ||
+		(isAfter[5] && (dependOtherRegRead[5][30] || dependOtherRegWrite[5][30])) ||
+		(isAfter[6] && (dependOtherRegRead[6][30] || dependOtherRegWrite[6][30])) ||
+		(isAfter[7] && (dependOtherRegRead[7][30] || dependOtherRegWrite[7][30]))
+		)) unreadyDependSelfRegWrite[30]=1'b1;
+
+	if (dependSelfRegWrite[31] && (
+		(isAfter[0] && (dependOtherRegRead[0][31] || dependOtherRegWrite[0][31])) ||
+		(isAfter[1] && (dependOtherRegRead[1][31] || dependOtherRegWrite[1][31])) ||
+		(isAfter[2] && (dependOtherRegRead[2][31] || dependOtherRegWrite[2][31])) ||
+		(isAfter[3] && (dependOtherRegRead[3][31] || dependOtherRegWrite[3][31])) ||
+		(isAfter[4] && (dependOtherRegRead[4][31] || dependOtherRegWrite[4][31])) ||
+		(isAfter[5] && (dependOtherRegRead[5][31] || dependOtherRegWrite[5][31])) ||
+		(isAfter[6] && (dependOtherRegRead[6][31] || dependOtherRegWrite[6][31])) ||
+		(isAfter[7] && (dependOtherRegRead[7][31] || dependOtherRegWrite[7][31]))
+		)) unreadyDependSelfRegWrite[31]=1'b1;
+
+	if (dependSelfRegWrite[32] && (
+		(isAfter[0] && (dependOtherRegRead[0][32] || dependOtherRegWrite[0][32])) ||
+		(isAfter[1] && (dependOtherRegRead[1][32] || dependOtherRegWrite[1][32])) ||
+		(isAfter[2] && (dependOtherRegRead[2][32] || dependOtherRegWrite[2][32])) ||
+		(isAfter[3] && (dependOtherRegRead[3][32] || dependOtherRegWrite[3][32])) ||
+		(isAfter[4] && (dependOtherRegRead[4][32] || dependOtherRegWrite[4][32])) ||
+		(isAfter[5] && (dependOtherRegRead[5][32] || dependOtherRegWrite[5][32])) ||
+		(isAfter[6] && (dependOtherRegRead[6][32] || dependOtherRegWrite[6][32])) ||
+		(isAfter[7] && (dependOtherRegRead[7][32] || dependOtherRegWrite[7][32]))
+		)) unreadyDependSelfRegWrite[32]=1'b1;
 end
 
-wire isUnblocked;
-reg [3:0] isUnblockedPieces=0;
-lcell_1 lc_isUnblocked(isUnblocked,(isUnblockedPieces[0] && isUnblockedPieces[1] && isUnblockedPieces[2] && isUnblockedPieces[3])?1'b1:1'b0);
+reg isUnblocked=0;
+reg isMemUnblocked=0;
+wire willMemBeUnblocked;
+wire [7:0] isMemUnblockedSourceValues;
+wire [41:0] isUnblockedSourceValues;
+wire [37:0] isUnblockedSourceValues0_lc;
+wire [ 1:0] isUnblockedSourceValues1_lc;
+
+assign isUnblockedSourceValues[32:0]=(dependSelfRegRead & ~resolveDependSelfRegRead) | unreadyDependSelfRegWrite;
+assign isUnblockedSourceValues[33]=is_new_instruction_entering_this_cycle;
+
+
+assign isUnblockedSourceValues[34]=(isAfter_next[0] && dependOtherSpecial_estimate[0][0])? 1'b1:1'b0;
+assign isUnblockedSourceValues[35]=(isAfter_next[1] && dependOtherSpecial_estimate[1][0])? 1'b1:1'b0;
+assign isUnblockedSourceValues[36]=(isAfter_next[2] && dependOtherSpecial_estimate[2][0])? 1'b1:1'b0;
+assign isUnblockedSourceValues[37]=(isAfter_next[3] && dependOtherSpecial_estimate[3][0])? 1'b1:1'b0;
+assign isUnblockedSourceValues[38]=(isAfter_next[4] && dependOtherSpecial_estimate[4][0])? 1'b1:1'b0;
+assign isUnblockedSourceValues[39]=(isAfter_next[5] && dependOtherSpecial_estimate[5][0])? 1'b1:1'b0;
+assign isUnblockedSourceValues[40]=(isAfter_next[6] && dependOtherSpecial_estimate[6][0])? 1'b1:1'b0;
+assign isUnblockedSourceValues[41]=(isAfter_next[7] && dependOtherSpecial_estimate[7][0])? 1'b1:1'b0;
+
+assign isMemUnblockedSourceValues[0]=(isAfter_next[0] && ((dependSelfSpecial[2] && dependOtherSpecial_estimate[0][1]) || ((dependSelfSpecial[2] || dependSelfSpecial[1]) && dependOtherSpecial_estimate[0][2])))? 1'b1:1'b0;
+assign isMemUnblockedSourceValues[1]=(isAfter_next[1] && ((dependSelfSpecial[2] && dependOtherSpecial_estimate[1][1]) || ((dependSelfSpecial[2] || dependSelfSpecial[1]) && dependOtherSpecial_estimate[1][2])))? 1'b1:1'b0;
+assign isMemUnblockedSourceValues[2]=(isAfter_next[2] && ((dependSelfSpecial[2] && dependOtherSpecial_estimate[2][1]) || ((dependSelfSpecial[2] || dependSelfSpecial[1]) && dependOtherSpecial_estimate[2][2])))? 1'b1:1'b0;
+assign isMemUnblockedSourceValues[3]=(isAfter_next[3] && ((dependSelfSpecial[2] && dependOtherSpecial_estimate[3][1]) || ((dependSelfSpecial[2] || dependSelfSpecial[1]) && dependOtherSpecial_estimate[3][2])))? 1'b1:1'b0;
+assign isMemUnblockedSourceValues[4]=(isAfter_next[4] && ((dependSelfSpecial[2] && dependOtherSpecial_estimate[4][1]) || ((dependSelfSpecial[2] || dependSelfSpecial[1]) && dependOtherSpecial_estimate[4][2])))? 1'b1:1'b0;
+assign isMemUnblockedSourceValues[5]=(isAfter_next[5] && ((dependSelfSpecial[2] && dependOtherSpecial_estimate[5][1]) || ((dependSelfSpecial[2] || dependSelfSpecial[1]) && dependOtherSpecial_estimate[5][2])))? 1'b1:1'b0;
+assign isMemUnblockedSourceValues[6]=(isAfter_next[6] && ((dependSelfSpecial[2] && dependOtherSpecial_estimate[6][1]) || ((dependSelfSpecial[2] || dependSelfSpecial[1]) && dependOtherSpecial_estimate[6][2])))? 1'b1:1'b0;
+assign isMemUnblockedSourceValues[7]=(isAfter_next[7] && ((dependSelfSpecial[2] && dependOtherSpecial_estimate[7][1]) || ((dependSelfSpecial[2] || dependSelfSpecial[1]) && dependOtherSpecial_estimate[7][2])))? 1'b1:1'b0;
+
+lcell_1 lcWillMemBeUnblocked(willMemBeUnblocked,(isMemUnblockedSourceValues==8'h0)? 1'b1:1'b0);
 always @(posedge main_clk) begin
-	isUnblockedPieces[0]<=1;
-	isUnblockedPieces[1]<=1;
-	isUnblockedPieces[2]<=1;
-	isUnblockedPieces[3]<=1;
-	if (is_new_instruction_entering_this_cycle) isUnblockedPieces[1]<=0;
-	if (dependSelfRegRead_next[7:0]!=8'h0) isUnblockedPieces[1]<=0;
-	if (dependSelfRegRead_next[16:8]!=9'h0) isUnblockedPieces[0]<=0;
-	if (unreadyDependSelfRegWrite!=17'h0) isUnblockedPieces[1]<=0; // this check using unreadyDependSelfRegWrite could be more advanced, an instruction could start without this (but especially for memory instructions, there would have to be some handling if it isn't ready to write when the data comes in).
-	
-	if (isAfter_next[0] && dependOtherSpecial_next[0][0]) isUnblockedPieces[2]<=0;
-	if (isAfter_next[1] && dependOtherSpecial_next[1][0]) isUnblockedPieces[2]<=0;
-	if (isAfter_next[2] && dependOtherSpecial_next[2][0]) isUnblockedPieces[2]<=0;
-	if (isAfter_next[3] && dependOtherSpecial_next[3][0]) isUnblockedPieces[2]<=0;
-	if (isAfter_next[4] && dependOtherSpecial_next[4][0]) isUnblockedPieces[3]<=0;
-	if (isAfter_next[5] && dependOtherSpecial_next[5][0]) isUnblockedPieces[3]<=0;
-	if (isAfter_next[6] && dependOtherSpecial_next[6][0]) isUnblockedPieces[3]<=0;
-	if (isAfter_next[7] && dependOtherSpecial_next[7][0]) isUnblockedPieces[3]<=0;
-	
-	if (dependSelfSpecial_next[1]) begin
-		if (isAfter_next[0] && dependOtherSpecial_next[0][2]) isUnblockedPieces[2]<=0;
-		if (isAfter_next[1] && dependOtherSpecial_next[1][2]) isUnblockedPieces[2]<=0;
-		if (isAfter_next[2] && dependOtherSpecial_next[2][2]) isUnblockedPieces[2]<=0;
-		if (isAfter_next[3] && dependOtherSpecial_next[3][2]) isUnblockedPieces[2]<=0;
-		if (isAfter_next[4] && dependOtherSpecial_next[4][2]) isUnblockedPieces[3]<=0;
-		if (isAfter_next[5] && dependOtherSpecial_next[5][2]) isUnblockedPieces[3]<=0;
-		if (isAfter_next[6] && dependOtherSpecial_next[6][2]) isUnblockedPieces[3]<=0;
-		if (isAfter_next[7] && dependOtherSpecial_next[7][2]) isUnblockedPieces[3]<=0;
-	end
-	if (dependSelfSpecial_next[2]) begin
-		if (isAfter_next[0] && (dependOtherSpecial_next[0][2] || dependOtherSpecial_next[0][1])) isUnblockedPieces[2]<=0;
-		if (isAfter_next[1] && (dependOtherSpecial_next[1][2] || dependOtherSpecial_next[1][1])) isUnblockedPieces[2]<=0;
-		if (isAfter_next[2] && (dependOtherSpecial_next[2][2] || dependOtherSpecial_next[2][1])) isUnblockedPieces[2]<=0;
-		if (isAfter_next[3] && (dependOtherSpecial_next[3][2] || dependOtherSpecial_next[3][1])) isUnblockedPieces[2]<=0;
-		if (isAfter_next[4] && (dependOtherSpecial_next[4][2] || dependOtherSpecial_next[4][1])) isUnblockedPieces[3]<=0;
-		if (isAfter_next[5] && (dependOtherSpecial_next[5][2] || dependOtherSpecial_next[5][1])) isUnblockedPieces[3]<=0;
-		if (isAfter_next[6] && (dependOtherSpecial_next[6][2] || dependOtherSpecial_next[6][1])) isUnblockedPieces[3]<=0;
-		if (isAfter_next[7] && (dependOtherSpecial_next[7][2] || dependOtherSpecial_next[7][1])) isUnblockedPieces[3]<=0;
-	end
+	isMemUnblocked<=willMemBeUnblocked;
+end
+
+
+lcell unblocked0_lc(.out(isUnblockedSourceValues0_lc[0]), .in(isUnblockedSourceValues[0]));
+lcell unblocked1_lc(.out(isUnblockedSourceValues0_lc[1]), .in(isUnblockedSourceValues[1]));
+lcell unblocked2_lc(.out(isUnblockedSourceValues0_lc[2]), .in(isUnblockedSourceValues[2]));
+lcell unblocked3_lc(.out(isUnblockedSourceValues0_lc[3]), .in(isUnblockedSourceValues[3]));
+lcell unblocked4_lc(.out(isUnblockedSourceValues0_lc[4]), .in(isUnblockedSourceValues[4]));
+lcell unblocked5_lc(.out(isUnblockedSourceValues0_lc[5]), .in(isUnblockedSourceValues[5]));
+lcell unblocked6_lc(.out(isUnblockedSourceValues0_lc[6]), .in(isUnblockedSourceValues[6]));
+lcell unblocked7_lc(.out(isUnblockedSourceValues0_lc[7]), .in(isUnblockedSourceValues[7]));
+lcell unblocked8_lc(.out(isUnblockedSourceValues0_lc[8]), .in(isUnblockedSourceValues[8]));
+lcell unblocked9_lc(.out(isUnblockedSourceValues0_lc[9]), .in(isUnblockedSourceValues[9]));
+lcell unblocked10_lc(.out(isUnblockedSourceValues0_lc[10]), .in(isUnblockedSourceValues[10]));
+lcell unblocked11_lc(.out(isUnblockedSourceValues0_lc[11]), .in(isUnblockedSourceValues[11]));
+lcell unblocked12_lc(.out(isUnblockedSourceValues0_lc[12]), .in(isUnblockedSourceValues[12]));
+lcell unblocked13_lc(.out(isUnblockedSourceValues0_lc[13]), .in(isUnblockedSourceValues[13]));
+lcell unblocked14_lc(.out(isUnblockedSourceValues0_lc[14]), .in(isUnblockedSourceValues[14]));
+lcell unblocked15_lc(.out(isUnblockedSourceValues0_lc[15]), .in(isUnblockedSourceValues[15]));
+lcell unblocked16_lc(.out(isUnblockedSourceValues0_lc[16]), .in(isUnblockedSourceValues[16]));
+lcell unblocked17_lc(.out(isUnblockedSourceValues0_lc[17]), .in(isUnblockedSourceValues[17]));
+lcell unblocked18_lc(.out(isUnblockedSourceValues0_lc[18]), .in(isUnblockedSourceValues[18]));
+lcell unblocked19_lc(.out(isUnblockedSourceValues0_lc[19]), .in(isUnblockedSourceValues[19]));
+lcell unblocked20_lc(.out(isUnblockedSourceValues0_lc[20]), .in(isUnblockedSourceValues[20]));
+lcell unblocked21_lc(.out(isUnblockedSourceValues0_lc[21]), .in(isUnblockedSourceValues[21]));
+lcell unblocked22_lc(.out(isUnblockedSourceValues0_lc[22]), .in(isUnblockedSourceValues[22]));
+lcell unblocked23_lc(.out(isUnblockedSourceValues0_lc[23]), .in(isUnblockedSourceValues[23]));
+lcell unblocked24_lc(.out(isUnblockedSourceValues0_lc[24]), .in(isUnblockedSourceValues[24]));
+lcell unblocked25_lc(.out(isUnblockedSourceValues0_lc[25]), .in(isUnblockedSourceValues[25]));
+lcell unblocked26_lc(.out(isUnblockedSourceValues0_lc[26]), .in(isUnblockedSourceValues[26]));
+lcell unblocked27_lc(.out(isUnblockedSourceValues0_lc[27]), .in(isUnblockedSourceValues[27]));
+lcell unblocked28_lc(.out(isUnblockedSourceValues0_lc[28]), .in(isUnblockedSourceValues[28]));
+lcell unblocked29_lc(.out(isUnblockedSourceValues0_lc[29]), .in(isUnblockedSourceValues[29]));
+lcell unblocked30_lc(.out(isUnblockedSourceValues0_lc[30]), .in(isUnblockedSourceValues[30]));
+lcell unblocked31_lc(.out(isUnblockedSourceValues0_lc[31]), .in(isUnblockedSourceValues[31]));
+lcell unblocked32_lc(.out(isUnblockedSourceValues0_lc[32]), .in(isUnblockedSourceValues[32]));
+lcell unblocked33_lc(.out(isUnblockedSourceValues0_lc[33]), .in(isUnblockedSourceValues[33]));
+
+lcell unblocked34_lc(.out(isUnblockedSourceValues0_lc[34]), .in(isUnblockedSourceValues[34] | isUnblockedSourceValues[35]));
+lcell unblocked35_lc(.out(isUnblockedSourceValues0_lc[35]), .in(isUnblockedSourceValues[36] | isUnblockedSourceValues[37]));
+lcell unblocked36_lc(.out(isUnblockedSourceValues0_lc[36]), .in(isUnblockedSourceValues[38] | isUnblockedSourceValues[39]));
+lcell unblocked37_lc(.out(isUnblockedSourceValues0_lc[37]), .in(isUnblockedSourceValues[40] | isUnblockedSourceValues[41]));
+
+lcell unblocked38_lc(.out(isUnblockedSourceValues1_lc[0]), .in((isUnblockedSourceValues0_lc[33: 0]==34'h0)? 1'b0:1'b1));
+lcell unblocked39_lc(.out(isUnblockedSourceValues1_lc[1]), .in((isUnblockedSourceValues0_lc[37:34]== 4'h0)? 1'b0:1'b1));
+
+
+always @(posedge main_clk) begin
+	//isUnblockedSourceValues_r<=isUnblockedSourceValues0_lc;
+	isUnblocked<=(isUnblockedSourceValues1_lc==2'h0)? 1'b1:1'b0;
 end
 
 reg jump_signal=0;
@@ -541,13 +930,20 @@ reg jump_signal_next;
 assign jump_signal_extern=jump_signal;
 assign jump_signal_next_extern=jump_signal_next;
 
-reg void_current_instruction=0;
-always @(posedge main_clk) void_current_instruction<=(!jumpIndex_next[3] && isAfter_next[jumpIndex_next[2:0]])?1'b1:1'b0;
+reg [7:0] isAfter_forVoidSelf;
+always_comb begin
+	isAfter_forVoidSelf=isAfter_next;
+	isAfter_forVoidSelf[selfIndex]=is_new_instruction_entering_this_cycle;
+end
 
+reg void_current_instruction=0;
+//always @(posedge main_clk) void_current_instruction<=(!jumpIndex_next[3] && (isAfter[jumpIndex_next[2:0]] || (jumpIndex_next[2:0]==selfIndex && is_new_instruction_entering_this_cycle)))?1'b1:1'b0;
+always @(posedge main_clk) void_current_instruction<=(!jumpIndex_next[3] && (isAfter_forVoidSelf[jumpIndex_next[2:0]]))?1'b1:1'b0;
 
 reg [15:0] instructionIn=0;
 reg [ 4:0] instructionInID=0;
 reg [ 3:0] state=0;
+
 
 reg [15:0] user_reg [15:0];
 reg [15:0] stack_pointer;
@@ -714,6 +1110,7 @@ always_comb begin
 end
 always_comb temporary1={instructionIn[11:4],1'b0} + user_reg[4'h1];
 
+
 reg [15:0] mul16TempVal [2:0];
 always @(posedge main_clk) mul16TempVal[0]<=vr0[ 7:0]*vr1[ 7:0];
 always @(posedge main_clk) mul16TempVal[1]<=vr0[15:8]*vr1[ 7:0];
@@ -723,6 +1120,11 @@ always_comb mul16Temp[ 7:0]=mul16TempVal[0][ 7:0];
 always_comb mul16Temp[15:8]=mul16TempVal[0][15:8]+mul16TempVal[1][ 7:0]+mul16TempVal[2][ 7:0];
 
 
+wire [15:0] user_reg_D;
+wire [15:0] user_reg_E;
+lcell_16 lc_user_reg_D(user_reg_D,user_reg[4'hD]);
+lcell_16 lc_user_reg_E(user_reg_E,user_reg[4'hE]);
+
 reg [7:0] mul32TempArg0 [3:0];
 reg [7:0] mul32TempArg1 [3:0];
 
@@ -730,10 +1132,10 @@ always_comb mul32TempArg0[0]=vr0[ 7:0];
 always_comb mul32TempArg0[1]=vr0[15:8];
 always_comb mul32TempArg0[2]=vr1[ 7:0];
 always_comb mul32TempArg0[3]=vr1[15:8];
-always_comb mul32TempArg1[0]=user_reg[4'hD][ 7:0];
-always_comb mul32TempArg1[1]=user_reg[4'hD][15:8];
-always_comb mul32TempArg1[2]=user_reg[4'hE][ 7:0];
-always_comb mul32TempArg1[3]=user_reg[4'hE][15:8];
+always_comb mul32TempArg1[0]=user_reg_D[ 7:0];
+always_comb mul32TempArg1[1]=user_reg_D[15:8];
+always_comb mul32TempArg1[2]=user_reg_E[ 7:0];
+always_comb mul32TempArg1[3]=user_reg_E[15:8];
 
 reg [15:0] mul32TempVal0 [9:0];
 
@@ -765,6 +1167,7 @@ always_comb mul32TempVal1[4][31:24]=mul32TempVal0[8][7:0]+mul32TempVal0[9][7:0];
 
 always_comb mul32Temp=(mul32TempVal1[0]+(mul32TempVal1[1]+mul32TempVal1[2]))+(mul32TempVal1[3]+mul32TempVal1[4]);
 
+/////
 
 reg [16:0] divTemp0;
 reg [ 1:0] divTemp2;
@@ -810,12 +1213,15 @@ assign mem_is_stack_access_requesting_extern=mem_is_stack_access_requesting;
 
 assign mem_is_general_access_byte_operation_extern=mem_is_general_access_byte_operation;
 assign mem_is_general_access_requesting_extern=mem_is_general_access_requesting;
-
+always @(posedge main_clk) begin if (mem_is_stack_access_requesting) assert(isMemUnblocked);end
+always @(posedge main_clk) begin if (mem_is_general_access_requesting) assert(isMemUnblocked);end
 
 reg is_instruction_valid=0;
 assign is_instruction_valid_extern=is_instruction_valid;
 reg is_instruction_valid_next;
+reg could_instruction_be_valid_next; // could_instruction_be_valid_next is an estimation for the scheduler. If 0, it is guaranteed that is_instruction_valid_next is 0. If 1, then is_instruction_valid_next is probably 1 but might be 0.
 lcell_1 lc_is_instruction_valid_next(is_instruction_valid_next_extern,is_instruction_valid_next);
+lcell_1 lc_could_instruction_be_valid_next(could_instruction_be_valid_next_extern,could_instruction_be_valid_next);
 
 always @(posedge main_clk) is_instruction_valid<=is_instruction_valid_next;
 
@@ -832,7 +1238,18 @@ wire j_uc_lc;
 lcell_1 lc_j_co(j_co_lc,j_co);
 lcell_1 lc_j_uc(j_uc_lc,j_uc);
 
+wire special_estimate_id;
+lcell_1 lc_special_estimate_id(special_estimate_id,(instructionInID==5'h0E)? 1'b1:1'b0);
 
+lcell_1 lc_special_estimate_nj(dependSelfSpecial_estimate[0],(special_estimate_id && isUnblocked && is_instruction_valid)? 1'b0:dependSelfSpecial[0]);
+
+always @(posedge main_clk) begin
+	if (!is_new_instruction_entering_this_cycle) begin
+		if (dependSelfSpecial_next[0]) assert (dependSelfSpecial_estimate[0]);
+		if (dependSelfSpecial_next[1]) assert (dependSelfSpecial_estimate[1]);
+		if (dependSelfSpecial_next[2]) assert (dependSelfSpecial_estimate[2]);
+	end
+end
 
 wire j_co_sat;
 lcell_1 lc_j_co_sat(j_co_sat,(vr2==16'h0)?1'b1:1'b0);
@@ -840,19 +1257,23 @@ lcell_1 lc_j_n(jump_signal_next,(j_uc_lc || (j_co_lc && j_co_sat))?1'b1:1'b0);
 
 always_comb begin
 	is_instruction_valid_next=is_instruction_valid;
+	could_instruction_be_valid_next=is_instruction_valid;
 	instruction_jump_address_next={vr1,vr0};
 	j_co=0;
 	j_uc=0;
 	dependSelfRegRead_next=dependSelfRegRead & ~resolveDependSelfRegRead;
 	dependSelfRegWrite_next=dependSelfRegWrite;
 	dependSelfSpecial_next=dependSelfSpecial;
+	dependSelfSpecial_estimate[2:1]=dependSelfSpecial[2:1];
 	
 	unique case (effectiveID)
 	5'h00:begin
 		is_instruction_valid_next=0;
+		could_instruction_be_valid_next=0;
 	end
 	5'h01:begin
 		is_instruction_valid_next=0;
+		could_instruction_be_valid_next=0;
 	end
 	5'h02:begin
 		unique case (state)
@@ -860,25 +1281,31 @@ always_comb begin
 		end
 		2:begin
 			is_instruction_valid_next=0;
+			could_instruction_be_valid_next=0;
 		end
 		endcase
 	end
 	5'h03:begin
 		if (mem_is_access_acknowledged_pulse) begin
 			is_instruction_valid_next=0;
+			could_instruction_be_valid_next=0;
 		end
 	end
 	5'h04:begin
 		is_instruction_valid_next=0;
+		could_instruction_be_valid_next=0;
 	end
 	5'h05:begin
 		is_instruction_valid_next=0;
+		could_instruction_be_valid_next=0;
 	end
 	5'h06:begin
 		is_instruction_valid_next=0;
+		could_instruction_be_valid_next=0;
 	end
 	5'h07:begin
 		is_instruction_valid_next=0;
+		could_instruction_be_valid_next=0;
 	end
 	5'h08:begin
 		unique case (state)
@@ -886,29 +1313,36 @@ always_comb begin
 		end
 		2:begin
 			is_instruction_valid_next=0;
+			could_instruction_be_valid_next=0;
 		end
 		endcase
 	end
 	5'h09:begin
 		if (mem_is_access_acknowledged_pulse) begin
 			is_instruction_valid_next=0;
+			could_instruction_be_valid_next=0;
 		end
 	end
 	5'h0A:begin
 		is_instruction_valid_next=0;
+		could_instruction_be_valid_next=0;
 	end
 	5'h0B:begin
 		is_instruction_valid_next=0;
+		could_instruction_be_valid_next=0;
 	end
 	5'h0C:begin
 		is_instruction_valid_next=0;
+		could_instruction_be_valid_next=0;
 	end
 	5'h0D:begin
 		is_instruction_valid_next=0;
+		could_instruction_be_valid_next=0;
 	end
 	5'h0E:begin
 		is_instruction_valid_next=0;
 		j_co=1;
+		could_instruction_be_valid_next=0;
 	end
 	5'h0F:begin
 		// could not execute this cycle
@@ -916,31 +1350,33 @@ always_comb begin
 	5'h10:begin
 		unique case (state)
 		1:begin
-			dependSelfRegWrite_next[16]=0;
+			dependSelfRegWrite_next[32]=0;
 		end
 		2:begin
 		end
 		endcase
 		if (mem_is_access_acknowledged_pulse) begin
 			is_instruction_valid_next=0;
+			could_instruction_be_valid_next=0;
 		end
 	end
 	5'h11:begin
 		unique case (state)
 		1:begin
-			dependSelfRegWrite_next[16]=0;
+			dependSelfRegWrite_next[32]=0;
 		end
 		2:begin
 		end
 		endcase
 		if (mem_is_access_acknowledged_pulse) begin
 			is_instruction_valid_next=0;
+			could_instruction_be_valid_next=0;
 		end
 	end
 	5'h12:begin
 		unique case (state)
 		1:begin
-			dependSelfRegWrite_next[16]=0;
+			dependSelfRegWrite_next[32]=0;
 		end
 		2:begin
 		end
@@ -952,7 +1388,7 @@ always_comb begin
 	5'h13:begin
 		unique case (state)
 		1:begin
-			dependSelfRegWrite_next[16]=0;
+			dependSelfRegWrite_next[32]=0;
 		end
 		2:begin
 		end
@@ -963,12 +1399,15 @@ always_comb begin
 	end
 	5'h14:begin
 		is_instruction_valid_next=0;
+		could_instruction_be_valid_next=0;
 	end
 	5'h15:begin
 		is_instruction_valid_next=0;
+		could_instruction_be_valid_next=0;
 	end
 	5'h16:begin
 		is_instruction_valid_next=0;
+		could_instruction_be_valid_next=0;
 	end
 	5'h17:begin
 		unique case (state)
@@ -976,6 +1415,7 @@ always_comb begin
 		end
 		2:begin
 			is_instruction_valid_next=0;
+			could_instruction_be_valid_next=0;
 		end
 		endcase
 	end
@@ -985,6 +1425,7 @@ always_comb begin
 		end
 		2:begin
 			is_instruction_valid_next=0;
+			could_instruction_be_valid_next=0;
 		end
 		endcase
 	end
@@ -1014,9 +1455,9 @@ always_comb begin
 	5'h1A:begin
 		unique case (state)
 		1:begin
-			dependSelfRegWrite_next[16]=0;
-			dependSelfRegWrite_next[0]=0;
-			dependSelfSpecial_next=0;
+			dependSelfRegWrite_next[32]=0;
+			dependSelfRegWrite_next[0]=0;dependSelfRegWrite_next[16]=0;
+			dependSelfSpecial_next[0]=0;
 			j_uc=1;
 		end
 		2:begin
@@ -1024,6 +1465,7 @@ always_comb begin
 		endcase
 		if (mem_is_access_acknowledged_pulse) begin
 			is_instruction_valid_next=0;
+			could_instruction_be_valid_next=0;
 		end
 	end
 	5'h1B:begin
@@ -1045,28 +1487,35 @@ always_comb begin
 		end
 		2:begin
 			is_instruction_valid_next=0;
+			could_instruction_be_valid_next=0;
 		end
 		endcase
 	end
 	5'h1D:begin
 		if (mem_is_access_acknowledged_pulse) begin
 			is_instruction_valid_next=0;
+			could_instruction_be_valid_next=0;
 		end
 	end
 	5'h1E:begin
 		is_instruction_valid_next=0;
 		j_uc=1;
+		could_instruction_be_valid_next=0;
 	end
 	5'h1F:begin
 		is_instruction_valid_next=0;
+		could_instruction_be_valid_next=0;
 	end
 	endcase
 	if (memory_dependency_clear[selfIndex]) begin
 		dependSelfSpecial_next[1]=0;
 		dependSelfSpecial_next[2]=0;
+		dependSelfSpecial_estimate[1]=0;
+		dependSelfSpecial_estimate[2]=0;
 	end
 	if (is_new_instruction_entering_this_cycle) begin
 		is_instruction_valid_next=1;
+		could_instruction_be_valid_next=1;
 		dependSelfRegRead_next=generatedDependSelfRegRead;
 		dependSelfRegWrite_next=generatedDependSelfRegWrite;
 		dependSelfSpecial_next=generatedDependSelfSpecial;
@@ -1079,6 +1528,10 @@ always_comb begin
 		dependSelfRegWrite_next=0;
 		dependSelfSpecial_next=0;
 	end
+	assert(dependSelfRegRead_next[17:16]==2'b0);
+	assert(dependSelfRegWrite_next[17:16]==2'b0);
+	dependSelfRegRead_next[17:16]=2'b0;
+	dependSelfRegWrite_next[17:16]=2'b0;
 end
 
 reg [4:0] effectiveID_r=5'h0F;
@@ -1130,15 +1583,130 @@ always @(posedge main_clk) begin
 	endcase
 end
 
+reg [2:0] twv0i=0;
+reg twv1i=0;
+wire [15:0] wv_table0 [5:0];
+wire [15:0] wv_table1 [1:0];
+assign wv_table0[0]=wv_0;
+assign wv_table0[1]=wv_1;
+assign wv_table0[2]=wv_2;
+assign wv_table0[3]=wv_3;
+assign wv_table0[4]=wv_7;
+assign wv_table0[5]=wv_8;
+
+assign wv_table1[0]=wv_1;
+assign wv_table1[1]=wv_4;
+
+
+always @(posedge main_clk) begin
+	twv0i<=3'hx;
+	twv1i<=1'hx;
+	unique case (effectiveID)
+	5'h00:begin
+		twv0i<=0;
+	end
+	5'h01:begin
+		twv0i<=0;
+	end
+	5'h02:begin
+		twv0i<=3;
+	end
+	5'h03:begin
+	end
+	5'h04:begin
+		twv0i<=0;
+	end
+	5'h05:begin
+		twv0i<=0;
+	end
+	5'h06:begin
+		twv0i<=0;
+	end
+	5'h07:begin
+		twv0i<=2;
+		twv1i<=0;
+	end
+	5'h08:begin
+		twv0i<=3;
+	end
+	5'h09:begin
+	end
+	5'h0A:begin
+		twv0i<=1;
+	end
+	5'h0B:begin
+		twv0i<=1;
+	end
+	5'h0C:begin
+		twv0i<=1;
+	end
+	5'h0D:begin
+		twv0i<=2;
+	end
+	5'h0E:begin
+	end
+	5'h0F:begin
+		// could not execute this cycle
+	end
+	5'h10:begin
+	end
+	5'h11:begin
+	end
+	5'h12:begin
+		twv0i<=3;
+	end
+	5'h13:begin
+		twv0i<=3;
+		twv1i<=1;
+	end
+	5'h14:begin
+		twv0i<=0;
+	end
+	5'h15:begin
+		twv0i<=0;
+	end
+	5'h16:begin
+		twv0i<=0;
+	end
+	5'h17:begin
+		twv0i<=4;
+	end
+	5'h18:begin
+	end
+	5'h19:begin
+		twv0i<=3;
+		twv1i<=1;
+	end
+	5'h1A:begin
+	end
+	5'h1B:begin
+	end
+	5'h1C:begin
+		twv0i<=3;
+	end
+	5'h1D:begin
+	end
+	5'h1E:begin
+	end
+	5'h1F:begin
+		twv0i<=5;
+	end
+	endcase
+end
+
+
 reg [15:0] twv0;
 reg [15:0] twv1;
 reg twv1e;
 wire [15:0] tcwv0;
 wire [15:0] tcwv1;
 wire tcwv1e;
-lcell_16 lc_twv0(tcwv0,twv0);
-lcell_16 lc_twv1(tcwv1,twv1);
+
+lcell_16 lc_twv0(tcwv0,wv_table0[twv0i]);
+lcell_16 lc_twv1(tcwv1,wv_table1[twv1i]);
 lcell_1 lc_twv1e(tcwv1e,twv1e);
+
+
 
 
 always_comb begin
@@ -1241,26 +1809,65 @@ always_comb begin
 	endcase
 end
 
-always_comb begin
-	writeValues[0]=tcwv0;
-	writeValues[1]=tcwv0;
-	writeValues[2]=tcwv0;
-	writeValues[3]=tcwv0;
-	writeValues[4]=tcwv0;
-	writeValues[5]=tcwv0;
-	writeValues[6]=tcwv0;
-	writeValues[7]=tcwv0;
-	writeValues[8]=tcwv0;
-	writeValues[9]=tcwv0;
-	writeValues[10]=tcwv0;
-	writeValues[11]=tcwv0;
-	writeValues[12]=tcwv0;
-	writeValues[13]=tcwv0;
-	writeValues[14]=tcwv0;
-	writeValues[15]=tcwv0;
-	if (tcwv1e) writeValues[instructionIn_r[7:4]]=tcwv1;
+
+wire [15:0] writeValueMap1 [15:0][3:0];
+reg [1:0] writeValueIndex1 [15:0]='{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+assign writeValueMap1[0][0]=tcwv0;
+assign writeValueMap1[0][1]=tcwv1;
+assign writeValueMap1[0][2]=wv_8;
+assign writeValueMap1[0][3]=mem_data_out_r[3];
+assign writeValueMap1[1][0]=tcwv0;
+assign writeValueMap1[1][1]=tcwv1;
+assign writeValueMap1[1][3:2]='{mem_data_out_r[2],mem_data_out_r[2]};
+assign writeValueMap1[2][0]=tcwv0;
+assign writeValueMap1[2][1]=tcwv1;
+assign writeValueMap1[2][3:2]='{16'hx,16'hx};
+assign writeValueMap1[3][0]=tcwv0;
+assign writeValueMap1[3][1]=tcwv1;
+assign writeValueMap1[3][3:2]='{16'hx,16'hx};
+assign writeValueMap1[4][0]=tcwv0;
+assign writeValueMap1[4][1]=tcwv1;
+assign writeValueMap1[4][3:2]='{16'hx,16'hx};
+assign writeValueMap1[5][0]=tcwv0;
+assign writeValueMap1[5][1]=tcwv1;
+assign writeValueMap1[5][3:2]='{16'hx,16'hx};
+assign writeValueMap1[6][0]=tcwv0;
+assign writeValueMap1[6][1]=tcwv1;
+assign writeValueMap1[6][3:2]='{16'hx,16'hx};
+assign writeValueMap1[7][0]=tcwv0;
+assign writeValueMap1[7][1]=tcwv1;
+assign writeValueMap1[7][3:2]='{16'hx,16'hx};
+assign writeValueMap1[8][0]=tcwv0;
+assign writeValueMap1[8][1]=tcwv1;
+assign writeValueMap1[8][3:2]='{16'hx,16'hx};
+assign writeValueMap1[9][0]=tcwv0;
+assign writeValueMap1[9][1]=tcwv1;
+assign writeValueMap1[9][3:2]='{16'hx,16'hx};
+assign writeValueMap1[10][0]=tcwv0;
+assign writeValueMap1[10][1]=tcwv1;
+assign writeValueMap1[10][3:2]='{16'hx,16'hx};
+assign writeValueMap1[11][0]=tcwv0;
+assign writeValueMap1[11][1]=tcwv1;
+assign writeValueMap1[11][3:2]='{16'hx,16'hx};
+assign writeValueMap1[12][0]=tcwv0;
+assign writeValueMap1[12][1]=tcwv1;
+assign writeValueMap1[12][3:2]='{16'hx,16'hx};
+assign writeValueMap1[13][0]=tcwv0;
+assign writeValueMap1[13][1]=tcwv1;
+assign writeValueMap1[13][3:2]='{wv_5,wv_5};
+assign writeValueMap1[14][0]=tcwv0;
+assign writeValueMap1[14][1]=tcwv1;
+assign writeValueMap1[14][3:2]='{wv_6,wv_6};
+assign writeValueMap1[15][0]=tcwv0;
+assign writeValueMap1[15][1]=tcwv1;
+assign writeValueMap1[15][3:2]='{wv_2,wv_2};
+
+
+always @(posedge main_clk) begin
+	writeValueIndex1<='{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+	if (effectiveID==5'h07 || effectiveID==5'h13 || effectiveID==5'h19) writeValueIndex1[instructionIn[7:4]][0]<=1'b1;
 	
-	unique case (effectiveID_r)
+	unique case (effectiveID)
 	5'h00:begin
 	end
 	5'h01:begin
@@ -1284,7 +1891,7 @@ always_comb begin
 	5'h0A:begin
 	end
 	5'h0B:begin
-		writeValues[15]=wv_2;
+		writeValueIndex1[15][1]<=1'b1;
 	end
 	5'h0C:begin
 	end
@@ -1312,17 +1919,18 @@ always_comb begin
 	5'h17:begin
 	end
 	5'h18:begin
-		writeValues[13]=wv_5;
-		writeValues[14]=wv_6;
+		writeValueIndex1[13][1]<=1'b1;
+		writeValueIndex1[14][1]<=1'b1;
 	end
 	5'h19:begin
 	end
 	5'h1A:begin
-		writeValues[0]=wv_8;
+		writeValueIndex1[0][1]<=1'b1;
 	end
 	5'h1B:begin
-		writeValues[0]=mem_data_out_r[3];
-		writeValues[1]=mem_data_out_r[2];
+		writeValueIndex1[0][1]<=1'b1;
+		writeValueIndex1[0][0]<=1'b1;
+		writeValueIndex1[1][1]<=1'b1;
 	end
 	5'h1C:begin
 	end
@@ -1333,8 +1941,222 @@ always_comb begin
 	5'h1F:begin
 	end
 	endcase
+end
+always_comb begin
 	writeValues[16]=wv_8;
 	writeValues[16][0]=1'b0;
+	
+	writeValues[0]=writeValueMap1[0][writeValueIndex1[0]];
+	writeValues[1]=writeValueMap1[1][writeValueIndex1[1]];
+	writeValues[2]=writeValueMap1[2][writeValueIndex1[2]];
+	writeValues[3]=writeValueMap1[3][writeValueIndex1[3]];
+	writeValues[4]=writeValueMap1[4][writeValueIndex1[4]];
+	writeValues[5]=writeValueMap1[5][writeValueIndex1[5]];
+	writeValues[6]=writeValueMap1[6][writeValueIndex1[6]];
+	writeValues[7]=writeValueMap1[7][writeValueIndex1[7]];
+	writeValues[8]=writeValueMap1[8][writeValueIndex1[8]];
+	writeValues[9]=writeValueMap1[9][writeValueIndex1[9]];
+	writeValues[10]=writeValueMap1[10][writeValueIndex1[10]];
+	writeValues[11]=writeValueMap1[11][writeValueIndex1[11]];
+	writeValues[12]=writeValueMap1[12][writeValueIndex1[12]];
+	writeValues[13]=writeValueMap1[13][writeValueIndex1[13]];
+	writeValues[14]=writeValueMap1[14][writeValueIndex1[14]];
+	writeValues[15]=writeValueMap1[15][writeValueIndex1[15]];
+end
+
+always_comb begin
+	writeValues_a[0]=tcwv0;
+	writeValues_a[1]=tcwv0;
+	writeValues_a[2]=tcwv0;
+	writeValues_a[3]=tcwv0;
+	writeValues_a[4]=tcwv0;
+	writeValues_a[5]=tcwv0;
+	writeValues_a[6]=tcwv0;
+	writeValues_a[7]=tcwv0;
+	writeValues_a[8]=tcwv0;
+	writeValues_a[9]=tcwv0;
+	writeValues_a[10]=tcwv0;
+	writeValues_a[11]=tcwv0;
+	writeValues_a[12]=tcwv0;
+	writeValues_a[13]=tcwv0;
+	writeValues_a[14]=tcwv0;
+	writeValues_a[15]=tcwv0;
+	if (tcwv1e) writeValues_a[instructionIn_r[7:4]]=tcwv1;
+	
+	unique case (effectiveID_r)
+	5'h00:begin
+	end
+	5'h01:begin
+	end
+	5'h02:begin
+	end
+	5'h03:begin
+	end
+	5'h04:begin
+	end
+	5'h05:begin
+	end
+	5'h06:begin
+	end
+	5'h07:begin
+	end
+	5'h08:begin
+	end
+	5'h09:begin
+	end
+	5'h0A:begin
+	end
+	5'h0B:begin
+		writeValues_a[15]=wv_2;
+	end
+	5'h0C:begin
+	end
+	5'h0D:begin
+	end
+	5'h0E:begin
+	end
+	5'h0F:begin
+		// could not execute this cycle
+	end
+	5'h10:begin
+	end
+	5'h11:begin
+	end
+	5'h12:begin
+	end
+	5'h13:begin
+	end
+	5'h14:begin
+	end
+	5'h15:begin
+	end
+	5'h16:begin
+	end
+	5'h17:begin
+	end
+	5'h18:begin
+		writeValues_a[13]=wv_5;
+		writeValues_a[14]=wv_6;
+	end
+	5'h19:begin
+	end
+	5'h1A:begin
+		writeValues_a[0]=wv_8;
+	end
+	5'h1B:begin
+		writeValues_a[0]=mem_data_out_r[3];
+		writeValues_a[1]=mem_data_out_r[2];
+	end
+	5'h1C:begin
+	end
+	5'h1D:begin
+	end
+	5'h1E:begin
+	end
+	5'h1F:begin
+	end
+	endcase
+	writeValues_a[16]=wv_8;
+	writeValues_a[16][0]=1'b0;
+end
+
+always @(posedge main_clk) begin
+	assert (tcwv0===twv0);
+	assert (tcwv1===twv1);
+	assert (writeValues_a[0]===writeValues[0]);
+	assert (writeValues_a[1]===writeValues[1]);
+	assert (writeValues_a[2]===writeValues[2]);
+	assert (writeValues_a[3]===writeValues[3]);
+	assert (writeValues_a[4]===writeValues[4]);
+	assert (writeValues_a[5]===writeValues[5]);
+	assert (writeValues_a[6]===writeValues[6]);
+	assert (writeValues_a[7]===writeValues[7]);
+	assert (writeValues_a[8]===writeValues[8]);
+	assert (writeValues_a[9]===writeValues[9]);
+	assert (writeValues_a[10]===writeValues[10]);
+	assert (writeValues_a[11]===writeValues[11]);
+	assert (writeValues_a[12]===writeValues[12]);
+	assert (writeValues_a[13]===writeValues[13]);
+	assert (writeValues_a[14]===writeValues[14]);
+	assert (writeValues_a[15]===writeValues[15]);
+	assert (writeValues_a[16]===writeValues[16]);
+end
+
+reg [3:0] stack_access_overflow_detection_temp;
+reg stack_access_overflow_detection=0;
+reg stack_access_overflow_detection_next;
+reg [31:0] mem_target_address_next;
+assign mem_is_stack_access_overflowing_extern=stack_access_overflow_detection;
+
+always_comb begin
+	stack_access_overflow_detection_temp=4'hx;
+	stack_access_overflow_detection_next=stack_access_overflow_detection;
+	mem_target_address_next=mem_target_address;
+	if (state[1:0]==2'h1) begin // state[3:2] does not matter
+		case (effectiveID)
+		5'h02:begin
+			stack_access_overflow_detection_next=0;
+			mem_target_address_next[15: 0]=temporary1;
+			mem_target_address_next[31:16]=0;mem_target_address_next[0]=0;
+		end
+		5'h03:begin
+			stack_access_overflow_detection_next=0;
+			mem_target_address_next[15: 0]=temporary1;
+			mem_target_address_next[31:16]=0;mem_target_address_next[0]=0;
+		end
+		5'h08:begin
+			mem_target_address_next={vr2,vr1};
+		end
+		5'h09:begin
+			mem_target_address_next={vr2,vr1};
+		end
+		5'h10:begin
+			stack_access_overflow_detection_next=0;
+			mem_target_address_next[15: 0]=stack_pointer -4'd2;
+			mem_target_address_next[31:16]=0;mem_target_address_next[0]=0;
+		end
+		5'h11:begin
+			stack_access_overflow_detection_temp=stack_pointer -4'd4;
+			stack_access_overflow_detection_temp=3'd1 + {1'b0,stack_access_overflow_detection_temp[3:1]};
+			stack_access_overflow_detection_next=stack_access_overflow_detection_temp[3];
+			mem_target_address_next[15: 0]=stack_pointer -4'd4;
+			mem_target_address_next[31:16]=0;mem_target_address_next[0]=0;
+		end
+		5'h12:begin
+			stack_access_overflow_detection_next=0;
+			mem_target_address_next[15: 0]=stack_pointer;
+			mem_target_address_next[31:16]=0;mem_target_address_next[0]=0;
+		end
+		5'h13:begin
+			stack_access_overflow_detection_temp=stack_pointer;
+			stack_access_overflow_detection_temp=3'd1 + {1'b0,stack_access_overflow_detection_temp[3:1]};
+			stack_access_overflow_detection_next=stack_access_overflow_detection_temp[3];
+			mem_target_address_next[15: 0]=stack_pointer;
+			mem_target_address_next[31:16]=0;mem_target_address_next[0]=0;
+		end
+		5'h1A:begin
+			stack_access_overflow_detection_temp=stack_pointer -4'd8;
+			stack_access_overflow_detection_temp=3'd3 + {1'b0,stack_access_overflow_detection_temp[3:1]};
+			stack_access_overflow_detection_next=stack_access_overflow_detection_temp[3];
+			mem_target_address_next[15: 0]=stack_pointer -4'd8;
+			mem_target_address_next[31:16]=0;mem_target_address_next[0]=0;
+		end
+		5'h1B:begin
+			stack_access_overflow_detection_temp=user_reg[4'h0];
+			stack_access_overflow_detection_temp=3'd4 + {1'b0,stack_access_overflow_detection_temp[3:1]};
+			stack_access_overflow_detection_next=stack_access_overflow_detection_temp[3];
+			mem_target_address_next[15: 0]=user_reg[4'h0];
+			mem_target_address_next[31:16]=0;mem_target_address_next[0]=0;
+		end
+		5'h1C:begin
+			mem_target_address_next={vr1,user_reg[4'hD]};
+		end
+		5'h1D:begin
+			mem_target_address_next={vr1,user_reg[4'hD]};
+		end
+		endcase
+	end
+	stack_access_overflow_detection_temp=4'hx;
 end
 
 always @(posedge main_clk) begin
@@ -1342,6 +2164,8 @@ always @(posedge main_clk) begin
 	dependSelfRegWrite<=dependSelfRegWrite_next;
 	dependSelfSpecial<=dependSelfSpecial_next;
 	jump_signal<=jump_signal_next;
+	stack_access_overflow_detection<=stack_access_overflow_detection_next;
+	mem_target_address<=mem_target_address_next;
 end
 always @(posedge main_clk) begin
 	is_instruction_finishing_this_cycle_pulse<=0;
@@ -1356,23 +2180,24 @@ always @(posedge main_clk) begin
 	mem_is_general_access_byte_operation<=1'hx;
 	mem_is_general_access_requesting<=0;
 	
-	if (resolveDependSelfRegRead[0]) user_reg[0]<=instant_user_reg[0];
-	if (resolveDependSelfRegRead[1]) user_reg[1]<=instant_user_reg[1];
-	if (resolveDependSelfRegRead[2]) user_reg[2]<=instant_user_reg[2];
-	if (resolveDependSelfRegRead[3]) user_reg[3]<=instant_user_reg[3];
-	if (resolveDependSelfRegRead[4]) user_reg[4]<=instant_user_reg[4];
-	if (resolveDependSelfRegRead[5]) user_reg[5]<=instant_user_reg[5];
-	if (resolveDependSelfRegRead[6]) user_reg[6]<=instant_user_reg[6];
-	if (resolveDependSelfRegRead[7]) user_reg[7]<=instant_user_reg[7];
-	if (resolveDependSelfRegRead[8]) user_reg[8]<=instant_user_reg[8];
-	if (resolveDependSelfRegRead[9]) user_reg[9]<=instant_user_reg[9];
-	if (resolveDependSelfRegRead[10]) user_reg[10]<=instant_user_reg[10];
-	if (resolveDependSelfRegRead[11]) user_reg[11]<=instant_user_reg[11];
-	if (resolveDependSelfRegRead[12]) user_reg[12]<=instant_user_reg[12];
-	if (resolveDependSelfRegRead[13]) user_reg[13]<=instant_user_reg[13];
-	if (resolveDependSelfRegRead[14]) user_reg[14]<=instant_user_reg[14];
-	if (resolveDependSelfRegRead[15]) user_reg[15]<=instant_user_reg[15];
-	if (resolveDependSelfRegRead[16]) stack_pointer<=instant_stack_pointer;
+	if (resolveDependSelfRegRead[32]) stack_pointer<=instant_core_values[32];
+	if (resolveDependSelfRegRead[0]) user_reg[0]<=instant_core_values[0];
+	if (resolveDependSelfRegRead[1]) user_reg[1]<=instant_core_values[1];
+	
+	if (resolveDependSelfRegRead[2] || resolveDependSelfRegRead[18]) user_reg[2]<=dependSelfRegRead[2]?instant_core_values[2]:instant_core_values[18];
+	if (resolveDependSelfRegRead[3] || resolveDependSelfRegRead[19]) user_reg[3]<=dependSelfRegRead[3]?instant_core_values[3]:instant_core_values[19];
+	if (resolveDependSelfRegRead[4] || resolveDependSelfRegRead[20]) user_reg[4]<=dependSelfRegRead[4]?instant_core_values[4]:instant_core_values[20];
+	if (resolveDependSelfRegRead[5] || resolveDependSelfRegRead[21]) user_reg[5]<=dependSelfRegRead[5]?instant_core_values[5]:instant_core_values[21];
+	if (resolveDependSelfRegRead[6] || resolveDependSelfRegRead[22]) user_reg[6]<=dependSelfRegRead[6]?instant_core_values[6]:instant_core_values[22];
+	if (resolveDependSelfRegRead[7] || resolveDependSelfRegRead[23]) user_reg[7]<=dependSelfRegRead[7]?instant_core_values[7]:instant_core_values[23];
+	if (resolveDependSelfRegRead[8] || resolveDependSelfRegRead[24]) user_reg[8]<=dependSelfRegRead[8]?instant_core_values[8]:instant_core_values[24];
+	if (resolveDependSelfRegRead[9] || resolveDependSelfRegRead[25]) user_reg[9]<=dependSelfRegRead[9]?instant_core_values[9]:instant_core_values[25];
+	if (resolveDependSelfRegRead[10] || resolveDependSelfRegRead[26]) user_reg[10]<=dependSelfRegRead[10]?instant_core_values[10]:instant_core_values[26];
+	if (resolveDependSelfRegRead[11] || resolveDependSelfRegRead[27]) user_reg[11]<=dependSelfRegRead[11]?instant_core_values[11]:instant_core_values[27];
+	if (resolveDependSelfRegRead[12] || resolveDependSelfRegRead[28]) user_reg[12]<=dependSelfRegRead[12]?instant_core_values[12]:instant_core_values[28];
+	if (resolveDependSelfRegRead[13] || resolveDependSelfRegRead[29]) user_reg[13]<=dependSelfRegRead[13]?instant_core_values[13]:instant_core_values[29];
+	if (resolveDependSelfRegRead[14] || resolveDependSelfRegRead[30]) user_reg[14]<=dependSelfRegRead[14]?instant_core_values[14]:instant_core_values[30];
+	if (resolveDependSelfRegRead[15] || resolveDependSelfRegRead[31]) user_reg[15]<=dependSelfRegRead[15]?instant_core_values[15]:instant_core_values[31];
 	
 	unique case (effectiveID)
 	5'h00:begin
@@ -1386,13 +2211,11 @@ always @(posedge main_clk) begin
 		state<=0;
 	end
 	5'h02:begin
-		mem_target_address[15: 0]<=temporary1;
-		mem_target_address[31:16]<=0;mem_target_address[0]<=0;
 		mem_is_access_write<=0;
 		mem_stack_access_size<=0;
 		unique case (state)
 		1:begin
-			mem_is_stack_access_requesting<=1;
+			mem_is_stack_access_requesting<=willMemBeUnblocked;
 			if (mem_is_access_acknowledged_pulse) begin
 				mem_is_stack_access_requesting<=0;
 				state<=2;
@@ -1408,11 +2231,9 @@ always @(posedge main_clk) begin
 	end
 	5'h03:begin
 		mem_data_in[0]<=vr0;
-		mem_target_address[15: 0]<=temporary1;
-		mem_target_address[31:16]<=0;mem_target_address[0]<=0;
 		mem_is_access_write<=1;
 		mem_stack_access_size<=0;
-		mem_is_stack_access_requesting<=1;
+		mem_is_stack_access_requesting<=willMemBeUnblocked;
 		if (mem_is_access_acknowledged_pulse) begin
 			mem_is_stack_access_requesting<=0;
 			is_instruction_finishing_this_cycle_pulse<=1;
@@ -1441,12 +2262,11 @@ always @(posedge main_clk) begin
 		state<=0;
 	end
 	5'h08:begin
-		mem_target_address<={vr2,vr1};
 		mem_is_general_access_byte_operation<=0;
 		mem_is_access_write<=0;
 		unique case (state)
 		1:begin
-			mem_is_general_access_requesting<=1;
+			mem_is_general_access_requesting<=willMemBeUnblocked;
 			if (mem_is_access_acknowledged_pulse) begin
 				mem_is_general_access_requesting<=0;
 				state<=2;
@@ -1462,9 +2282,8 @@ always @(posedge main_clk) begin
 	end
 	5'h09:begin
 		mem_data_in[0]<=vr0;
-		mem_target_address<={vr2,vr1};
 		mem_is_general_access_byte_operation<=0;
-		mem_is_general_access_requesting<=1;
+		mem_is_general_access_requesting<=willMemBeUnblocked;
 		mem_is_access_write<=1;
 		if (mem_is_access_acknowledged_pulse) begin
 			mem_is_general_access_requesting<=0;
@@ -1504,11 +2323,9 @@ always @(posedge main_clk) begin
 		mem_data_in[0]<=vr0;
 		mem_is_access_write<=1;
 		mem_stack_access_size<=0;
-		mem_is_stack_access_requesting<=1;
+		mem_is_stack_access_requesting<=willMemBeUnblocked;
 		unique case (state)
 		1:begin
-			mem_target_address[15: 0]<=stack_pointer -4'd2;
-			mem_target_address[31:16]<=0;mem_target_address[0]<=0;
 			doWrite[16]<=1'b1;
 			state<=2;
 		end
@@ -1526,11 +2343,9 @@ always @(posedge main_clk) begin
 		mem_data_in[1]<=vr0;
 		mem_is_access_write<=1;
 		mem_stack_access_size<=1;
-		mem_is_stack_access_requesting<=1;
+		mem_is_stack_access_requesting<=willMemBeUnblocked;
 		unique case (state)
 		1:begin
-			mem_target_address[15: 0]<=stack_pointer -4'd4;
-			mem_target_address[31:16]<=0;mem_target_address[0]<=0;
 			doWrite[16]<=1'b1;
 			state<=2;
 		end
@@ -1546,12 +2361,9 @@ always @(posedge main_clk) begin
 	5'h12:begin
 		mem_is_access_write<=0;
 		mem_stack_access_size<=0;
-		mem_is_stack_access_requesting<=1;
+		mem_is_stack_access_requesting<=willMemBeUnblocked;
 		unique case (state)
 		1:begin
-			mem_target_address[15: 0]<=stack_pointer;
-			mem_target_address[31:16]<=0;mem_target_address[0]<=0;
-
 			doWrite[16]<=1'b1;
 			state<=2;
 		end
@@ -1574,14 +2386,12 @@ always @(posedge main_clk) begin
 		mem_stack_access_size<=1;
 		unique case (state)
 		1:begin
-			mem_is_stack_access_requesting<=1;
-			mem_target_address[15: 0]<=stack_pointer;
-			mem_target_address[31:16]<=0;mem_target_address[0]<=0;
+			mem_is_stack_access_requesting<=willMemBeUnblocked;
 			doWrite[16]<=1'b1;
 			state<=2;
 		end
 		2:begin
-			mem_is_stack_access_requesting<=1;
+			mem_is_stack_access_requesting<=willMemBeUnblocked;
 			if (mem_is_access_acknowledged_pulse) begin
 				state<=3;
 				mem_is_stack_access_requesting<=0;
@@ -1700,13 +2510,11 @@ always @(posedge main_clk) begin
 		mem_data_in[1]<={6'b0,instructionAddressIn[25:16]};
 		mem_data_in[2]<=user_reg[4'h1];
 		mem_data_in[3]<=user_reg[4'h0];
-		mem_is_stack_access_requesting<=1;
+		mem_is_stack_access_requesting<=willMemBeUnblocked;
 		mem_is_access_write<=1;
 		mem_stack_access_size<=3;
 		unique case (state)
 		1:begin
-			mem_target_address[15: 0]<=stack_pointer -4'd8;
-			mem_target_address[31:16]<=0;mem_target_address[0]<=0;
 			state<=2;
 			doWrite[16]<=1'b1;
 			doWrite[0]<=1'b1;
@@ -1725,13 +2533,11 @@ always @(posedge main_clk) begin
 		mem_stack_access_size<=4;
 		unique case (state)
 		1:begin
-			mem_is_stack_access_requesting<=1;
-			mem_target_address[15: 0]<=user_reg[4'h0];
-			mem_target_address[31:16]<=0;mem_target_address[0]<=0;
+			mem_is_stack_access_requesting<=willMemBeUnblocked;
 			state<=2;
 		end
 		2:begin
-			mem_is_stack_access_requesting<=1;
+			mem_is_stack_access_requesting<=willMemBeUnblocked;
 			if (mem_is_access_acknowledged_pulse) begin
 				mem_is_stack_access_requesting<=0;
 				state<=3;
@@ -1748,12 +2554,11 @@ always @(posedge main_clk) begin
 		endcase
 	end
 	5'h1C:begin
-		mem_target_address<={vr1,user_reg[4'hD]};
 		mem_is_general_access_byte_operation<=1;
 		mem_is_access_write<=0;
 		unique case (state)
 		1:begin
-			mem_is_general_access_requesting<=1;
+			mem_is_general_access_requesting<=willMemBeUnblocked;
 			if (mem_is_access_acknowledged_pulse) begin
 				mem_is_general_access_requesting<=0;
 				state<=2;
@@ -1769,9 +2574,8 @@ always @(posedge main_clk) begin
 	end
 	5'h1D:begin
 		mem_data_in[0]<={8'h0,vr0[7:0]};
-		mem_target_address<={vr1,user_reg[4'hD]};
 		mem_is_general_access_byte_operation<=1;
-		mem_is_general_access_requesting<=1;
+		mem_is_general_access_requesting<=willMemBeUnblocked;
 		mem_is_access_write<=1;
 		if (mem_is_access_acknowledged_pulse) begin
 			mem_is_general_access_requesting<=0;
@@ -1794,18 +2598,25 @@ always @(posedge main_clk) begin
 		instructionIn<=instructionIn_extern;
 		instructionInID<=instructionInID_extern;
 		instructionAddressIn<=instructionAddressIn_extern;
+		rename_state_in<=generated_rename_state_in;
+		rename_state_out<=generated_rename_state_out;
 		state<=1;
-		
-		//user_reg<=instant_user_reg; // for now, this would not be needed. it might be helpful in the future if I remove a cycle off of the read dependencies being resolved
-		//stack_pointer<=instant_stack_pointer;
 	end
 	if (void_current_instruction) begin
 		state<=0;
 	end
+	stack_pointer[0]<=1'b0;
 end
 
 
-wire [15:0] simExecutingInstruction=((effectiveID==5'h0F)?(is_instruction_valid?16'hx:16'hz):instructionIn); // this is only used for the simulator
+always @(posedge main_clk) begin
+	if (effectiveID!=5'h0F) assert (state!=4'h0);
+	if (effectiveID==5'h0F) assert (state==4'h0 || state==4'h1);
+	if (effectiveID==5'h0F) assert(!mem_is_stack_access_requesting);
+	if (effectiveID==5'h0F) assert(!mem_is_general_access_requesting);
+end
+
+wire [15:0] simExecutingInstruction=((effectiveID==5'h0F)?(is_instruction_valid?16'hx:16'hz):(isMemUnblocked?instructionIn:{instructionIn[15:8],8'hxx})); // this is only used for the simulator
 
 
 

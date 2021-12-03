@@ -1,5 +1,86 @@
 `timescale 1 ps / 1 ps
+/*
+module fake_sd_card_controller(
+	output clk_external,
+	output chip_select_external,
+	output data_external_mosi,
+	input  data_external_miso,
 
+	output [15:0] data_read_mmio,
+	input  [15:0] data_write_mmio,
+	input  [12:0] address_mmio,
+	input  is_mmio_byte,
+	input  is_mmio_write,
+	input  main_clk // 83 MHz
+);
+
+reg [7:0] cache_mem [8191:0];
+reg [7:0] m [64028671:0];
+assign data_read_mmio[ 7:0]=cache_mem[{address_mmio[12:1],1'b0}];
+assign data_read_mmio[15:8]=cache_mem[{address_mmio[12:1],1'b1}];
+
+int i;
+initial begin
+	for (i=0;i<8192;i=i+1) begin
+		cache_mem[i]=0;
+	end
+	cache_mem[4]=4;
+end
+initial begin
+`include "AutoGen1.sv"
+end
+reg [9:0] cp;
+reg ce=0;
+reg [31:0] addr;
+reg [3:0] cblk;
+reg pol;
+int g;
+
+initial begin
+	#3;
+	forever begin
+		#40;
+		for (g=0;ce && cp!=512;g=g+1) begin
+			// g is ignored. quartus demands having an expression....
+			if (pol) begin
+				m[{addr,cp[8:0]}]=cache_mem[{cblk,cp[8:0]}];
+			end else begin
+				cache_mem[{cblk,cp[8:0]}]=m[{addr,cp[8:0]}];
+			end
+			cp=cp+1;
+		end
+	end
+end
+
+always @(posedge main_clk) begin
+	if (is_mmio_write) begin
+		if (is_mmio_byte) begin
+			cache_mem[address_mmio]<=data_write_mmio[7:0];
+		end else begin
+			cache_mem[{address_mmio[12:1],1'b0}]<=data_write_mmio[ 7:0];
+			cache_mem[{address_mmio[12:1],1'b1}]<=data_write_mmio[15:8];
+		end
+	end
+	if (cache_mem[4]==3 && cache_mem[2]==0) begin
+		cache_mem[4]<=4;
+	end else if (cache_mem[4]==4 && cache_mem[2]==1) begin
+		addr[ 7: 0]<=cache_mem[12];
+		addr[15: 8]<=cache_mem[13];
+		addr[23:16]<=cache_mem[14];
+		addr[31:24]<=cache_mem[15];
+		pol<=cache_mem[0][0];
+		ce<=1;
+		cblk<=cache_mem[8][3:0];
+		cp<=0;
+	end
+	if (ce && cp==512) begin
+		cache_mem[4]<=3;
+		ce<=0;
+	end
+end
+
+endmodule
+*/
 module fake_dram(
 	input 		    [12:0]		DRAM_ADDR,
 	input 		     [1:0]		DRAM_BA,
@@ -55,15 +136,15 @@ initial begin
 		end
 		$display("Initializing fake DRAM to RANDOM state finished.");
 	end else begin
-		$display("Initializing fake DRAM to ZERO state...");
+		$display("Initializing fake DRAM to X state...");
 		for (i0=0;i0<4;i0=i0+1) begin
 			for (i1=0;i1<8192;i1=i1+1) begin
 				for (i2=0;i2<1024;i2=i2+1) begin
-					mem[i0][i1][i2]=0;
+					mem[i0][i1][i2]=16'hxxxx;
 				end
 			end
 		end
-		$display("Initializing fake DRAM to ZERO state finished.");
+		$display("Initializing fake DRAM to X state finished.");
 	end
 end
 
@@ -78,43 +159,43 @@ always @(posedge main_clk) begin
 		// write (auto precharge) 1
 		state<=2;
 		mem[active_bank][bank_active_row[active_bank]][active_col+1]<=DRAM_DQ;
-		$display("DRAM: write (auto precharge 1) [%h,%h,%h,%h]",active_bank,bank_active_row[active_bank],active_col+1,DRAM_DQ);
+		//$display("DRAM: write (auto precharge 1) [%h,%h,%h,%h]",active_bank,bank_active_row[active_bank],active_col+1,DRAM_DQ);
 	end
 	2:begin
 		// write (auto precharge) 2
 		state<=3;
 		mem[active_bank][bank_active_row[active_bank]][active_col+2]<=DRAM_DQ;
-		$display("DRAM: write (auto precharge 2) [%h,%h,%h,%h]",active_bank,bank_active_row[active_bank],active_col+2,DRAM_DQ);
+		//$display("DRAM: write (auto precharge 2) [%h,%h,%h,%h]",active_bank,bank_active_row[active_bank],active_col+2,DRAM_DQ);
 	end
 	3:begin
 		// write (auto precharge) 3
 		state<=4;
 		mem[active_bank][bank_active_row[active_bank]][active_col+3]<=DRAM_DQ;
-		$display("DRAM: write (auto precharge 3) [%h,%h,%h,%h]",active_bank,bank_active_row[active_bank],active_col+3,DRAM_DQ);
+		//$display("DRAM: write (auto precharge 3) [%h,%h,%h,%h]",active_bank,bank_active_row[active_bank],active_col+3,DRAM_DQ);
 	end
 	4:begin
 		// write (auto precharge) 4
 		state<=5;
 		mem[active_bank][bank_active_row[active_bank]][active_col+4]<=DRAM_DQ;
-		$display("DRAM: write (auto precharge 4) [%h,%h,%h,%h]",active_bank,bank_active_row[active_bank],active_col+4,DRAM_DQ);
+		//$display("DRAM: write (auto precharge 4) [%h,%h,%h,%h]",active_bank,bank_active_row[active_bank],active_col+4,DRAM_DQ);
 	end
 	5:begin
 		// write (auto precharge) 5
 		state<=6;
 		mem[active_bank][bank_active_row[active_bank]][active_col+5]<=DRAM_DQ;
-		$display("DRAM: write (auto precharge 5) [%h,%h,%h,%h]",active_bank,bank_active_row[active_bank],active_col+5,DRAM_DQ);
+		//$display("DRAM: write (auto precharge 5) [%h,%h,%h,%h]",active_bank,bank_active_row[active_bank],active_col+5,DRAM_DQ);
 	end
 	6:begin
 		// write (auto precharge) 6
 		state<=7;
 		mem[active_bank][bank_active_row[active_bank]][active_col+6]<=DRAM_DQ;
-		$display("DRAM: write (auto precharge 6) [%h,%h,%h,%h]",active_bank,bank_active_row[active_bank],active_col+6,DRAM_DQ);
+		//$display("DRAM: write (auto precharge 6) [%h,%h,%h,%h]",active_bank,bank_active_row[active_bank],active_col+6,DRAM_DQ);
 	end
 	7:begin
 		// write (auto precharge) 7
 		state<=0;
 		mem[active_bank][bank_active_row[active_bank]][active_col+7]<=DRAM_DQ;
-		$display("DRAM: write (auto precharge 7) [%h,%h,%h,%h]",active_bank,bank_active_row[active_bank],active_col+7,DRAM_DQ);
+		//$display("DRAM: write (auto precharge 7) [%h,%h,%h,%h]",active_bank,bank_active_row[active_bank],active_col+7,DRAM_DQ);
 		bank_is_active[active_bank]<=0;
 		bank_active_row[active_bank]<=0;
 	end
@@ -160,49 +241,49 @@ always @(posedge main_clk) begin
 		state<=17;
 		DRAM_DQ_oe<=1;
 		DRAM_DQ_source<=mem[active_bank][bank_active_row[active_bank]][active_col+0];
-		$display("DRAM: read (auto precharge 0) [%h,%h,%h,%h]",active_bank,bank_active_row[active_bank],active_col+0,mem[active_bank][bank_active_row[active_bank]][active_col+0]);
+		//$display("DRAM: read (auto precharge 0) [%h,%h,%h,%h]",active_bank,bank_active_row[active_bank],active_col+0,mem[active_bank][bank_active_row[active_bank]][active_col+0]);
 	end
 	17:begin
 		// read (auto precharge) 1
 		state<=18;
 		DRAM_DQ_source<=mem[active_bank][bank_active_row[active_bank]][active_col+1];
-		$display("DRAM: read (auto precharge 1) [%h,%h,%h,%h]",active_bank,bank_active_row[active_bank],active_col+1,mem[active_bank][bank_active_row[active_bank]][active_col+1]);
+		//$display("DRAM: read (auto precharge 1) [%h,%h,%h,%h]",active_bank,bank_active_row[active_bank],active_col+1,mem[active_bank][bank_active_row[active_bank]][active_col+1]);
 	end
 	18:begin
 		// read (auto precharge) 2
 		state<=19;
 		DRAM_DQ_source<=mem[active_bank][bank_active_row[active_bank]][active_col+2];
-		$display("DRAM: read (auto precharge 2) [%h,%h,%h,%h]",active_bank,bank_active_row[active_bank],active_col+2,mem[active_bank][bank_active_row[active_bank]][active_col+2]);
+		//$display("DRAM: read (auto precharge 2) [%h,%h,%h,%h]",active_bank,bank_active_row[active_bank],active_col+2,mem[active_bank][bank_active_row[active_bank]][active_col+2]);
 	end
 	19:begin
 		// read (auto precharge) 3
 		state<=20;
 		DRAM_DQ_source<=mem[active_bank][bank_active_row[active_bank]][active_col+3];
-		$display("DRAM: read (auto precharge 3) [%h,%h,%h,%h]",active_bank,bank_active_row[active_bank],active_col+3,mem[active_bank][bank_active_row[active_bank]][active_col+3]);
+		//$display("DRAM: read (auto precharge 3) [%h,%h,%h,%h]",active_bank,bank_active_row[active_bank],active_col+3,mem[active_bank][bank_active_row[active_bank]][active_col+3]);
 	end
 	20:begin
 		// read (auto precharge) 4
 		state<=21;
 		DRAM_DQ_source<=mem[active_bank][bank_active_row[active_bank]][active_col+4];
-		$display("DRAM: read (auto precharge 4) [%h,%h,%h,%h]",active_bank,bank_active_row[active_bank],active_col+4,mem[active_bank][bank_active_row[active_bank]][active_col+4]);
+		//$display("DRAM: read (auto precharge 4) [%h,%h,%h,%h]",active_bank,bank_active_row[active_bank],active_col+4,mem[active_bank][bank_active_row[active_bank]][active_col+4]);
 	end
 	21:begin
 		// read (auto precharge) 5
 		state<=22;
 		DRAM_DQ_source<=mem[active_bank][bank_active_row[active_bank]][active_col+5];
-		$display("DRAM: read (auto precharge 5) [%h,%h,%h,%h]",active_bank,bank_active_row[active_bank],active_col+5,mem[active_bank][bank_active_row[active_bank]][active_col+5]);
+		//$display("DRAM: read (auto precharge 5) [%h,%h,%h,%h]",active_bank,bank_active_row[active_bank],active_col+5,mem[active_bank][bank_active_row[active_bank]][active_col+5]);
 	end
 	22:begin
 		// read (auto precharge) 6
 		state<=23;
 		DRAM_DQ_source<=mem[active_bank][bank_active_row[active_bank]][active_col+6];
-		$display("DRAM: read (auto precharge 6) [%h,%h,%h,%h]",active_bank,bank_active_row[active_bank],active_col+6,mem[active_bank][bank_active_row[active_bank]][active_col+6]);
+		//$display("DRAM: read (auto precharge 6) [%h,%h,%h,%h]",active_bank,bank_active_row[active_bank],active_col+6,mem[active_bank][bank_active_row[active_bank]][active_col+6]);
 	end
 	23:begin
 		// read (auto precharge) 7
 		state<=0;
 		DRAM_DQ_source<=mem[active_bank][bank_active_row[active_bank]][active_col+7];
-		$display("DRAM: read (auto precharge 7) [%h,%h,%h,%h]",active_bank,bank_active_row[active_bank],active_col+7,mem[active_bank][bank_active_row[active_bank]][active_col+7]);
+		//$display("DRAM: read (auto precharge 7) [%h,%h,%h,%h]",active_bank,bank_active_row[active_bank],active_col+7,mem[active_bank][bank_active_row[active_bank]][active_col+7]);
 		bank_is_active[active_bank]<=0;
 		bank_active_row[active_bank]<=0;
 	end
@@ -242,7 +323,7 @@ always @(posedge main_clk) begin
 			active_bank<=DRAM_BA;
 			active_col<=DRAM_ADDR[9:0];
 			mem[DRAM_BA][bank_active_row[DRAM_BA]][DRAM_ADDR[9:0]]<=DRAM_DQ;
-			$display("DRAM: write (auto precharge 0) [%h,%h,%h,%h]",DRAM_BA,bank_active_row[DRAM_BA],DRAM_ADDR[9:0]+0,DRAM_DQ);
+			//$display("DRAM: write (auto precharge 0) [%h,%h,%h,%h]",DRAM_BA,bank_active_row[DRAM_BA],DRAM_ADDR[9:0]+0,DRAM_DQ);
 		end else begin
 			$stop(); // unimplemented (write no precharge)
 		end
@@ -300,8 +381,6 @@ wire sd_at0_chip_select_external;
 wire sd_at0_data_external_mosi;
 wire sd_at0_data_external_miso;
 
-wire [7:0] debug_controller_state_now; // for sd card debug
-
 wire [15:0] data_out_io;
 wire [15:0] data_in_io;
 wire [31:0] address_io;
@@ -346,8 +425,11 @@ fake_dram fake__dram(
 	
 	main_clk,
 	
-	1'b1 // init_to_random
+	1'b0 // init_to_random
 );
+wire [9:0] debug_port_states2;
+wire [9:0] debug_port_states0;
+wire [9:0] debug_port_states1;
 
 core_main core__main(
 	DRAM_ADDR,
@@ -370,7 +452,10 @@ core_main core__main(
 	
 	debug_user_reg,
 	debug_stack_pointer,
-	debug_instruction_fetch_address
+	debug_instruction_fetch_address,
+	debug_port_states2,
+	debug_port_states0,
+	debug_port_states1
 );
 
 memory_io memory__io(
@@ -393,19 +478,18 @@ memory_io memory__io(
 	.sd_at0_data_external_mosi(sd_at0_data_external_mosi),
 	.sd_at0_data_external_miso(sd_at0_data_external_miso),
 	
-	.debug_controller_state_now(debug_controller_state_now),
-	
 	.VGA_CLK(vga_clk),
 	.main_clk(main_clk)
 );
-
+/*
 initial begin // stopping timer
 	#10;
-	for (i=0;i<131072;i=i+1) begin//131072//800
+	for (i=0;i<13107200;i=i+1) begin//131072//800
 		#20;
 	end
 	$display("Stopping Normally due to cutoff timer.");
 	$stop;
 end
+*/
 
 endmodule

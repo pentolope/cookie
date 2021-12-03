@@ -43,7 +43,7 @@ def directory_extract(origins):
 		l+=directory_extract(sub)
 	return l
 
-f=open("cookie.qsf","rb")
+f=open("cookie.qsf","r")
 qsf_content=f.read()
 f.close()
 bad_initial_seed=False
@@ -106,7 +106,7 @@ if ("set_global_assignment -name SEED 1" in qsf_content) and not bad_initial_see
 		os.mkdir(directory_root)
 		for directory_item in directory_list:
 			os.mkdir(directory_root+directory_item)
-		f=open(directory_root+"cookie.qsf","wb")
+		f=open(directory_root+"cookie.qsf","w")
 		f.write(qsf_content.replace("set_global_assignment -name SEED 1","set_global_assignment -name SEED "+str(seed_value)))
 		f.close()
 	total_count=(seed_upper+1)-seed_lower

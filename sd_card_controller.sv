@@ -58,8 +58,6 @@ module sd_card_controller(
 	output chip_select_external,
 	output data_external_mosi,
 	input  data_external_miso,
-	
-	output [7:0] debug_controller_state_now,
 
 	output [15:0] data_read_mmio,
 	input  [15:0] data_write_mmio,
@@ -245,8 +243,6 @@ reg [31:0] command_arg=0;
 reg [7:0] general_use_counter=0;
 reg [7:0] controller_state_now=0;
 reg [7:0] controller_state_after_command_sent=0;
-
-assign debug_controller_state_now=controller_state_now;
 
 
 reg perform_controller_process=0; // pulses on once for every byte that goes to/from SPI. It is also timed in a sweet spot that allows processing on the previous byte in to effect the next byte out.

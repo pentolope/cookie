@@ -5,6 +5,23 @@
 `include "cache_data.sv"
 `include "cache_way.sv"
 
+module move_data_for_memory_system(
+	output [15:0] moved_data_in_extern [3:0],
+	input  [15:0] temp_data_in [3:0],
+	input  [1:0] move_value
+);
+reg [15:0] moved_data_in [3:0];
+assign moved_data_in_extern=moved_data_in;
+always_comb begin
+	moved_data_in='{16'hx,16'hx,16'hx,16'hx};
+	unique case (move_value)
+	0:moved_data_in[2:0]=temp_data_in[3:1];
+	1:moved_data_in[1:0]=temp_data_in[3:2];
+	2:moved_data_in[  0]=temp_data_in[3  ];
+	3:moved_data_in[3:0]=temp_data_in[3:0];
+	endcase
+end
+endmodule
 
 module memory_system(
 	output		    [12:0]		DRAM_ADDR,
@@ -19,20 +36,30 @@ module memory_system(
 	output		          		DRAM_WE_N,
 	
 	input  [1:0] tick_tock_phase0,
+	output [1:0] tick_tock_phase1_extern,
 	output [1:0] tick_tock_phase2_extern,
+	output tick_tock_phase2_moved_extern,
 	
 	input [30:0] tt_address [1:0],
-	input [15:0] tt_data [1:0][3:0],
+	input [15:0] tt_data_in0 [3:0],
+	input [15:0] tt_data_in1 [3:0],
+	input [1:0] tt_move [1:0],
+	input tt_secondary [1:0],
 	input [2:0] tt_access_length [1:0],
-	input tt_is_hyperfetch [1:0],
 	input tt_is_byte_op [1:0],
 	input tt_is_write_op [1:0],
 	
-	output out_soft_fault,
 	output [15:0] cd_access_out_full_data [7:0],
 	
 	input  main_clk
 );
+
+reg [1:0] tick_tock_phase1=0;
+reg [1:0] tick_tock_phase2=0;
+reg tick_tock_phase2_moved=0;
+assign tick_tock_phase1_extern=tick_tock_phase1;
+assign tick_tock_phase2_extern=tick_tock_phase2;
+assign tick_tock_phase2_moved_extern=tick_tock_phase2_moved;
 
 
 wire cd_out_dirty;
@@ -42,26 +69,24 @@ wire is_cache_being_filled; // this is referring to being filled from DRAM
 
 
 wire [30:0] cw_target_address;
-wire cw_is_hyper_fetch;
 wire cw_no_access;
 wire cw_is_byte_op;
 wire cw_is_write_op;
 wire [2:0] cw_access_length;
 wire [15:0] cw_data_in [3:0];
+wire [1:0] cw_move;
+wire cw_secondary;
 
 reg cd_is_byte_op=0;
 reg cd_is_write_op=0;
 reg [2:0] cd_access_length=0;
 
 wire [10:0] addr_at_in_way_index;
-wire soft_fault;
 wire hard_fault;
 wire any_fault; // includes no access faulting
 
 wire was_hard_fault_starting;
 wire was_hard_faulting;
-reg signal_dram_of_hard_fault=0;
-always @(posedge main_clk) signal_dram_of_hard_fault<=was_hard_fault_starting;
 
 wire [10:0] cd_target_segment;
 wire [1:0] cd_target_way;
@@ -69,16 +94,34 @@ wire [1:0] lru_least_used_way;
 wire enable_data_and_lru;
 wire [1:0] cd_way;
 reg [15:0] cd_data_in [3:0];
+
 reg [30:0] cd_target_address=0;
 
-always @(posedge main_clk) begin
-	if (!(hard_fault && !was_hard_faulting)) begin
-		cd_target_address<=cw_target_address;
-		cd_is_byte_op<=cw_is_byte_op;
-		cd_is_write_op<=cw_is_write_op;
-		cd_access_length<=cw_access_length;
-		cd_data_in<=cw_data_in;
+reg [30:0] raw_address;
+always_comb begin
+	raw_address=tt_address[tick_tock_phase1[0]];
+	if (tt_secondary[tick_tock_phase1[0]]) begin
+		raw_address=raw_address+5'd16;
+		raw_address[3:0]=4'h0;
 	end
+end
+
+wire [15:0] moved_data_in [3:0];
+
+
+move_data_for_memory_system move_data_for_memory_system_inst(
+	moved_data_in,
+	tick_tock_phase1[0]?tt_data_in1:tt_data_in0,
+	tt_move[tick_tock_phase1[0]]
+);
+
+
+always @(posedge main_clk) begin
+	cd_target_address<=cw_target_address;
+	cd_is_byte_op<=cw_is_byte_op;
+	cd_is_write_op<=cw_is_write_op;
+	cd_access_length<=cw_access_length;
+	cd_data_in<=cw_data_in;
 end
 
 
@@ -96,38 +139,29 @@ assign cd_target_segment=cd_target_address[14:4];
 
 assign enable_data_and_lru=!any_fault;
 
-reg [1:0] tick_tock_phase1=0;
-reg [1:0] tick_tock_phase2=0;
-assign tick_tock_phase2_extern=tick_tock_phase2;
 
-assign cw_no_access=(tick_tock_phase0==tick_tock_phase1)?1'b1:1'b0;
+assign cw_no_access=(tick_tock_phase0==tick_tock_phase1 && !was_hard_faulting)?1'b1:1'b0;
 
-assign cw_target_address=tt_address[tick_tock_phase1[0]];
-assign cw_is_hyper_fetch=tt_is_hyperfetch[tick_tock_phase1[0]];
-assign cw_is_byte_op=tt_is_byte_op[tick_tock_phase1[0]];
-assign cw_is_write_op=tt_is_write_op[tick_tock_phase1[0]];
-assign cw_access_length=tt_access_length[tick_tock_phase1[0]];
-assign cw_data_in=tt_data[tick_tock_phase1[0]];
+assign cw_target_address=hard_fault?cd_target_address:raw_address;
+assign cw_is_byte_op=hard_fault?cd_is_byte_op:tt_is_byte_op[tick_tock_phase1[0]];
+assign cw_is_write_op=hard_fault?cd_is_write_op:tt_is_write_op[tick_tock_phase1[0]];
+assign cw_access_length=hard_fault?cd_access_length:tt_access_length[tick_tock_phase1[0]];
+assign cw_data_in=hard_fault?cd_data_in:moved_data_in;
 
 
 always @(posedge main_clk) begin
-	tick_tock_phase2<=tick_tock_phase1;
-	tick_tock_phase1<=tick_tock_phase1 + ((tick_tock_phase0!=tick_tock_phase1)?1'b1:1'b0);
-	if (hard_fault) begin
-		tick_tock_phase2<=tick_tock_phase2;
-		tick_tock_phase1<=tick_tock_phase2;
+	if (!hard_fault) begin
+		tick_tock_phase2_moved<=(tick_tock_phase2!=tick_tock_phase1)? 1'b1:1'b0;
+		tick_tock_phase2<=tick_tock_phase1;
+		tick_tock_phase1<=tick_tock_phase1 + ((tick_tock_phase0!=tick_tock_phase1)?1'b1:1'b0);
+	end else begin
+		tick_tock_phase2_moved<=0;
 	end
 end
-
-reg soft_fault_r=0;
-assign out_soft_fault=soft_fault_r;
-always @(posedge main_clk) soft_fault_r<=soft_fault;
-
 
 cache_way cache_way(
 	addr_at_in_way_index,
 	
-	soft_fault,
 	hard_fault,
 	any_fault,
 	was_hard_fault_starting,
@@ -138,10 +172,9 @@ cache_way cache_way(
 	lru_least_used_way, // cache way to set
 	
 	cw_target_address,
-	cw_is_hyper_fetch,
 	cw_no_access,
 	
-	is_cache_being_filled, // do_set_cache_way
+	is_cache_being_filled, // do_write
 	main_clk
 );
 
@@ -179,15 +212,9 @@ cache_LRU cache_LRU_inst(
 );
 
 always @(posedge main_clk) begin
-	if (signal_dram_of_hard_fault) begin
-		$display("signal_dram_of_hard_fault [%h]",cd_target_address);
-	end
-	if (hard_fault) begin
-		$display("addr_at_in_way_index [%h,%h]",addr_at_in_way_index,cd_target_address);
-	end
+	if (was_hard_fault_starting) $display("hard fault start at %t",$time);
 end
-
-
+wire [30:0] evicted_address;assign evicted_address={addr_at_in_way_index,cd_target_address[14: 4],4'b0};
 
 dram_controller dram_controller_inst(
 	cd_target_address[25:15],
@@ -197,9 +224,8 @@ dram_controller dram_controller_inst(
 	cd_raw_out_full_data,
 	cd_out_dirty,
 	
-	signal_dram_of_hard_fault,
+	was_hard_fault_starting, // signal_dram_of_hard_fault
 	is_cache_being_filled,
-	
 	
 	DRAM_ADDR,
 	DRAM_BA,

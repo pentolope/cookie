@@ -28,8 +28,6 @@ module memory_io(
 	output sd_at0_data_external_mosi,
 	input  sd_at0_data_external_miso,
 	
-	output [7:0] debug_controller_state_now,
-	
 	input VGA_CLK,
 	input main_clk
 );
@@ -132,8 +130,6 @@ sd_card_controller sd_card_controller_inst(
 	.chip_select_external(sd_at0_chip_select_external),
 	.data_external_mosi(sd_at0_data_external_mosi),
 	.data_external_miso(sd_at0_data_external_miso),
-	
-	.debug_controller_state_now(debug_controller_state_now),
 	
 	.data_read_mmio(out_mux[2]),
 	.data_write_mmio(data_in_io_modified),

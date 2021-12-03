@@ -31,6 +31,16 @@ reg [14:0] read_addr_async;
 reg [14:0] read_addr_r=0;
 always @(posedge VGA_CLK) read_addr_r<=read_addr_async;
 
+always @(posedge main_clk) begin
+	if (io_do_write) begin
+		if (io_write_data[7:0]>=32 && io_write_data[7:0]<=126) begin
+			$display("VGA:%h:%h:%h:[%c]@%0t",io_do_byte_op,io_addr,io_write_data,io_write_data[7:0],$time);
+		end else begin
+			$display("VGA:%h:%h:%h:[]@%0t",io_do_byte_op,io_addr,io_write_data,$time);
+		end
+	end
+end
+
 wire [15:0] raw_read0;
 wire [15:0] raw_read1;
 reg [7:0] vga_read_byte;

@@ -1,0 +1,186 @@
+import itertools as it
+
+def test_filter(b):
+	if b.index(2)>b.index(4) and b.index(3)>b.index(5):
+		return True
+	return False
+
+perms=list(it.permutations(range(6)[::-1]))
+perms=list(filter(test_filter,perms))
+print(len(perms))
+
+prefix="""
+*(U)(0x15f010)=0x000A;
+*(U)(0x15f000)=0x0009;
+*(U)(0x14f010)=0x0008;
+*(U)(0x14f000)=0x0007;
+*(U)(0x13f010)=0x0006;
+*(U)(0x13f000)=0x0005;
+*(U)(0x12f010)=0x0004;
+*(U)(0x12f000)=0x0003;
+*(U)(0x11f010)=0x0002;
+*(U)(0x11f000)=0x0001;
+"""
+
+access_list=[
+"*(U)(0x11f000)=0x000F;",
+"*(U)(0x11f010)=0x000F;",
+"*(U)(0x14f000)=0x000F;",
+"*(U)(0x14f010)=0x000F;",
+"*(U)(0x15f000)=0x000F;",
+"*(U)(0x15f010)=0x000F;"
+]
+
+
+out_list=[]
+out_list.append("\ntypedef volatile unsigned int* U;\n")
+
+k=0
+f_list=[]
+print(str(k*60)+":"+str((k+1)*60))
+for i,v in list(enumerate(perms))[k*60:(k+1)*60]:
+	f_list.append("f"+str(i+1))
+	out_list.append("void f"+str(i+1)+"(){")
+	out_list.append(prefix)
+	out_list.append("*(U)(0x16f0F0)="+str(i+1)+";")
+	out_list.append("*(U)(0x16f0F2)="+str(i+1)+";")
+	out_list.append("*(U)(0x16f0F4)="+str(i+1)+";")
+	out_list.append("*(U)(0x16f0F6)="+str(i+1)+";")
+	out_list.append("*(U)(0x16f0F8)="+str(i+1)+";")
+	out_list.append("*(U)(0x16f0FA)="+str(i+1)+";")
+	out_list.append("*(U)(0x16f0FC)="+str(i+1)+";")
+	out_list.append("*(U)(0x16f0FE)="+str(i+1)+";")
+	out_list.append(access_list[v[0]])
+	out_list.append(access_list[v[1]])
+	out_list.append(access_list[v[2]])
+	out_list.append(access_list[v[3]])
+	out_list.append(access_list[v[4]])
+	out_list.append(access_list[v[5]])
+	out_list.append("}")
+
+
+
+
+out_list.append("\nint main(){\n")
+out_list.append("""
+
+*(U)(0x16f0F0)=0xFFFF;
+
+*(U)(0x15f000)=0x0009;
+*(U)(0x15f002)=0x0009;
+*(U)(0x15f004)=0x0009;
+*(U)(0x15f006)=0x0009;
+*(U)(0x15f008)=0x0009;
+*(U)(0x15f00A)=0x0009;
+*(U)(0x15f00C)=0x0009;
+*(U)(0x15f00E)=0x0009;
+
+*(U)(0x15f010)=0x000A;
+*(U)(0x15f012)=0x000A;
+*(U)(0x15f014)=0x000A;
+*(U)(0x15f016)=0x000A;
+*(U)(0x15f018)=0x000A;
+*(U)(0x15f01A)=0x000A;
+*(U)(0x15f01C)=0x000A;
+*(U)(0x15f01E)=0x000A;
+
+*(U)(0x14f000)=0x0007;
+*(U)(0x14f002)=0x0007;
+*(U)(0x14f004)=0x0007;
+*(U)(0x14f006)=0x0007;
+*(U)(0x14f008)=0x0007;
+*(U)(0x14f00A)=0x0007;
+*(U)(0x14f00C)=0x0007;
+*(U)(0x14f00E)=0x0007;
+
+*(U)(0x14f010)=0x0008;
+*(U)(0x14f012)=0x0008;
+*(U)(0x14f014)=0x0008;
+*(U)(0x14f016)=0x0008;
+*(U)(0x14f018)=0x0008;
+*(U)(0x14f01A)=0x0008;
+*(U)(0x14f01C)=0x0008;
+*(U)(0x14f01E)=0x0008;
+
+*(U)(0x13f000)=0x0005;
+*(U)(0x13f002)=0x0005;
+*(U)(0x13f004)=0x0005;
+*(U)(0x13f006)=0x0005;
+*(U)(0x13f008)=0x0005;
+*(U)(0x13f00A)=0x0005;
+*(U)(0x13f00C)=0x0005;
+*(U)(0x13f00E)=0x0005;
+
+*(U)(0x13f010)=0x0006;
+*(U)(0x13f012)=0x0006;
+*(U)(0x13f014)=0x0006;
+*(U)(0x13f016)=0x0006;
+*(U)(0x13f018)=0x0006;
+*(U)(0x13f01A)=0x0006;
+*(U)(0x13f01C)=0x0006;
+*(U)(0x13f01E)=0x0006;
+
+*(U)(0x12f000)=0x0003;
+*(U)(0x12f002)=0x0003;
+*(U)(0x12f004)=0x0003;
+*(U)(0x12f006)=0x0003;
+*(U)(0x12f008)=0x0003;
+*(U)(0x12f00A)=0x0003;
+*(U)(0x12f00C)=0x0003;
+*(U)(0x12f00E)=0x0003;
+
+*(U)(0x12f010)=0x0004;
+*(U)(0x12f012)=0x0004;
+*(U)(0x12f014)=0x0004;
+*(U)(0x12f016)=0x0004;
+*(U)(0x12f018)=0x0004;
+*(U)(0x12f01A)=0x0004;
+*(U)(0x12f01C)=0x0004;
+*(U)(0x12f01E)=0x0004;
+
+*(U)(0x11f000)=0x0001;
+*(U)(0x11f002)=0x0001;
+*(U)(0x11f004)=0x0001;
+*(U)(0x11f006)=0x0001;
+*(U)(0x11f008)=0x0001;
+*(U)(0x11f00A)=0x0001;
+*(U)(0x11f00C)=0x0001;
+*(U)(0x11f00E)=0x0001;
+
+*(U)(0x11f010)=0x0002;
+*(U)(0x11f012)=0x0002;
+*(U)(0x11f014)=0x0002;
+*(U)(0x11f016)=0x0002;
+*(U)(0x11f018)=0x0002;
+*(U)(0x11f01A)=0x0002;
+*(U)(0x11f01C)=0x0002;
+*(U)(0x11f01E)=0x0002;
+""")
+
+
+for v in f_list:
+	out_list.append(v+"();")
+
+if False:
+	out_list=["\n"]
+	for i in range(2,32,2):
+		out_list.append("void f"+str(i)+"_0(){char v["+str(i)+"];}")
+	for i in range(2,32,2):
+		out_list.append("void f"+str(i)+"_1(){")
+		for j in range(2,32,2):
+			out_list.append("f"+str(j)+"_0();")
+		out_list.append("}")
+
+	out_list.append("int main(){")
+	for i in range(2,32,2):
+		out_list.append("f"+str(i)+"_1();")
+
+
+
+out_list.append("\nEnd:;goto End;}\n")
+
+with open("boot.c","w") as f:
+	f.write('\n'.join(out_list))
+
+
+

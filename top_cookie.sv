@@ -155,9 +155,16 @@ wire [15:0] debug_user_reg [15:0];
 wire [15:0] debug_stack_pointer;
 wire [25:0] debug_instruction_fetch_address;
 wire [9:0] led_state;
-assign LEDR=led_state;
-
-
+//assign LEDR[9:0]=led_state;
+wire [9:0] debug_port_states0;
+wire [9:0] debug_port_states1;
+wire [9:0] debug_port_states2;
+wire [9:0] led_mux [3:0];
+assign led_mux[0]=led_state;
+assign led_mux[1]=debug_port_states2;
+assign led_mux[2]=debug_port_states0;
+assign led_mux[3]=debug_port_states1;
+assign LEDR[9:0]=led_mux[SW[9:8]];
 
 core_main core__main(
 	DRAM_ADDR,
@@ -180,11 +187,11 @@ core_main core__main(
 	
 	debug_user_reg,
 	debug_stack_pointer,
-	debug_instruction_fetch_address
+	debug_instruction_fetch_address,
+	debug_port_states2,
+	debug_port_states0,
+	debug_port_states1
 );
-
-
-wire [7:0] debug_controller_state_now; // for sd card debug
 
 generate_hex_display_base16 generate_hex_display_inst(
 	hex_display,
@@ -196,19 +203,19 @@ wire ps2_at0_external_clock_pulldown;
 wire ps2_at0_external_data_pulldown;
 wire ps2_at0_external_clock_in;
 wire ps2_at0_external_data_in;
-assign GPIO[0]=ps2_at0_external_data_pulldown;  // GPIO[0]
-assign ps2_at0_external_data_in=GPIO[1];        // GPIO[1]
-assign GPIO[2]=ps2_at0_external_clock_pulldown; // GPIO[2]
-assign ps2_at0_external_clock_in=GPIO[3];       // GPIO[3]
+assign ARDUINO_IO[14]=ps2_at0_external_data_pulldown;  // ARDUINO_IO[14]
+assign ps2_at0_external_data_in=ARDUINO_IO[15];        // ARDUINO_IO[15]
+assign ARDUINO_IO[13]=ps2_at0_external_clock_pulldown; // ARDUINO_IO[13]
+assign ps2_at0_external_clock_in=ARDUINO_IO[12];       // ARDUINO_IO[12]
 
 wire sd_at0_clk_external;
 wire sd_at0_chip_select_external;
 wire sd_at0_data_external_mosi;
 wire sd_at0_data_external_miso;
-assign sd_at0_data_external_miso=GPIO[4];       // GPIO[4]
-assign GPIO[5]=sd_at0_clk_external;             // GPIO[5]
-assign GPIO[6]=sd_at0_data_external_mosi;       // GPIO[6]
-assign GPIO[7]=sd_at0_chip_select_external;     // GPIO[7]
+assign sd_at0_data_external_miso=ARDUINO_IO[5];    // ARDUINO_IO[5]
+assign ARDUINO_IO[4]=sd_at0_clk_external;          // ARDUINO_IO[4]
+assign ARDUINO_IO[3]=sd_at0_data_external_mosi;    // ARDUINO_IO[3]
+assign ARDUINO_IO[2]=sd_at0_chip_select_external;  // ARDUINO_IO[2]
 
 memory_io memory__io(
 	.data_out_io(data_out_io),
@@ -229,8 +236,6 @@ memory_io memory__io(
 	.sd_at0_chip_select_external(sd_at0_chip_select_external),
 	.sd_at0_data_external_mosi(sd_at0_data_external_mosi),
 	.sd_at0_data_external_miso(sd_at0_data_external_miso),
-	
-	.debug_controller_state_now(debug_controller_state_now),
 	
 	.VGA_CLK(vga_clk),
 	.main_clk(main_clk)

@@ -6,23 +6,20 @@ waveAdds=[
 '-radix hexadecimal /sim_enviroment/core__main/user_reg',
 '-radix hexadecimal /sim_enviroment/core__main/stack_pointer',
 '-radix hexadecimal /sim_enviroment/core__main/instant_updated_core_values',
-'-radix hexadecimal /sim_enviroment/core__main/vr0',
-'-radix hexadecimal /sim_enviroment/core__main/vr1',
-'-radix hexadecimal /sim_enviroment/core__main/vr2',
 '-radix hexadecimal /sim_enviroment/core__main/core_executer_inst0/simExecutingInstruction',
 '-radix hexadecimal /sim_enviroment/core__main/core_executer_inst1/simExecutingInstruction',
 '-radix hexadecimal /sim_enviroment/core__main/core_executer_inst2/simExecutingInstruction',
 '-radix hexadecimal /sim_enviroment/core__main/core_executer_inst3/simExecutingInstruction',
-'/sim_enviroment/core__main/core_executer_inst2/dependSelfRegRead',
-'/sim_enviroment/core__main/core_executer_inst2/resolveDependSelfRegRead',
-'-radix hexadecimal /sim_enviroment/core__main/core_executer_inst2/user_reg',
-'-radix hexadecimal /sim_enviroment/core__main/core_executer_inst2/stack_pointer',
-#'/sim_enviroment/core__main/core_executer_inst0/dependSelfRegWrite',
-#'/sim_enviroment/core__main/core_executer_inst0/dependSelfSpecial',
-#'/sim_enviroment/core__main/core_executer_inst0/resolveDependSelfRegRead',
-#'/sim_enviroment/core__main/core_executer_inst0/unreadyDependSelfRegWrite',
-#'/sim_enviroment/core__main/core_executer_inst0/isUnblocked',
-#'/sim_enviroment/core__main/core_executer_inst0/isAfter',
+'-radix hexadecimal /sim_enviroment/core__main/core_executer_inst4/simExecutingInstruction',
+'-radix hexadecimal /sim_enviroment/core__main/core_executer_inst5/simExecutingInstruction',
+'-radix hexadecimal /sim_enviroment/core__main/core_executer_inst6/simExecutingInstruction',
+'-radix hexadecimal /sim_enviroment/core__main/core_executer_inst7/simExecutingInstruction',
+'/sim_enviroment/core__main/main_clk',
+'/sim_enviroment/core__main/scheduler_inst/fifo_instruction_cache_size_next',
+'/sim_enviroment/core__main/scheduler_inst/fifo_instruction_cache_size',
+'/sim_enviroment/core__main/fifo_instruction_cache_size',
+'/sim_enviroment/core__main/fifo_instruction_cache_consume_count',
+'/sim_enviroment/core__main/fifo_instruction_cache_size_after_read',
 '/sim_enviroment/core__main/main_clk',
 '/sim_enviroment/core__main/*',
 '/sim_enviroment/core__main/main_clk'
@@ -33,24 +30,24 @@ try:
 
 	filePathHijackTarget=fileBasePath+"modelsim\\cookie_run_msim_rtl_verilog.do"
 
-	f=file(filePathHijackTarget,'w')
+	f=open(filePathHijackTarget,'w')
 	f.write('')
 	f.close()
 	
-	f=file(fileBasePath+"hijacker_ready.txt",'w')
+	f=open(fileBasePath+"hijacker_ready.txt",'w')
 	f.write('y')
 	f.close()
 	
-	print 'modelsim fixer ready...'
+	print('modelsim fixer ready...')
 	
 	hasHijacked=False
 	while not hasHijacked:
-		f=file(filePathHijackTarget,'r')
+		f=open(filePathHijackTarget,'r')
 		contents=f.read()
 		isReady=len(contents)!=0
 		f.close()
 		if isReady:
-			print 'Hijacking in progress...'
+			print('Hijacking in progress...')
 			contents='\n'.join(filter(lambda x:not ('autogen' in x.lower()),contents.split('\n')))
 			contents+='\n'
 			contents+='vsim -L fiftyfivenm_ver -L altera_ver -L altera_mf_ver -L 220model_ver -L sgate_ver -L altera_lnsim_ver work.sim_enviroment'#-c -t 1ps
@@ -63,15 +60,15 @@ try:
 			contents+='\n'
 			contents+='run -all'
 			contents+='\n'
-			f=file(filePathHijackTarget,'w')
+			f=open(filePathHijackTarget,'w')
 			f.write(contents)
 			f.close()
 			hasHijacked=True
 		sleep(.001)
 except Exception as ex:
-	print 'Error!'
-	print ex
-	raw_input('Press Enter to Exit:')
+	print('Error!')
+	print(ex)
+	input('Press Enter to Exit:')
 	raise
-print 'Finished!'
+print('Finished!')
 sleep(.2)
