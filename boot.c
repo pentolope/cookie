@@ -19,20 +19,21 @@
 
 #define FAT_DIRENTRY_DELETED 0xe5
 
-void memcpy(void* dest, const void* src, size_t size){
-	while (size!=0){
-		*(uint8_t*)dest = *(uint8_t*)src;
-		dest=(void*)((size_t)dest+1);
-		src=(const void*)((size_t)src+1);
-		--size;
+// note that normal memcpy does not return void, but here it does because I never use the return value
+void memcpy(void* dest, const void* src, unsigned long n){
+	if (n!=0u){
+		if (((unsigned long)dest&1u)==0u & ((unsigned long)src&1u)==0u){
+			__intrinsic_memcpy_aligned(dest,src,n);
+		} else {
+			__intrinsic_memmove_forward_unaligned(dest,src,n);
+		}
 	}
 }
 
-void memset(void* dest, uint8_t val, size_t size){
-	while (size!=0){
-		*(uint8_t*)dest = val;
-		dest=(void*)((size_t)dest+1);
-		--size;
+// note that normal memset does not return void, but here it does because I never use the return value
+void memset(void* dest, int v, unsigned long n){
+	if (n!=0u){
+		__intrinsic_memset(dest,v,n);
 	}
 }
 
