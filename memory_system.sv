@@ -5,24 +5,6 @@
 `include "cache_data.sv"
 `include "cache_way.sv"
 
-module move_data_for_memory_system(
-	output [15:0] moved_data_in_extern [3:0],
-	input  [15:0] temp_data_in [3:0],
-	input  [1:0] move_value
-);
-reg [15:0] moved_data_in [3:0];
-assign moved_data_in_extern=moved_data_in;
-always_comb begin
-	moved_data_in='{16'hx,16'hx,16'hx,16'hx};
-	unique case (move_value)
-	0:moved_data_in[2:0]=temp_data_in[3:1];
-	1:moved_data_in[1:0]=temp_data_in[3:2];
-	2:moved_data_in[  0]=temp_data_in[3  ];
-	3:moved_data_in[3:0]=temp_data_in[3:0];
-	endcase
-end
-endmodule
-
 module memory_system(
 	output		    [12:0]		DRAM_ADDR,
 	output		     [1:0]		DRAM_BA,
@@ -107,13 +89,19 @@ always_comb begin
 end
 
 wire [15:0] moved_data_in [3:0];
-
-
-move_data_for_memory_system move_data_for_memory_system_inst(
-	moved_data_in,
-	tick_tock_phase1[0]?tt_data_in1:tt_data_in0,
-	tt_move[tick_tock_phase1[0]]
-);
+wire [15:0] almost_moved_data [3:0];
+wire [15:0] moving_data_mux [3:0][3:0];
+wire [1:0] move_value;
+assign almost_moved_data=tick_tock_phase1[0]?tt_data_in1:tt_data_in0;
+assign move_value=tt_move[tick_tock_phase1[0]];
+assign moving_data_mux[0][2:0]=almost_moved_data[3:1];
+assign moving_data_mux[0][  3]=16'hx;
+assign moving_data_mux[1][1:0]=almost_moved_data[3:2];
+assign moving_data_mux[2][3:2]='{16'hx,16'hx};
+assign moving_data_mux[2][  0]=almost_moved_data[3  ];
+assign moving_data_mux[2][3:1]='{16'hx,16'hx,16'hx};
+assign moving_data_mux[3][3:0]=almost_moved_data[3:0];
+assign moved_data_in=moving_data_mux[move_value];
 
 
 always @(posedge main_clk) begin
