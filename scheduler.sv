@@ -91,7 +91,6 @@ reg [7:0] instructions_might_be_valid_now=0;
 reg [7:0] is_instructions_valid=0;
 always @(posedge main_clk) is_instructions_valid<=is_instructions_valid_next;
 always @(posedge main_clk) instructions_might_be_valid_now<=instructions_might_be_valid_next;
-//always_comb instructions_might_be_valid_next=is_instructions_valid | is_new_instruction_entering_this_cycle;
 always_comb instructions_might_be_valid_next=could_instruction_be_valid_next;
 
 
@@ -119,8 +118,8 @@ wire [2:0] popcntConsume_next2;
 wire [1:0] popcntConsume_next3;
 reg  [1:0] popcntConsume_3=3;
 
-lcell_2 lc_popcnt0(popcntConsume_next0,popcnt4[~instructions_might_be_valid_next[3:0]]);
-lcell_2 lc_popcnt1(popcntConsume_next1,popcnt4[~instructions_might_be_valid_next[7:4]]);
+lcells #(2) lc_popcnt0(popcntConsume_next0,popcnt4[~instructions_might_be_valid_next[3:0]]);
+lcells #(2) lc_popcnt1(popcntConsume_next1,popcnt4[~instructions_might_be_valid_next[7:4]]);
 
 assign popcntConsume_next2=popcntConsume_next0 + popcntConsume_next1;
 assign popcntConsume_next3=(popcntConsume_next2>2'd3)?(2'd3):(popcntConsume_next2[1:0]);
@@ -131,14 +130,14 @@ assign used_ready_instruction_count_extern=used_ready_instruction_count;
 
 reg [1:0] setIndexes [7:0];
 
-lcell_2 lc0_setIndexes(setIndexes_extern[0],setIndexes[0]);
-lcell_2 lc1_setIndexes(setIndexes_extern[1],setIndexes[1]);
-lcell_2 lc2_setIndexes(setIndexes_extern[2],setIndexes[2]);
-lcell_2 lc3_setIndexes(setIndexes_extern[3],setIndexes[3]);
-lcell_2 lc4_setIndexes(setIndexes_extern[4],setIndexes[4]);
-lcell_2 lc5_setIndexes(setIndexes_extern[5],setIndexes[5]);
-lcell_2 lc6_setIndexes(setIndexes_extern[6],setIndexes[6]);
-lcell_2 lc7_setIndexes(setIndexes_extern[7],setIndexes[7]);
+lcells #(2) lc0_setIndexes(setIndexes_extern[0],setIndexes[0]);
+lcells #(2) lc1_setIndexes(setIndexes_extern[1],setIndexes[1]);
+lcells #(2) lc2_setIndexes(setIndexes_extern[2],setIndexes[2]);
+lcells #(2) lc3_setIndexes(setIndexes_extern[3],setIndexes[3]);
+lcells #(2) lc4_setIndexes(setIndexes_extern[4],setIndexes[4]);
+lcells #(2) lc5_setIndexes(setIndexes_extern[5],setIndexes[5]);
+lcells #(2) lc6_setIndexes(setIndexes_extern[6],setIndexes[6]);
+lcells #(2) lc7_setIndexes(setIndexes_extern[7],setIndexes[7]);
 
 assign is_new_instruction_entering_this_cycle_extern=is_new_instruction_entering_this_cycle;
 
@@ -262,8 +261,8 @@ wire [11:0] tmp0;
 wire [11:0] tmp1;
 wire [5:0] tmp2;
 wire [5:0] tmp3;
-lcell_12 lc_g0(tmp0,lut0[tmp2]);
-lcell_12 lc_g1(tmp1,lut0[tmp3]);
+lcells #(12) lc_g0(tmp0,lut0[tmp2]);
+lcells #(12) lc_g1(tmp1,lut0[tmp3]);
 assign tmp2[3:0]=~(instructions_might_be_valid_now[3:0]);
 assign tmp2[5:4]=count_for0;
 assign tmp3[3:0]=~(instructions_might_be_valid_now[7:4]);
@@ -280,130 +279,6 @@ assign setIndexes[4]=tmp1[ 5: 4]+count_for0;
 assign setIndexes[5]=tmp1[ 7: 6]+count_for0;
 assign setIndexes[6]=tmp1[ 9: 8]+count_for0;
 assign setIndexes[7]=tmp1[11:10]+count_for0;
-
-/*
-always_comb begin
-	isAfter_temp=isAfter_true;
-	is_new_instruction_entering_this_cycle=8'h0;
-	setIndexes='{2'hx,2'hx,2'hx,2'hx,2'hx,2'hx,2'hx,2'hx};
-	count_left0=count_for0;
-	count_left1=count_for1;
-	if (count_left0!=2'h0 && !instructions_might_be_valid_now[0]) begin
-		is_new_instruction_entering_this_cycle[0]=1'b1;
-		setIndexes[0]=count_for0 -count_left0;
-		count_left0=count_left0-1'd1;
-		isAfter_temp[0]=8'hFF;
-		isAfter_temp[0][0]=1'b0;
-		isAfter_temp[1][0]=1'b0;
-		isAfter_temp[2][0]=1'b0;
-		isAfter_temp[3][0]=1'b0;
-		isAfter_temp[4][0]=1'b0;
-		isAfter_temp[5][0]=1'b0;
-		isAfter_temp[6][0]=1'b0;
-		isAfter_temp[7][0]=1'b0;
-	end
-	if (count_left0!=2'h0 && !instructions_might_be_valid_now[1]) begin
-		is_new_instruction_entering_this_cycle[1]=1'b1;
-		setIndexes[1]=count_for0 -count_left0;
-		count_left0=count_left0-1'd1;
-		isAfter_temp[1]=8'hFF;
-		isAfter_temp[0][1]=1'b0;
-		isAfter_temp[1][1]=1'b0;
-		isAfter_temp[2][1]=1'b0;
-		isAfter_temp[3][1]=1'b0;
-		isAfter_temp[4][1]=1'b0;
-		isAfter_temp[5][1]=1'b0;
-		isAfter_temp[6][1]=1'b0;
-		isAfter_temp[7][1]=1'b0;
-	end
-	if (count_left0!=2'h0 && !instructions_might_be_valid_now[2]) begin
-		is_new_instruction_entering_this_cycle[2]=1'b1;
-		setIndexes[2]=count_for0 -count_left0;
-		count_left0=count_left0-1'd1;
-		isAfter_temp[2]=8'hFF;
-		isAfter_temp[0][2]=1'b0;
-		isAfter_temp[1][2]=1'b0;
-		isAfter_temp[2][2]=1'b0;
-		isAfter_temp[3][2]=1'b0;
-		isAfter_temp[4][2]=1'b0;
-		isAfter_temp[5][2]=1'b0;
-		isAfter_temp[6][2]=1'b0;
-		isAfter_temp[7][2]=1'b0;
-	end
-	if (count_left0!=2'h0 && !instructions_might_be_valid_now[3]) begin
-		is_new_instruction_entering_this_cycle[3]=1'b1;
-		setIndexes[3]=count_for0 -count_left0;
-		count_left0=count_left0-1'd1;
-		isAfter_temp[3]=8'hFF;
-		isAfter_temp[0][3]=1'b0;
-		isAfter_temp[1][3]=1'b0;
-		isAfter_temp[2][3]=1'b0;
-		isAfter_temp[3][3]=1'b0;
-		isAfter_temp[4][3]=1'b0;
-		isAfter_temp[5][3]=1'b0;
-		isAfter_temp[6][3]=1'b0;
-		isAfter_temp[7][3]=1'b0;
-	end
-	if (count_left1!=2'h0 && !instructions_might_be_valid_now[4]) begin
-		is_new_instruction_entering_this_cycle[4]=1'b1;
-		setIndexes[4]=(count_for1 -count_left1)+count_for0;
-		count_left1=count_left1-1'd1;
-		isAfter_temp[4]=8'hFF;
-		isAfter_temp[0][4]=1'b0;
-		isAfter_temp[1][4]=1'b0;
-		isAfter_temp[2][4]=1'b0;
-		isAfter_temp[3][4]=1'b0;
-		isAfter_temp[4][4]=1'b0;
-		isAfter_temp[5][4]=1'b0;
-		isAfter_temp[6][4]=1'b0;
-		isAfter_temp[7][4]=1'b0;
-	end
-	if (count_left1!=2'h0 && !instructions_might_be_valid_now[5]) begin
-		is_new_instruction_entering_this_cycle[5]=1'b1;
-		setIndexes[5]=(count_for1 -count_left1)+count_for0;
-		count_left1=count_left1-1'd1;
-		isAfter_temp[5]=8'hFF;
-		isAfter_temp[0][5]=1'b0;
-		isAfter_temp[1][5]=1'b0;
-		isAfter_temp[2][5]=1'b0;
-		isAfter_temp[3][5]=1'b0;
-		isAfter_temp[4][5]=1'b0;
-		isAfter_temp[5][5]=1'b0;
-		isAfter_temp[6][5]=1'b0;
-		isAfter_temp[7][5]=1'b0;
-	end
-	if (count_left1!=2'h0 && !instructions_might_be_valid_now[6]) begin
-		is_new_instruction_entering_this_cycle[6]=1'b1;
-		setIndexes[6]=(count_for1 -count_left1)+count_for0;
-		count_left1=count_left1-1'd1;
-		isAfter_temp[6]=8'hFF;
-		isAfter_temp[0][6]=1'b0;
-		isAfter_temp[1][6]=1'b0;
-		isAfter_temp[2][6]=1'b0;
-		isAfter_temp[3][6]=1'b0;
-		isAfter_temp[4][6]=1'b0;
-		isAfter_temp[5][6]=1'b0;
-		isAfter_temp[6][6]=1'b0;
-		isAfter_temp[7][6]=1'b0;
-	end
-	if (count_left1!=2'h0 && !instructions_might_be_valid_now[7]) begin
-		is_new_instruction_entering_this_cycle[7]=1'b1;
-		setIndexes[7]=(count_for1 -count_left1)+count_for0;
-		count_left1=count_left1-1'd1;
-		isAfter_temp[7]=8'hFF;
-		isAfter_temp[0][7]=1'b0;
-		isAfter_temp[1][7]=1'b0;
-		isAfter_temp[2][7]=1'b0;
-		isAfter_temp[3][7]=1'b0;
-		isAfter_temp[4][7]=1'b0;
-		isAfter_temp[5][7]=1'b0;
-		isAfter_temp[6][7]=1'b0;
-		isAfter_temp[7][7]=1'b0;
-	end
-end
-always @(posedge main_clk) assert(count_left0==2'h0);
-always @(posedge main_clk) assert(count_left1==2'h0);
-*/
 
 always_comb begin
 	isAfter_temp=isAfter_true;

@@ -186,12 +186,11 @@ wire [25:0] muxed_instruction_fetch_address;
 wire [25:0] muxed_instruction_fetch_address_temp [1:0];
 assign muxed_instruction_fetch_address_temp[0]=target_address_instruction_fetch_0;
 assign muxed_instruction_fetch_address_temp[1]=target_address_instruction_fetch_1;
-lcell_26 lc_instruction_fetch_mux_address(muxed_instruction_fetch_address,muxed_instruction_fetch_address_temp[instruction_fetch_mux_value_a]);
+lcells #(26) lc_instruction_fetch_mux_address(muxed_instruction_fetch_address,muxed_instruction_fetch_address_temp[instruction_fetch_mux_value_a]);
 
 
-reg [4:0] next_new_index_working;
+reg [4:0] next_new_index_test;
 wire [4:0] next_new_index;
-//lcell_5 lc_next_new_index(next_new_index,next_new_index_working);
 reg current_0;
 reg current_1;
 reg current_1or0;
@@ -199,9 +198,9 @@ wire current_0_lc;
 wire current_1_lc;
 wire current_1or0_lc;
 reg [1:0] phase_diff;
-lcell_1 cur0(current_0_lc,current_0);
-lcell_1 cur1(current_1_lc,current_1);
-lcell_1 cur2(current_1or0_lc,current_1or0);
+lcells #(1) cur0(current_0_lc,current_0);
+lcells #(1) cur1(current_1_lc,current_1);
+lcells #(1) cur2(current_1or0_lc,current_1or0);
 
 always_comb begin
 	phase_diff=tick_tock_phase0 - tick_tock_phase1;
@@ -239,7 +238,7 @@ assign suggest0[3]=(is_general_access_requesting[3] & !target_address_executer[3
 assign suggest0[2]=(is_general_access_requesting[2] & !target_address_executer[2][31]) | (is_stack_access_requesting[2] & !is_stack_access_overflowing[2]);
 assign suggest0[1]=(is_general_access_requesting[1] & !target_address_executer[1][31]) | (is_stack_access_requesting[1] & !is_stack_access_overflowing[1]);
 assign suggest0[0]=(is_general_access_requesting[0] & !target_address_executer[0][31]) | (is_stack_access_requesting[0] & !is_stack_access_overflowing[0]);
-lcell_8 sug0(suggest0_lc,suggest0);
+lcells #(8) sug0(suggest0_lc,suggest0);
 
 wire [7:0] suggest1;
 wire [7:0] suggest1_lc;
@@ -251,30 +250,30 @@ assign suggest1[3]=(is_stack_access_requesting[3] & is_stack_access_overflowing[
 assign suggest1[2]=(is_stack_access_requesting[2] & is_stack_access_overflowing[2]);
 assign suggest1[1]=(is_stack_access_requesting[1] & is_stack_access_overflowing[1]);
 assign suggest1[0]=(is_stack_access_requesting[0] & is_stack_access_overflowing[0]);
-lcell_8 sug1(suggest1_lc,suggest1);
+lcells #(8) sug1(suggest1_lc,suggest1);
 
 wire [2:0] suggest2 [3:0];
-lcell_3 sug2_0(suggest2[0],lut0[suggest0_lc[3:0]]);
-lcell_3 sug2_1(suggest2[1],lut0[suggest0_lc[7:4]]);
-lcell_3 sug2_2(suggest2[2],lut0[suggest1_lc[3:0]]);
-lcell_3 sug2_3(suggest2[3],lut0[suggest1_lc[7:4]]);
+lcells #(3) sug2_0(suggest2[0],lut0[suggest0_lc[3:0]]);
+lcells #(3) sug2_1(suggest2[1],lut0[suggest0_lc[7:4]]);
+lcells #(3) sug2_2(suggest2[2],lut0[suggest1_lc[3:0]]);
+lcells #(3) sug2_3(suggest2[3],lut0[suggest1_lc[7:4]]);
 
 wire [3:0] suggest3 [1:0];
-lcell_4 sug3_0(suggest3[0],suggest2[0][2]? {suggest2[0][2],1'b0,suggest2[0][1:0]} : {suggest2[1][2],1'b1,suggest2[1][1:0]} );
-lcell_4 sug3_1(suggest3[1],((!current_1_lc)? 4'b1111:4'b0000) & (suggest2[2][2]? {suggest2[2][2],1'b0,suggest2[2][1:0]} : {suggest2[3][2],1'b1,suggest2[3][1:0]} ));
+lcells #(4) sug3_0(suggest3[0],suggest2[0][2]? {suggest2[0][2],1'b0,suggest2[0][1:0]} : {suggest2[1][2],1'b1,suggest2[1][1:0]} );
+lcells #(4) sug3_1(suggest3[1],((!current_1_lc)? 4'b1111:4'b0000) & (suggest2[2][2]? {suggest2[2][2],1'b0,suggest2[2][1:0]} : {suggest2[3][2],1'b1,suggest2[3][1:0]} ));
 
 wire either_fetch;
-lcell_1 either(either_fetch,is_instruction_fetch_0_requesting | is_instruction_fetch_1_requesting);
+lcells #(1) either(either_fetch,is_instruction_fetch_0_requesting | is_instruction_fetch_1_requesting);
 
 wire [3:0] suggest4;
-lcell_3 sug4_0(suggest4[2:0],(suggest3[1][3] | suggest3[0][3])? suggest3[suggest3[1][3]][2:0] : {2'b10,!is_instruction_fetch_0_requesting});
-lcell_1 sug4_1(suggest4[3]  ,(suggest3[1][3] | suggest3[0][3] | either_fetch) & current_1or0_lc);
+lcells #(3) sug4_0(suggest4[2:0],(suggest3[1][3] | suggest3[0][3])? suggest3[suggest3[1][3]][2:0] : {2'b10,!is_instruction_fetch_0_requesting});
+lcells #(1) sug4_1(suggest4[3]  ,(suggest3[1][3] | suggest3[0][3] | either_fetch) & current_1or0_lc);
 
 wire [3:0] suggest5;
-lcell_1 sug5_0(suggest5[0],(suggest3[1][3] | suggest3[0][3]) & current_1or0_lc);
-lcell_1 sug5_1(suggest5[1],is_general_access_requesting[suggest3[suggest3[1][3]][2:0]]);
-lcell_1 sug5_2(suggest5[2],is_stack_access_requesting[suggest3[suggest3[1][3]][2:0]]);
-lcell_1 sug5_3(suggest5[3],is_stack_access_overflowing[suggest3[suggest3[1][3]][2:0]]);
+lcells #(1) sug5_0(suggest5[0],(suggest3[1][3] | suggest3[0][3]) & current_1or0_lc);
+lcells #(1) sug5_1(suggest5[1],is_general_access_requesting[suggest3[suggest3[1][3]][2:0]]);
+lcells #(1) sug5_2(suggest5[2],is_stack_access_requesting[suggest3[suggest3[1][3]][2:0]]);
+lcells #(1) sug5_3(suggest5[3],is_stack_access_overflowing[suggest3[suggest3[1][3]][2:0]]);
 
 wire [4:0] suggest6;
 assign suggest6[2:0]={3{suggest4[3]}} & suggest4[2:0];
@@ -282,37 +281,37 @@ assign suggest6[3]=suggest5[0] & (suggest5[1] | (suggest5[2] & suggest5[3]));
 assign suggest6[4]=(suggest3[1][3] | suggest3[0][3]) & current_1or0_lc & suggest5[2];
 
 
-lcell_5 lc_next_new_index(next_new_index,suggest6);
+lcells #(5) lc_next_new_index(next_new_index,suggest6);
 
 wire is_accepting_any;
 assign is_accepting_any=suggest4[3];
 wire is_accepting_multi;
-lcell_1 is_accepting_multi_any(is_accepting_multi,suggest5[0] & suggest5[2] & suggest5[3]);
+lcells #(1) is_accepting_multi_any(is_accepting_multi,suggest5[0] & suggest5[2] & suggest5[3]);
 wire [3:0] is_accepting_into_alt;
-lcell_1 is_accepting_into_alt0(is_accepting_into_alt[0],((tick_tock_phase0==2'd3 && is_accepting_multi))? 1'b1:1'b0);
-lcell_1 is_accepting_into_alt1(is_accepting_into_alt[1],((tick_tock_phase0==2'd0 && is_accepting_multi))? 1'b1:1'b0);
-lcell_1 is_accepting_into_alt2(is_accepting_into_alt[2],((tick_tock_phase0==2'd1 && is_accepting_multi))? 1'b1:1'b0);
-lcell_1 is_accepting_into_alt3(is_accepting_into_alt[3],((tick_tock_phase0==2'd2 && is_accepting_multi))? 1'b1:1'b0);
+lcells #(1) is_accepting_into_alt0(is_accepting_into_alt[0],((tick_tock_phase0==2'd3 && is_accepting_multi))? 1'b1:1'b0);
+lcells #(1) is_accepting_into_alt1(is_accepting_into_alt[1],((tick_tock_phase0==2'd0 && is_accepting_multi))? 1'b1:1'b0);
+lcells #(1) is_accepting_into_alt2(is_accepting_into_alt[2],((tick_tock_phase0==2'd1 && is_accepting_multi))? 1'b1:1'b0);
+lcells #(1) is_accepting_into_alt3(is_accepting_into_alt[3],((tick_tock_phase0==2'd2 && is_accepting_multi))? 1'b1:1'b0);
 wire [3:0] is_accepting_into_typical;
-lcell_1 is_accepting_into_typical0(is_accepting_into_typical[0],((tick_tock_phase0==2'd3 && is_accepting_multi) || (tick_tock_phase0==2'd0 && is_accepting_any))? 1'b1:1'b0);
-lcell_1 is_accepting_into_typical1(is_accepting_into_typical[1],((tick_tock_phase0==2'd0 && is_accepting_multi) || (tick_tock_phase0==2'd1 && is_accepting_any))? 1'b1:1'b0);
-lcell_1 is_accepting_into_typical2(is_accepting_into_typical[2],((tick_tock_phase0==2'd1 && is_accepting_multi) || (tick_tock_phase0==2'd2 && is_accepting_any))? 1'b1:1'b0);
-lcell_1 is_accepting_into_typical3(is_accepting_into_typical[3],((tick_tock_phase0==2'd2 && is_accepting_multi) || (tick_tock_phase0==2'd3 && is_accepting_any))? 1'b1:1'b0);
+lcells #(1) is_accepting_into_typical0(is_accepting_into_typical[0],((tick_tock_phase0==2'd3 && is_accepting_multi) || (tick_tock_phase0==2'd0 && is_accepting_any))? 1'b1:1'b0);
+lcells #(1) is_accepting_into_typical1(is_accepting_into_typical[1],((tick_tock_phase0==2'd0 && is_accepting_multi) || (tick_tock_phase0==2'd1 && is_accepting_any))? 1'b1:1'b0);
+lcells #(1) is_accepting_into_typical2(is_accepting_into_typical[2],((tick_tock_phase0==2'd1 && is_accepting_multi) || (tick_tock_phase0==2'd2 && is_accepting_any))? 1'b1:1'b0);
+lcells #(1) is_accepting_into_typical3(is_accepting_into_typical[3],((tick_tock_phase0==2'd2 && is_accepting_multi) || (tick_tock_phase0==2'd3 && is_accepting_any))? 1'b1:1'b0);
 wire [3:0] is_using_void;
-lcell_1 is_using_void0(is_using_void[0],((tt_access_index[0]==5'd4 || tt_access_index[0]==5'd5) && void_instruction_fetch)? 1'b1:1'b0);
-lcell_1 is_using_void1(is_using_void[1],((tt_access_index[1]==5'd4 || tt_access_index[1]==5'd5) && void_instruction_fetch)? 1'b1:1'b0);
-lcell_1 is_using_void2(is_using_void[2],((tt_access_index[2]==5'd4 || tt_access_index[2]==5'd5) && void_instruction_fetch)? 1'b1:1'b0);
-lcell_1 is_using_void3(is_using_void[3],((tt_access_index[3]==5'd4 || tt_access_index[3]==5'd5) && void_instruction_fetch)? 1'b1:1'b0);
+lcells #(1) is_using_void0(is_using_void[0],((tt_access_index[0]==5'd4 || tt_access_index[0]==5'd5) && void_instruction_fetch)? 1'b1:1'b0);
+lcells #(1) is_using_void1(is_using_void[1],((tt_access_index[1]==5'd4 || tt_access_index[1]==5'd5) && void_instruction_fetch)? 1'b1:1'b0);
+lcells #(1) is_using_void2(is_using_void[2],((tt_access_index[2]==5'd4 || tt_access_index[2]==5'd5) && void_instruction_fetch)? 1'b1:1'b0);
+lcells #(1) is_using_void3(is_using_void[3],((tt_access_index[3]==5'd4 || tt_access_index[3]==5'd5) && void_instruction_fetch)? 1'b1:1'b0);
 wire [3:0] is_accepting_into_partial;
-lcell_1 is_accepting_into_partial0(is_accepting_into_partial[0],((tick_tock_phase0==2'd0 && is_accepting_any) || is_using_void[0])? 1'b1:1'b0);
-lcell_1 is_accepting_into_partial1(is_accepting_into_partial[1],((tick_tock_phase0==2'd1 && is_accepting_any) || is_using_void[1])? 1'b1:1'b0);
-lcell_1 is_accepting_into_partial2(is_accepting_into_partial[2],((tick_tock_phase0==2'd2 && is_accepting_any) || is_using_void[2])? 1'b1:1'b0);
-lcell_1 is_accepting_into_partial3(is_accepting_into_partial[3],((tick_tock_phase0==2'd3 && is_accepting_any) || is_using_void[3])? 1'b1:1'b0);
+lcells #(1) is_accepting_into_partial0(is_accepting_into_partial[0],((tick_tock_phase0==2'd0 && is_accepting_any) || is_using_void[0])? 1'b1:1'b0);
+lcells #(1) is_accepting_into_partial1(is_accepting_into_partial[1],((tick_tock_phase0==2'd1 && is_accepting_any) || is_using_void[1])? 1'b1:1'b0);
+lcells #(1) is_accepting_into_partial2(is_accepting_into_partial[2],((tick_tock_phase0==2'd2 && is_accepting_any) || is_using_void[2])? 1'b1:1'b0);
+lcells #(1) is_accepting_into_partial3(is_accepting_into_partial[3],((tick_tock_phase0==2'd3 && is_accepting_any) || is_using_void[3])? 1'b1:1'b0);
 wire [3:0] is_accepting_into_any;
-lcell_1 is_accepting_into_any0(is_accepting_into_any[0],(is_accepting_into_partial[0] || (tick_tock_phase0==2'd3 && is_accepting_multi))? 1'b1:1'b0);
-lcell_1 is_accepting_into_any1(is_accepting_into_any[1],(is_accepting_into_partial[1] || (tick_tock_phase0==2'd0 && is_accepting_multi))? 1'b1:1'b0);
-lcell_1 is_accepting_into_any2(is_accepting_into_any[2],(is_accepting_into_partial[2] || (tick_tock_phase0==2'd1 && is_accepting_multi))? 1'b1:1'b0);
-lcell_1 is_accepting_into_any3(is_accepting_into_any[3],(is_accepting_into_partial[3] || (tick_tock_phase0==2'd2 && is_accepting_multi))? 1'b1:1'b0);
+lcells #(1) is_accepting_into_any0(is_accepting_into_any[0],(is_accepting_into_partial[0] || (tick_tock_phase0==2'd3 && is_accepting_multi))? 1'b1:1'b0);
+lcells #(1) is_accepting_into_any1(is_accepting_into_any[1],(is_accepting_into_partial[1] || (tick_tock_phase0==2'd0 && is_accepting_multi))? 1'b1:1'b0);
+lcells #(1) is_accepting_into_any2(is_accepting_into_any[2],(is_accepting_into_partial[2] || (tick_tock_phase0==2'd1 && is_accepting_multi))? 1'b1:1'b0);
+lcells #(1) is_accepting_into_any3(is_accepting_into_any[3],(is_accepting_into_partial[3] || (tick_tock_phase0==2'd2 && is_accepting_multi))? 1'b1:1'b0);
 
 
 assign instruction_fetch_mux_value_a= !is_instruction_fetch_0_requesting;
@@ -333,46 +332,46 @@ always @(posedge main_clk) begin
 	if (suggest4[3]) begin
 		assert(suggest4[2:0]==next_new_index[2:0]);
 	end
-	assert(next_new_index==next_new_index_working);
+	assert(next_new_index==next_new_index_test);
 end
 
 always_comb begin
-	next_new_index_working=0;
+	next_new_index_test=0;
 	instruction_fetch_mux_value=1'hx;
 	if (current_1or0) begin
-		if (is_instruction_fetch_1_requesting) begin next_new_index_working= 5;instruction_fetch_mux_value=1'h1;end
-		if (is_instruction_fetch_0_requesting) begin next_new_index_working= 4;instruction_fetch_mux_value=1'h0;end
+		if (is_instruction_fetch_1_requesting) begin next_new_index_test= 5;instruction_fetch_mux_value=1'h1;end
+		if (is_instruction_fetch_0_requesting) begin next_new_index_test= 4;instruction_fetch_mux_value=1'h0;end
 		
-		if (is_general_access_requesting[7] && !target_address_executer[7][31]) begin next_new_index_working=15;instruction_fetch_mux_value=1'hx;end
-		if (is_general_access_requesting[6] && !target_address_executer[6][31]) begin next_new_index_working=14;instruction_fetch_mux_value=1'hx;end
-		if (is_general_access_requesting[5] && !target_address_executer[5][31]) begin next_new_index_working=13;instruction_fetch_mux_value=1'hx;end
-		if (is_general_access_requesting[4] && !target_address_executer[4][31]) begin next_new_index_working=12;instruction_fetch_mux_value=1'hx;end
+		if (is_general_access_requesting[7] && !target_address_executer[7][31]) begin next_new_index_test=15;instruction_fetch_mux_value=1'hx;end
+		if (is_general_access_requesting[6] && !target_address_executer[6][31]) begin next_new_index_test=14;instruction_fetch_mux_value=1'hx;end
+		if (is_general_access_requesting[5] && !target_address_executer[5][31]) begin next_new_index_test=13;instruction_fetch_mux_value=1'hx;end
+		if (is_general_access_requesting[4] && !target_address_executer[4][31]) begin next_new_index_test=12;instruction_fetch_mux_value=1'hx;end
 		
-		if (is_general_access_requesting[3] && !target_address_executer[3][31]) begin next_new_index_working=11;instruction_fetch_mux_value=1'hx;end
-		if (is_general_access_requesting[2] && !target_address_executer[2][31]) begin next_new_index_working=10;instruction_fetch_mux_value=1'hx;end
-		if (is_general_access_requesting[1] && !target_address_executer[1][31]) begin next_new_index_working= 9;instruction_fetch_mux_value=1'hx;end
-		if (is_general_access_requesting[0] && !target_address_executer[0][31]) begin next_new_index_working= 8;instruction_fetch_mux_value=1'hx;end
+		if (is_general_access_requesting[3] && !target_address_executer[3][31]) begin next_new_index_test=11;instruction_fetch_mux_value=1'hx;end
+		if (is_general_access_requesting[2] && !target_address_executer[2][31]) begin next_new_index_test=10;instruction_fetch_mux_value=1'hx;end
+		if (is_general_access_requesting[1] && !target_address_executer[1][31]) begin next_new_index_test= 9;instruction_fetch_mux_value=1'hx;end
+		if (is_general_access_requesting[0] && !target_address_executer[0][31]) begin next_new_index_test= 8;instruction_fetch_mux_value=1'hx;end
 
-		if (  is_stack_access_requesting[7] && !is_stack_access_overflowing[7]) begin next_new_index_working=23;instruction_fetch_mux_value=1'hx;end
-		if (  is_stack_access_requesting[6] && !is_stack_access_overflowing[6]) begin next_new_index_working=22;instruction_fetch_mux_value=1'hx;end
-		if (  is_stack_access_requesting[5] && !is_stack_access_overflowing[5]) begin next_new_index_working=21;instruction_fetch_mux_value=1'hx;end
-		if (  is_stack_access_requesting[4] && !is_stack_access_overflowing[4]) begin next_new_index_working=20;instruction_fetch_mux_value=1'hx;end
+		if (  is_stack_access_requesting[7] && !is_stack_access_overflowing[7]) begin next_new_index_test=23;instruction_fetch_mux_value=1'hx;end
+		if (  is_stack_access_requesting[6] && !is_stack_access_overflowing[6]) begin next_new_index_test=22;instruction_fetch_mux_value=1'hx;end
+		if (  is_stack_access_requesting[5] && !is_stack_access_overflowing[5]) begin next_new_index_test=21;instruction_fetch_mux_value=1'hx;end
+		if (  is_stack_access_requesting[4] && !is_stack_access_overflowing[4]) begin next_new_index_test=20;instruction_fetch_mux_value=1'hx;end
 		
-		if (  is_stack_access_requesting[3] && !is_stack_access_overflowing[3]) begin next_new_index_working=19;instruction_fetch_mux_value=1'hx;end
-		if (  is_stack_access_requesting[2] && !is_stack_access_overflowing[2]) begin next_new_index_working=18;instruction_fetch_mux_value=1'hx;end
-		if (  is_stack_access_requesting[1] && !is_stack_access_overflowing[1]) begin next_new_index_working=17;instruction_fetch_mux_value=1'hx;end
-		if (  is_stack_access_requesting[0] && !is_stack_access_overflowing[0]) begin next_new_index_working=16;instruction_fetch_mux_value=1'hx;end
+		if (  is_stack_access_requesting[3] && !is_stack_access_overflowing[3]) begin next_new_index_test=19;instruction_fetch_mux_value=1'hx;end
+		if (  is_stack_access_requesting[2] && !is_stack_access_overflowing[2]) begin next_new_index_test=18;instruction_fetch_mux_value=1'hx;end
+		if (  is_stack_access_requesting[1] && !is_stack_access_overflowing[1]) begin next_new_index_test=17;instruction_fetch_mux_value=1'hx;end
+		if (  is_stack_access_requesting[0] && !is_stack_access_overflowing[0]) begin next_new_index_test=16;instruction_fetch_mux_value=1'hx;end
 	end
 	if (current_0) begin
-		if (  is_stack_access_requesting[7] &&  is_stack_access_overflowing[7]) begin next_new_index_working=31;instruction_fetch_mux_value=1'hx;end
-		if (  is_stack_access_requesting[6] &&  is_stack_access_overflowing[6]) begin next_new_index_working=30;instruction_fetch_mux_value=1'hx;end
-		if (  is_stack_access_requesting[5] &&  is_stack_access_overflowing[5]) begin next_new_index_working=29;instruction_fetch_mux_value=1'hx;end
-		if (  is_stack_access_requesting[4] &&  is_stack_access_overflowing[4]) begin next_new_index_working=28;instruction_fetch_mux_value=1'hx;end
+		if (  is_stack_access_requesting[7] &&  is_stack_access_overflowing[7]) begin next_new_index_test=31;instruction_fetch_mux_value=1'hx;end
+		if (  is_stack_access_requesting[6] &&  is_stack_access_overflowing[6]) begin next_new_index_test=30;instruction_fetch_mux_value=1'hx;end
+		if (  is_stack_access_requesting[5] &&  is_stack_access_overflowing[5]) begin next_new_index_test=29;instruction_fetch_mux_value=1'hx;end
+		if (  is_stack_access_requesting[4] &&  is_stack_access_overflowing[4]) begin next_new_index_test=28;instruction_fetch_mux_value=1'hx;end
 
-		if (  is_stack_access_requesting[3] &&  is_stack_access_overflowing[3]) begin next_new_index_working=27;instruction_fetch_mux_value=1'hx;end
-		if (  is_stack_access_requesting[2] &&  is_stack_access_overflowing[2]) begin next_new_index_working=26;instruction_fetch_mux_value=1'hx;end
-		if (  is_stack_access_requesting[1] &&  is_stack_access_overflowing[1]) begin next_new_index_working=25;instruction_fetch_mux_value=1'hx;end
-		if (  is_stack_access_requesting[0] &&  is_stack_access_overflowing[0]) begin next_new_index_working=24;instruction_fetch_mux_value=1'hx;end
+		if (  is_stack_access_requesting[3] &&  is_stack_access_overflowing[3]) begin next_new_index_test=27;instruction_fetch_mux_value=1'hx;end
+		if (  is_stack_access_requesting[2] &&  is_stack_access_overflowing[2]) begin next_new_index_test=26;instruction_fetch_mux_value=1'hx;end
+		if (  is_stack_access_requesting[1] &&  is_stack_access_overflowing[1]) begin next_new_index_test=25;instruction_fetch_mux_value=1'hx;end
+		if (  is_stack_access_requesting[0] &&  is_stack_access_overflowing[0]) begin next_new_index_test=24;instruction_fetch_mux_value=1'hx;end
 	end
 end
 
@@ -445,64 +444,14 @@ assign raw_out_info[1]=effective_tt_access_index_at_phase3[4] ^ effective_tt_acc
 assign raw_out_info[2]=effective_tt_access_index_at_phase3[4] & effective_tt_access_index_at_phase3[3];
 assign raw_out_info[3]=(!raw_out_info_lc[0] && state_for_io_is_5 && !is_waiting_on_second_overflowed_stack)? 1'b1:1'b0;
 assign raw_out_info[4]=(((!raw_out_info_lc[0] && state_for_io_is_5 && !is_waiting_on_second_overflowed_stack) || state_for_io_is_7))? 1'b1:1'b0;
-lcell_5 lc_raw_out_info(raw_out_info_lc,raw_out_info);
+lcells #(5) lc_raw_out_info(raw_out_info_lc,raw_out_info);
 
-lcell_8 lc_is_general_or_stack_access_acknowledged_pulse(is_general_or_stack_access_acknowledged_pulse,(raw_out_index0 & {8{raw_out_info_lc[1]}}) | (raw_out_index1 & {8{raw_out_info_lc[4]}}));
-lcell_8 lc_is_first_overflowed_stack_ready(is_first_overflowed_stack_ready,(raw_out_index0 & {8{raw_out_info[2]}}));
+lcells #(8) lc_is_general_or_stack_access_acknowledged_pulse(is_general_or_stack_access_acknowledged_pulse,(raw_out_index0 & {8{raw_out_info_lc[1]}}) | (raw_out_index1 & {8{raw_out_info_lc[4]}}));
+lcells #(8) lc_is_first_overflowed_stack_ready(is_first_overflowed_stack_ready,(raw_out_index0 & {8{raw_out_info[2]}}));
 
 assign is_instruction_fetch_0_acknowledged_pulse=(effective_tt_access_index_at_phase3==5'd4)? 1'b1:1'b0;
 assign is_instruction_fetch_1_acknowledged_pulse=(effective_tt_access_index_at_phase3==5'd5)? 1'b1:1'b0;
 assign perform_io_mem_read_output=raw_out_info[3];
-
-/*
-always_comb begin
-	perform_io_mem_read_output=1'b0;
-	is_instruction_fetch_0_acknowledged_pulse=1'b0;
-	is_instruction_fetch_1_acknowledged_pulse=1'b0;
-	is_general_or_stack_access_acknowledged_pulse=8'b0;
-	is_first_overflowed_stack_ready=8'b0;
-	if (tick_tock_phase3!=tick_tock_phase2) begin
-		unique case (tt_access_index_at_phase3)
-		 0:begin end // yes, 0 is possible, it happens when an instruction fetch is voided
-		 4:is_instruction_fetch_0_acknowledged_pulse=!void_instruction_fetch;
-		 5:is_instruction_fetch_1_acknowledged_pulse=!void_instruction_fetch;
-
-		 8:is_general_or_stack_access_acknowledged_pulse[0]=1'b1;
-		 9:is_general_or_stack_access_acknowledged_pulse[1]=1'b1;
-		10:is_general_or_stack_access_acknowledged_pulse[2]=1'b1;
-		11:is_general_or_stack_access_acknowledged_pulse[3]=1'b1;
-		12:is_general_or_stack_access_acknowledged_pulse[4]=1'b1;
-		13:is_general_or_stack_access_acknowledged_pulse[5]=1'b1;
-		14:is_general_or_stack_access_acknowledged_pulse[6]=1'b1;
-		15:is_general_or_stack_access_acknowledged_pulse[7]=1'b1;
-
-		16:is_general_or_stack_access_acknowledged_pulse[0]=1'b1;
-		17:is_general_or_stack_access_acknowledged_pulse[1]=1'b1;
-		18:is_general_or_stack_access_acknowledged_pulse[2]=1'b1;
-		19:is_general_or_stack_access_acknowledged_pulse[3]=1'b1;
-		20:is_general_or_stack_access_acknowledged_pulse[4]=1'b1;
-		21:is_general_or_stack_access_acknowledged_pulse[5]=1'b1;
-		22:is_general_or_stack_access_acknowledged_pulse[6]=1'b1;
-		23:is_general_or_stack_access_acknowledged_pulse[7]=1'b1;
-
-		24:is_first_overflowed_stack_ready[0]=1'b1;
-		25:is_first_overflowed_stack_ready[1]=1'b1;
-		26:is_first_overflowed_stack_ready[2]=1'b1;
-		27:is_first_overflowed_stack_ready[3]=1'b1;
-		28:is_first_overflowed_stack_ready[4]=1'b1;
-		29:is_first_overflowed_stack_ready[5]=1'b1;
-		30:is_first_overflowed_stack_ready[6]=1'b1;
-		31:is_first_overflowed_stack_ready[7]=1'b1;
-		endcase
-	end else if ((state_for_io==3'd5) && !is_waiting_on_second_overflowed_stack) begin
-		perform_io_mem_read_output=1'b1;
-		is_general_or_stack_access_acknowledged_pulse[executer_index_for_io]=1'b1;
-	end
-	if (state_for_io==3'd7) begin
-		is_general_or_stack_access_acknowledged_pulse[executer_index_for_io]=1'b1;
-	end
-end
-*/
 
 reg [1:0] next_overflowed_stack_shift_value=2'hx;
 
@@ -530,17 +479,17 @@ always @(posedge main_clk) begin
 end
 
 wire [31:0] muxed_tt_address;
-lcell_32 lc_muxed_tt_address(muxed_tt_address,(next_new_index[4:3]==2'd0)?muxed_instruction_fetch_address:muxed_target_address_executer);
+lcells #(32) lc_muxed_tt_address(muxed_tt_address,(next_new_index[4:3]==2'd0)?muxed_instruction_fetch_address:muxed_target_address_executer);
 wire [2:0] muxed_tt_access_length;
-lcell_3 lc_tt_muxed_access_length(muxed_tt_access_length,
+lcells #(3) lc_tt_muxed_access_length(muxed_tt_access_length,
 	((next_new_index[4:3]==2'd0)? 3'd7:3'd0) | 
 	((next_new_index[4:3]==2'd2)? muxed_access_length :3'd0) | 
 	((next_new_index[4:3]==2'd3)? muxed_access_length0:3'd0)
 );
 wire muxed_tt_is_byte_op;
-lcell_1 lc_muxed_tt_is_byte_op(muxed_tt_is_byte_op,(next_new_index[4:3]==2'd1)? muxed_is_byte_op:1'd0);
+lcells #(1) lc_muxed_tt_is_byte_op(muxed_tt_is_byte_op,(next_new_index[4:3]==2'd1)? muxed_is_byte_op:1'd0);
 wire muxed_tt_is_write_op;
-lcell_1 lc_muxed_tt_is_write_op(muxed_tt_is_write_op,(next_new_index[4:3]!=2'd0)? muxed_is_write_op:1'd0);
+lcells #(1) lc_muxed_tt_is_write_op(muxed_tt_is_write_op,(next_new_index[4:3]!=2'd0)? muxed_is_write_op:1'd0);
 
 wire [2:0] swap0_tt_access_length;
 wire [2:0] swap1_tt_access_length;
@@ -552,35 +501,15 @@ assign swap1_tt_access_length=!(tick_tock_phase0[0])?muxed_access_length1:muxed_
 
 wire write_new_request_at0;
 wire write_new_request_at1;
-lcell_1 lc_write_new_request_at0(write_new_request_at0,(next_new_index[4:2]!=3'd0 && (next_new_index[4:3]==2'd3 || tick_tock_phase0[0]==1'b0))? 1'b1:1'b0);
-lcell_1 lc_write_new_request_at1(write_new_request_at1,(next_new_index[4:2]!=3'd0 && (next_new_index[4:3]==2'd3 || tick_tock_phase0[0]==1'b1))? 1'b1:1'b0);
+lcells #(1) lc_write_new_request_at0(write_new_request_at0,(next_new_index[4:2]!=3'd0 && (next_new_index[4:3]==2'd3 || tick_tock_phase0[0]==1'b0))? 1'b1:1'b0);
+lcells #(1) lc_write_new_request_at1(write_new_request_at1,(next_new_index[4:2]!=3'd0 && (next_new_index[4:3]==2'd3 || tick_tock_phase0[0]==1'b1))? 1'b1:1'b0);
 
 always @(posedge main_clk) begin
 	if (void_instruction_fetch) begin
 		resolving_memory_access_from_instruction_fetch[0]<=1'b0;
 		resolving_memory_access_from_instruction_fetch[1]<=1'b0;
-		/*
-		if (tt_access_index[0]==5'd4 || tt_access_index[0]==5'd5) tt_access_index[0]<=5'd0;
-		if (tt_access_index[1]==5'd4 || tt_access_index[1]==5'd5) tt_access_index[1]<=5'd0;
-		if (tt_access_index[2]==5'd4 || tt_access_index[2]==5'd5) tt_access_index[2]<=5'd0;
-		if (tt_access_index[3]==5'd4 || tt_access_index[3]==5'd5) tt_access_index[3]<=5'd0;
-		*/
 	end
 	tick_tock_phase0<=(tick_tock_phase0 + write_new_request_at0) + write_new_request_at1;
-	/*
-	if (write_new_request_at0 || write_new_request_at1) begin
-		unique case ({((write_new_request_at0 && write_new_request_at1)? 1'b1:1'b0),tick_tock_phase0})
-		3'b000:begin tt_access_index[0]<=next_new_index;end
-		3'b001:begin tt_access_index[1]<=next_new_index;end
-		3'b010:begin tt_access_index[2]<=next_new_index;end
-		3'b011:begin tt_access_index[3]<=next_new_index;end
-		3'b100:begin tt_access_index[0]<=next_new_index;tt_access_index[1]<=next_new_index ^ 5'd8;end
-		3'b101:begin tt_access_index[1]<=next_new_index;tt_access_index[2]<=next_new_index ^ 5'd8;end
-		3'b110:begin tt_access_index[2]<=next_new_index;tt_access_index[3]<=next_new_index ^ 5'd8;end
-		3'b111:begin tt_access_index[3]<=next_new_index;tt_access_index[0]<=next_new_index ^ 5'd8;end
-		endcase
-	end
-	*/
 	if (is_accepting_into_any[0]) tt_access_index[0]<=is_accepting_into_typical[0]?(next_new_index ^ (is_accepting_into_alt[0]? 5'd8:5'd0)):(5'd0);
 	if (is_accepting_into_any[1]) tt_access_index[1]<=is_accepting_into_typical[1]?(next_new_index ^ (is_accepting_into_alt[1]? 5'd8:5'd0)):(5'd0);
 	if (is_accepting_into_any[2]) tt_access_index[2]<=is_accepting_into_typical[2]?(next_new_index ^ (is_accepting_into_alt[2]? 5'd8:5'd0)):(5'd0);

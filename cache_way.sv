@@ -113,18 +113,18 @@ assign way_index_lookup[6]=2;
 assign way_index_lookup[7]=1;
 
 
-lcell_4 lc_match(match,{
+lcells #(4) lc_match(match,{
 	((raw_out[3]==saved_target)?1'b1:1'b0),
 	((raw_out[2]==saved_target)?1'b1:1'b0),
 	((raw_out[1]==saved_target)?1'b1:1'b0),
 	((raw_out[0]==saved_target)?1'b1:1'b0)
 });
 
-lcell_2 lc_calc_way_index(calc_way_index,way_index_lookup[match[3:1]]);
+lcells #(2) lc_calc_way_index(calc_way_index,way_index_lookup[match[3:1]]);
 
 wire fault;
 
-lcell_1 lc_general_fault(fault,(match==4'd0)? 1'b1:1'b0);
+lcells #(1) lc_general_fault(fault,(match==4'd0)? 1'b1:1'b0);
 
 assign possible_any_fault=(fault || out_fault_modification);
 assign possible_hard_fault=(fault && !out_fault_modification);

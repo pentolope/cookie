@@ -92,6 +92,7 @@ if ("set_global_assignment -name SEED 1" in qsf_content) and not bad_initial_see
 		run_script.append('echo run_script_'+str(seed_value)+' is copying result file')
 		run_script.append('cd ..')
 		run_script.append('copy /B "seed_'+str(seed_value)+sep+'output_files'+sep+'cookie.sta.summary" /B "cookie_'+str(seed_value)+'.sta.summary" >NUL')
+		run_script.append('IF not EXIST "cookie_'+str(seed_value)+'.sta.summary" rem. > "cookie_'+str(seed_value)+'.sta.summary"')
 		if do_clean:
 			run_script.append('echo run_script_'+str(seed_value)+' is cleaning up')
 			run_script.append('rmdir /S /Q "seed_'+str(seed_value)+'"')

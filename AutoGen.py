@@ -57,6 +57,120 @@ del perms
 
 ############################################################
 
+
+outFileList=[]
+
+def filterByUnzero(h):
+	return list(filter(lambda m:m!="(1'b0)",h))
+
+outFileList.append('wire [32:0] dependencyCalculationTemporary0 [3:0];')
+outFileList.append('wire [32:0] dependencyCalculationTemporary1 [7:0];')
+outFileList.append('wire [32:0] dependencyCalculationTemporary2 [1:0];')
+outFileList.append('generate')
+outFileList.append('genvar regIterationVar;')
+outFileList.append('for (regIterationVar=0;regIterationVar<33;regIterationVar=regIterationVar+1) begin : generated')
+outFileList.append('if (regIterationVar!=16 && regIterationVar!=17) begin')
+d0={}
+votes=[]
+for i0 in range(8):
+	d0[i0]=[]
+	vote0=False
+	vote1=False
+	l=[]
+	for i1 in range(8):
+		if i0==i1:
+			l.append("(1'b0)")
+			continue
+		l.append(f'(isAfter[{i1}] & dependOtherRegWrite[{i1}][regIterationVar])')
+	g=[]
+	for k in range(4):
+		g.append(f'dependencyCalculationTemporary0[{k}][regIterationVar]')
+		d0[i0].append(f'lcell dependency_lc(.in({"|".join(filterByUnzero(l[k::4]))}),.out(dependencyCalculationTemporary0[{k}][regIterationVar]));')
+	d0[i0].append(f'lcell dependency_lc(.in({"|".join(g)}),.out(readBlockedByDepend[regIterationVar]));')
+	l=[]
+	for i1 in range(8):
+		if i0==i1:
+			l.append("(1'b0)")
+			continue
+		l.append(f'dependencyCalculationTemporary1[{i1}][regIterationVar]')
+		d0[i0].append(f'lcell dependency_lc(.in(isAfter[{i1}] & (dependOtherRegRead[{i1}][regIterationVar] | dependOtherRegWrite[{i1}][regIterationVar])),.out(dependencyCalculationTemporary1[{i1}][regIterationVar]));')
+	g=[]
+	
+	if "(1'b0)" in l[0::2]:
+		g=[f'dependencyCalculationTemporary2[1][regIterationVar]']
+		vote0=True
+	d0[i0].append(f'lcell dependency_lc(.in({"|".join(filterByUnzero(l[0::2])+g)}),.out(dependencyCalculationTemporary2[0][regIterationVar]));')
+	g=[]
+	if "(1'b0)" in l[1::2]:
+		g=[f'dependencyCalculationTemporary2[0][regIterationVar]']
+		vote1=True
+	d0[i0].append(f'lcell dependency_lc(.in({"|".join(filterByUnzero(l[1::2])+g)}),.out(dependencyCalculationTemporary2[1][regIterationVar]));')
+	if vote0 and vote1:
+		assert False
+	votes.append((vote0,vote1))
+
+
+
+d1={}
+for i0 in range(8):
+	for v in d0[i0]:
+		d1[v]=set()
+for i0 in range(8):
+	for v in d0[i0]:
+		d1[v].add(i0)
+d2={}
+for k in d1.keys():
+	d2[tuple(d1[k])]=[]
+for k in d1.keys():
+	d2[tuple(d1[k])].append(k)
+
+j=0
+for k in sorted(d2.keys()): # sort just helps it look a little prettier
+	outFileList.append('	if ('+(' || '.join(['selfIndex==3\'d'+v for v in map(str,k)]))+') begin')
+	for v in sorted(d2[k]): # sort just helps it look a little prettier
+		outFileList.append('		'+v.replace('dependency_lc',f'dependency_lc_{j}'))
+		j+=1
+	outFileList.append('	end')
+outFileList.append('end end')
+
+voted0=[]
+voted1=[]
+for i0 in range(8):
+	vote0,vote1=votes[i0]
+	if vote0:
+		voted0.append(i0)
+	if vote1:
+		voted1.append(i0)
+
+outFileList.append('if ('+(' || '.join(['selfIndex==3\'d'+v for v in map(str,voted0)]))+') begin')
+for i0 in range(8):
+	vote0,vote1=votes[i0]
+	if vote0:
+		outFileList.append('	assign writeBlockedByDepend[32:18]=dependencyCalculationTemporary2[0][32:18];')
+		outFileList.append('	assign writeBlockedByDepend[15: 0]=dependencyCalculationTemporary2[0][15: 0];')
+outFileList.append('end')
+
+outFileList.append('if ('+(' || '.join(['selfIndex==3\'d'+v for v in map(str,voted1)]))+') begin')
+for i0 in range(8):
+	vote0,vote1=votes[i0]
+	if vote1:
+		outFileList.append('	assign writeBlockedByDepend[32:18]=dependencyCalculationTemporary2[1][32:18];')
+		outFileList.append('	assign writeBlockedByDepend[15: 0]=dependencyCalculationTemporary2[1][15: 0];')
+outFileList.append('end')
+
+
+outFileList.append('endgenerate')
+
+file_write_if_needed('AutoGen1.sv',False,'\n'+'\n'.join(outFileList)+'\n')
+
+del outFileList
+del d0
+del d1
+del d2
+
+
+############################################################
+
 from PIL import Image
 img = Image.open('(7, 8) font.png').convert('RGB')
 default_character=[]

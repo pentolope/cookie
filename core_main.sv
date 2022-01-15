@@ -75,22 +75,8 @@ always @(posedge main_clk) begin
 	if (^stack_pointer===1'bx) $stop;
 end
 
-wire [32:0] executer0DoWrite;
-wire [15:0] executer0WriteValues [32:0];
-wire [32:0] executer1DoWrite;
-wire [15:0] executer1WriteValues [32:0];
-wire [32:0] executer2DoWrite;
-wire [15:0] executer2WriteValues [32:0];
-wire [32:0] executer3DoWrite;
-wire [15:0] executer3WriteValues [32:0];
-wire [32:0] executer4DoWrite;
-wire [15:0] executer4WriteValues [32:0];
-wire [32:0] executer5DoWrite;
-wire [15:0] executer5WriteValues [32:0];
-wire [32:0] executer6DoWrite;
-wire [15:0] executer6WriteValues [32:0];
-wire [32:0] executer7DoWrite;
-wire [15:0] executer7WriteValues [32:0];
+wire [32:0] executerDoWrite [7:0];
+wire [15:0] executerWriteValues [7:0][32:0];
 
 wire [15:0] rename_state_from_executers [7:0];
 
@@ -168,7 +154,15 @@ wire [4:0] new_instructionID_table [2:0];
 
 wire [32:0] generatedDependSelfRegRead_table [2:0];
 wire [32:0] generatedDependSelfRegWrite_table [2:0];
+wire generatedDependSelfStackPointer_table [2:0];
 wire [2:0] generatedDependSelfSpecial_table [2:0];
+
+assign generatedDependSelfRegRead_table[0][32]=generatedDependSelfStackPointer_table[0];
+assign generatedDependSelfRegRead_table[1][32]=generatedDependSelfStackPointer_table[1];
+assign generatedDependSelfRegRead_table[2][32]=generatedDependSelfStackPointer_table[2];
+assign generatedDependSelfRegWrite_table[0][32]=generatedDependSelfStackPointer_table[0];
+assign generatedDependSelfRegWrite_table[1][32]=generatedDependSelfStackPointer_table[1];
+assign generatedDependSelfRegWrite_table[2][32]=generatedDependSelfStackPointer_table[2];
 
 reg [15:0] rename_state_base=0;
 wire [15:0] rename_state_walk [3:0];
@@ -192,9 +186,9 @@ assign rename_state_out[0][1:0]=0;
 assign rename_state_out[1][1:0]=0;
 assign rename_state_out[2][1:0]=0;
 
-dependancy_generation dependancy_generation_inst0(new_instruction_table[0],rename_state_walk[0],rename_state_walk[1],new_instructionID_table[0],generatedDependSelfRegRead_table[0],generatedDependSelfRegWrite_table[0],generatedDependSelfSpecial_table[0]);
-dependancy_generation dependancy_generation_inst1(new_instruction_table[1],rename_state_walk[1],rename_state_walk[2],new_instructionID_table[1],generatedDependSelfRegRead_table[1],generatedDependSelfRegWrite_table[1],generatedDependSelfSpecial_table[1]);
-dependancy_generation dependancy_generation_inst2(new_instruction_table[2],rename_state_walk[2],rename_state_walk[3],new_instructionID_table[2],generatedDependSelfRegRead_table[2],generatedDependSelfRegWrite_table[2],generatedDependSelfSpecial_table[2]);
+dependancy_generation dependancy_generation_inst0(new_instruction_table[0],rename_state_walk[0],rename_state_walk[1],new_instructionID_table[0],generatedDependSelfRegRead_table[0][31:0],generatedDependSelfRegWrite_table[0][31:0],generatedDependSelfStackPointer_table[0],generatedDependSelfSpecial_table[0]);
+dependancy_generation dependancy_generation_inst1(new_instruction_table[1],rename_state_walk[1],rename_state_walk[2],new_instructionID_table[1],generatedDependSelfRegRead_table[1][31:0],generatedDependSelfRegWrite_table[1][31:0],generatedDependSelfStackPointer_table[1],generatedDependSelfSpecial_table[1]);
+dependancy_generation dependancy_generation_inst2(new_instruction_table[2],rename_state_walk[2],rename_state_walk[3],new_instructionID_table[2],generatedDependSelfRegRead_table[2][31:0],generatedDependSelfRegWrite_table[2][31:0],generatedDependSelfStackPointer_table[2],generatedDependSelfSpecial_table[2]);
 
 
 wire [7:0] is_instructions_valid;
@@ -240,56 +234,42 @@ instruction_cache instruction_cache_inst(
 assign mem_target_address_instruction_fetch_0[0]=1'b0;
 assign mem_target_address_instruction_fetch_1[0]=1'b0;
 
+wire [15:0] instant_updated_from_memory [32:0];
 wire [15:0] instant_updated_core_values [32:0];
 wire [15:0] core_values [32:0];
 assign core_values[31:0]=user_reg;
 assign core_values[32]=stack_pointer;
 
-reg_mux_full reg_mux_full_inst(
-	instant_updated_core_values,
-	core_values,
-	'{executer7DoWrite,executer6DoWrite,executer5DoWrite,executer4DoWrite,executer3DoWrite,executer2DoWrite,executer1DoWrite,executer0DoWrite},
-	executer0WriteValues,
-	executer1WriteValues,
-	executer2WriteValues,
-	executer3WriteValues,
-	executer4WriteValues,
-	executer5WriteValues,
-	executer6WriteValues,
-	executer7WriteValues
-);
-
-
 
 always @(posedge main_clk) begin
-	assert ((executer0DoWrite & executer1DoWrite)==0);
-	assert ((executer0DoWrite & executer2DoWrite)==0);
-	assert ((executer0DoWrite & executer3DoWrite)==0);
-	assert ((executer0DoWrite & executer4DoWrite)==0);
-	assert ((executer0DoWrite & executer5DoWrite)==0);
-	assert ((executer0DoWrite & executer6DoWrite)==0);
-	assert ((executer0DoWrite & executer7DoWrite)==0);
-	assert ((executer1DoWrite & executer2DoWrite)==0);
-	assert ((executer1DoWrite & executer3DoWrite)==0);
-	assert ((executer1DoWrite & executer4DoWrite)==0);
-	assert ((executer1DoWrite & executer5DoWrite)==0);
-	assert ((executer1DoWrite & executer6DoWrite)==0);
-	assert ((executer1DoWrite & executer7DoWrite)==0);
-	assert ((executer2DoWrite & executer3DoWrite)==0);
-	assert ((executer2DoWrite & executer4DoWrite)==0);
-	assert ((executer2DoWrite & executer5DoWrite)==0);
-	assert ((executer2DoWrite & executer6DoWrite)==0);
-	assert ((executer2DoWrite & executer7DoWrite)==0);
-	assert ((executer3DoWrite & executer4DoWrite)==0);
-	assert ((executer3DoWrite & executer5DoWrite)==0);
-	assert ((executer3DoWrite & executer6DoWrite)==0);
-	assert ((executer3DoWrite & executer7DoWrite)==0);
-	assert ((executer4DoWrite & executer5DoWrite)==0);
-	assert ((executer4DoWrite & executer6DoWrite)==0);
-	assert ((executer4DoWrite & executer7DoWrite)==0);
-	assert ((executer5DoWrite & executer6DoWrite)==0);
-	assert ((executer5DoWrite & executer7DoWrite)==0);
-	assert ((executer6DoWrite & executer7DoWrite)==0);
+	assert ((executerDoWrite[0] & executerDoWrite[1])==0);
+	assert ((executerDoWrite[0] & executerDoWrite[2])==0);
+	assert ((executerDoWrite[0] & executerDoWrite[3])==0);
+	assert ((executerDoWrite[0] & executerDoWrite[4])==0);
+	assert ((executerDoWrite[0] & executerDoWrite[5])==0);
+	assert ((executerDoWrite[0] & executerDoWrite[6])==0);
+	assert ((executerDoWrite[0] & executerDoWrite[7])==0);
+	assert ((executerDoWrite[1] & executerDoWrite[2])==0);
+	assert ((executerDoWrite[1] & executerDoWrite[3])==0);
+	assert ((executerDoWrite[1] & executerDoWrite[4])==0);
+	assert ((executerDoWrite[1] & executerDoWrite[5])==0);
+	assert ((executerDoWrite[1] & executerDoWrite[6])==0);
+	assert ((executerDoWrite[1] & executerDoWrite[7])==0);
+	assert ((executerDoWrite[2] & executerDoWrite[3])==0);
+	assert ((executerDoWrite[2] & executerDoWrite[4])==0);
+	assert ((executerDoWrite[2] & executerDoWrite[5])==0);
+	assert ((executerDoWrite[2] & executerDoWrite[6])==0);
+	assert ((executerDoWrite[2] & executerDoWrite[7])==0);
+	assert ((executerDoWrite[3] & executerDoWrite[4])==0);
+	assert ((executerDoWrite[3] & executerDoWrite[5])==0);
+	assert ((executerDoWrite[3] & executerDoWrite[6])==0);
+	assert ((executerDoWrite[3] & executerDoWrite[7])==0);
+	assert ((executerDoWrite[4] & executerDoWrite[5])==0);
+	assert ((executerDoWrite[4] & executerDoWrite[6])==0);
+	assert ((executerDoWrite[4] & executerDoWrite[7])==0);
+	assert ((executerDoWrite[5] & executerDoWrite[6])==0);
+	assert ((executerDoWrite[5] & executerDoWrite[7])==0);
+	assert ((executerDoWrite[6] & executerDoWrite[7])==0);
 end
 
 
@@ -305,7 +285,6 @@ assign debug_port_states2[7:0]=is_instructions_valid;
 assign debug_port_states2[9:8]=ready_instruction_count_now;
 
 wire [7:0] is_new_instruction_entering_this_cycle;
-wire [7:0] is_instruction_finishing_this_cycle_pulse;
 
 wire [32:0] dependRegRead [7:0];
 wire [32:0] dependRegWrite [7:0];
@@ -338,36 +317,72 @@ scheduler scheduler_inst(
 	main_clk
 );
 
+wire [15:0] instructions [7:0];
+wire [7:0] doSpecialWrite;
 
 
-core_executer core_executer_inst0(
-	3'h0,
+reg_mux_from_memory reg_mux_from_memory_inst(
+	instant_updated_from_memory[31:0],
+	
+	core_values[31:0],
+	instructions,
+	rename_state_from_executers,
+	doSpecialWrite,
+	mem_data_out_type_1[3:0],
+	(~mem_is_access_write_all) & mem_is_general_or_stack_access_acknowledged_pulse,
+	main_clk
+);
+
+assign instant_updated_from_memory[32]=core_values[32];
+
+reg_mux_full reg_mux_full_inst(
+	instant_updated_core_values,
+	instant_updated_from_memory,
+	'{executerDoWrite[7],executerDoWrite[6],executerDoWrite[5],executerDoWrite[4],executerDoWrite[3],executerDoWrite[2],executerDoWrite[1],executerDoWrite[0]},
+	executerWriteValues[0],
+	executerWriteValues[1],
+	executerWriteValues[2],
+	executerWriteValues[3],
+	executerWriteValues[4],
+	executerWriteValues[5],
+	executerWriteValues[6],
+	executerWriteValues[7]
+);
+
+
+
+generate
+genvar i;
+for (i=0;i<8;i=i+1) begin : core_gen
+core_executer #(i) core_executer_inst(
 	jump_index_for_executer,
 	jump_index_next_for_executer,
-	is_new_instruction_entering_this_cycle[0],
-	is_instructions_valid[0],
-	is_instructions_valid_next[0],
-	could_instruction_be_valid_next[0],
-	new_instruction_table[setIndexes[0]],
-	new_instructionID_table[setIndexes[0]],
-	new_instruction_address_table[setIndexes[0]],
+	is_new_instruction_entering_this_cycle[i],
+	is_instructions_valid[i],
+	is_instructions_valid_next[i],
+	could_instruction_be_valid_next[i],
 	
-	rename_state_in[setIndexes[0]],
-	rename_state_out[setIndexes[0]],
-	rename_state_from_executers[0],
+	instructions[i],
+	new_instruction_table[setIndexes[i]],
+	new_instructionID_table[setIndexes[i]],
+	new_instruction_address_table[setIndexes[i]],
 	
-	generatedDependSelfRegRead_table[setIndexes[0]],
-	generatedDependSelfRegWrite_table[setIndexes[0]],
-	generatedDependSelfSpecial_table[setIndexes[0]],
+	rename_state_in[setIndexes[i]],
+	rename_state_out[setIndexes[i]],
+	rename_state_from_executers[i],
 	
-	dependRegRead[0],
-	dependRegWrite[0],
-	dependSpecial[0],
+	generatedDependSelfRegRead_table[setIndexes[i]],
+	generatedDependSelfRegWrite_table[setIndexes[i]],
+	generatedDependSelfSpecial_table[setIndexes[i]],
 	
-	dependRegRead_next[0],
-	dependRegWrite_next[0],
-	dependSpecial_next[0],
-	dependSpecial_estimate[0],
+	dependRegRead[i],
+	dependRegWrite[i],
+	dependSpecial[i],
+	
+	dependRegRead_next[i],
+	dependRegWrite_next[i],
+	dependSpecial_next[i],
+	dependSpecial_estimate[i],
 	
 	dependRegRead,
 	dependRegWrite,
@@ -378,520 +393,38 @@ core_executer core_executer_inst0(
 	dependSpecial_next,
 	dependSpecial_estimate,
 	
-	isAfter[0],
-	isAfter_next[0],
+	isAfter[i],
+	isAfter_next[i],
 	
 	instant_updated_core_values,
-	executer0DoWrite,
-	executer0WriteValues,
 	
-	mem_stack_access_size_all[0],
-	mem_target_address_all[0],
+	doSpecialWrite[i],
+	executerDoWrite[i],
+	executerWriteValues[i],
+	
+	mem_stack_access_size_all[i],
+	mem_target_address_all[i],
 	
 	mem_data_out_type_1[4:0],
-	mem_data_in_all[0],
+	mem_data_in_all[i],
 	
-	mem_is_access_write_all[0],
-	mem_is_general_access_byte_operation_all[0],
-	mem_is_general_access_requesting_all[0],
-	mem_is_stack_access_requesting_all[0],
-	mem_is_stack_access_overflowing_all[0],
+	mem_is_access_write_all[i],
+	mem_is_general_access_byte_operation_all[i],
+	mem_is_general_access_requesting_all[i],
+	mem_is_stack_access_requesting_all[i],
+	mem_is_stack_access_overflowing_all[i],
 	
-	mem_is_general_or_stack_access_acknowledged_pulse[0],
+	mem_is_general_or_stack_access_acknowledged_pulse[i],
 	memory_dependency_clear,
 	
-	is_instruction_finishing_this_cycle_pulse[0],
-	
-	instruction_jump_address_next_executer[0],
-	jump_signal_executer[0],
-	jump_signal_next_executer[0],
-	
+	instruction_jump_address_next_executer[i],
+	jump_signal_executer[i],
+	jump_signal_next_executer[i],
 	main_clk
 );
 
-core_executer core_executer_inst1(
-	3'h1,
-	jump_index_for_executer,
-	jump_index_next_for_executer,
-	is_new_instruction_entering_this_cycle[1],
-	is_instructions_valid[1],
-	is_instructions_valid_next[1],
-	could_instruction_be_valid_next[1],
-	new_instruction_table[setIndexes[1]],
-	new_instructionID_table[setIndexes[1]],
-	new_instruction_address_table[setIndexes[1]],
-	
-	rename_state_in[setIndexes[1]],
-	rename_state_out[setIndexes[1]],
-	rename_state_from_executers[1],
-	
-	generatedDependSelfRegRead_table[setIndexes[1]],
-	generatedDependSelfRegWrite_table[setIndexes[1]],
-	generatedDependSelfSpecial_table[setIndexes[1]],
-	
-	dependRegRead[1],
-	dependRegWrite[1],
-	dependSpecial[1],
-	
-	dependRegRead_next[1],
-	dependRegWrite_next[1],
-	dependSpecial_next[1],
-	dependSpecial_estimate[1],
-	
-	dependRegRead,
-	dependRegWrite,
-	dependSpecial,
-	
-	dependRegRead_next,
-	dependRegWrite_next,
-	dependSpecial_next,
-	dependSpecial_estimate,
-	
-	isAfter[1],
-	isAfter_next[1],
-	
-	instant_updated_core_values,
-	executer1DoWrite,
-	executer1WriteValues,
-	
-	mem_stack_access_size_all[1],
-	mem_target_address_all[1],
-	
-	mem_data_out_type_1[4:0],
-	mem_data_in_all[1],
-	
-	mem_is_access_write_all[1],
-	mem_is_general_access_byte_operation_all[1],
-	mem_is_general_access_requesting_all[1],
-	mem_is_stack_access_requesting_all[1],
-	mem_is_stack_access_overflowing_all[1],
-	
-	mem_is_general_or_stack_access_acknowledged_pulse[1],
-	memory_dependency_clear,
-	
-	is_instruction_finishing_this_cycle_pulse[1],
-	
-	instruction_jump_address_next_executer[1],
-	jump_signal_executer[1],
-	jump_signal_next_executer[1],
-	
-	main_clk
-);
-
-core_executer core_executer_inst2(
-	3'h2,
-	jump_index_for_executer,
-	jump_index_next_for_executer,
-	is_new_instruction_entering_this_cycle[2],
-	is_instructions_valid[2],
-	is_instructions_valid_next[2],
-	could_instruction_be_valid_next[2],
-	new_instruction_table[setIndexes[2]],
-	new_instructionID_table[setIndexes[2]],
-	new_instruction_address_table[setIndexes[2]],
-	
-	rename_state_in[setIndexes[2]],
-	rename_state_out[setIndexes[2]],
-	rename_state_from_executers[2],
-
-	generatedDependSelfRegRead_table[setIndexes[2]],
-	generatedDependSelfRegWrite_table[setIndexes[2]],
-	generatedDependSelfSpecial_table[setIndexes[2]],
-	
-	dependRegRead[2],
-	dependRegWrite[2],
-	dependSpecial[2],
-	
-	dependRegRead_next[2],
-	dependRegWrite_next[2],
-	dependSpecial_next[2],
-	dependSpecial_estimate[2],
-	
-	dependRegRead,
-	dependRegWrite,
-	dependSpecial,
-	
-	dependRegRead_next,
-	dependRegWrite_next,
-	dependSpecial_next,
-	dependSpecial_estimate,
-	
-	isAfter[2],
-	isAfter_next[2],
-	
-	instant_updated_core_values,
-	executer2DoWrite,
-	executer2WriteValues,
-	
-	mem_stack_access_size_all[2],
-	mem_target_address_all[2],
-	
-	mem_data_out_type_1[4:0],
-	mem_data_in_all[2],
-	
-	mem_is_access_write_all[2],
-	mem_is_general_access_byte_operation_all[2],
-	mem_is_general_access_requesting_all[2],
-	mem_is_stack_access_requesting_all[2],
-	mem_is_stack_access_overflowing_all[2],
-	
-	mem_is_general_or_stack_access_acknowledged_pulse[2],
-	memory_dependency_clear,
-	
-	is_instruction_finishing_this_cycle_pulse[2],
-	
-	instruction_jump_address_next_executer[2],
-	jump_signal_executer[2],
-	jump_signal_next_executer[2],
-	
-	main_clk
-);
-
-core_executer core_executer_inst3(
-	3'h3,
-	jump_index_for_executer,
-	jump_index_next_for_executer,
-	is_new_instruction_entering_this_cycle[3],
-	is_instructions_valid[3],
-	is_instructions_valid_next[3],
-	could_instruction_be_valid_next[3],
-	new_instruction_table[setIndexes[3]],
-	new_instructionID_table[setIndexes[3]],
-	new_instruction_address_table[setIndexes[3]],
-	
-	rename_state_in[setIndexes[3]],
-	rename_state_out[setIndexes[3]],
-	rename_state_from_executers[3],
-
-	generatedDependSelfRegRead_table[setIndexes[3]],
-	generatedDependSelfRegWrite_table[setIndexes[3]],
-	generatedDependSelfSpecial_table[setIndexes[3]],
-	
-	dependRegRead[3],
-	dependRegWrite[3],
-	dependSpecial[3],
-	
-	dependRegRead_next[3],
-	dependRegWrite_next[3],
-	dependSpecial_next[3],
-	dependSpecial_estimate[3],
-	
-	dependRegRead,
-	dependRegWrite,
-	dependSpecial,
-	
-	dependRegRead_next,
-	dependRegWrite_next,
-	dependSpecial_next,
-	dependSpecial_estimate,
-	
-	isAfter[3],
-	isAfter_next[3],
-	
-	instant_updated_core_values,
-	executer3DoWrite,
-	executer3WriteValues,
-	
-	mem_stack_access_size_all[3],
-	mem_target_address_all[3],
-	
-	mem_data_out_type_1[4:0],
-	mem_data_in_all[3],
-	
-	mem_is_access_write_all[3],
-	mem_is_general_access_byte_operation_all[3],
-	mem_is_general_access_requesting_all[3],
-	mem_is_stack_access_requesting_all[3],
-	mem_is_stack_access_overflowing_all[3],
-	
-	mem_is_general_or_stack_access_acknowledged_pulse[3],
-	memory_dependency_clear,
-	
-	is_instruction_finishing_this_cycle_pulse[3],
-	
-	instruction_jump_address_next_executer[3],
-	jump_signal_executer[3],
-	jump_signal_next_executer[3],
-	
-	main_clk
-);
-
-core_executer core_executer_inst4(
-	3'h4,
-	jump_index_for_executer,
-	jump_index_next_for_executer,
-	is_new_instruction_entering_this_cycle[4],
-	is_instructions_valid[4],
-	is_instructions_valid_next[4],
-	could_instruction_be_valid_next[4],
-	new_instruction_table[setIndexes[4]],
-	new_instructionID_table[setIndexes[4]],
-	new_instruction_address_table[setIndexes[4]],
-	
-	rename_state_in[setIndexes[4]],
-	rename_state_out[setIndexes[4]],
-	rename_state_from_executers[4],
-
-	generatedDependSelfRegRead_table[setIndexes[4]],
-	generatedDependSelfRegWrite_table[setIndexes[4]],
-	generatedDependSelfSpecial_table[setIndexes[4]],
-	
-	dependRegRead[4],
-	dependRegWrite[4],
-	dependSpecial[4],
-	
-	dependRegRead_next[4],
-	dependRegWrite_next[4],
-	dependSpecial_next[4],
-	dependSpecial_estimate[4],
-	
-	dependRegRead,
-	dependRegWrite,
-	dependSpecial,
-	
-	dependRegRead_next,
-	dependRegWrite_next,
-	dependSpecial_next,
-	dependSpecial_estimate,
-	
-	isAfter[4],
-	isAfter_next[4],
-	
-	instant_updated_core_values,
-	executer4DoWrite,
-	executer4WriteValues,
-	
-	mem_stack_access_size_all[4],
-	mem_target_address_all[4],
-	
-	mem_data_out_type_1[4:0],
-	mem_data_in_all[4],
-	
-	mem_is_access_write_all[4],
-	mem_is_general_access_byte_operation_all[4],
-	mem_is_general_access_requesting_all[4],
-	mem_is_stack_access_requesting_all[4],
-	mem_is_stack_access_overflowing_all[4],
-	
-	mem_is_general_or_stack_access_acknowledged_pulse[4],
-	memory_dependency_clear,
-	
-	is_instruction_finishing_this_cycle_pulse[4],
-	
-	instruction_jump_address_next_executer[4],
-	jump_signal_executer[4],
-	jump_signal_next_executer[4],
-	
-	main_clk
-);
-
-core_executer core_executer_inst5(
-	3'h5,
-	jump_index_for_executer,
-	jump_index_next_for_executer,
-	is_new_instruction_entering_this_cycle[5],
-	is_instructions_valid[5],
-	is_instructions_valid_next[5],
-	could_instruction_be_valid_next[5],
-	new_instruction_table[setIndexes[5]],
-	new_instructionID_table[setIndexes[5]],
-	new_instruction_address_table[setIndexes[5]],
-	
-	rename_state_in[setIndexes[5]],
-	rename_state_out[setIndexes[5]],
-	rename_state_from_executers[5],
-
-	generatedDependSelfRegRead_table[setIndexes[5]],
-	generatedDependSelfRegWrite_table[setIndexes[5]],
-	generatedDependSelfSpecial_table[setIndexes[5]],
-	
-	dependRegRead[5],
-	dependRegWrite[5],
-	dependSpecial[5],
-	
-	dependRegRead_next[5],
-	dependRegWrite_next[5],
-	dependSpecial_next[5],
-	dependSpecial_estimate[5],
-	
-	dependRegRead,
-	dependRegWrite,
-	dependSpecial,
-	
-	dependRegRead_next,
-	dependRegWrite_next,
-	dependSpecial_next,
-	dependSpecial_estimate,
-	
-	isAfter[5],
-	isAfter_next[5],
-	
-	instant_updated_core_values,
-	executer5DoWrite,
-	executer5WriteValues,
-	
-	mem_stack_access_size_all[5],
-	mem_target_address_all[5],
-	
-	mem_data_out_type_1[4:0],
-	mem_data_in_all[5],
-	
-	mem_is_access_write_all[5],
-	mem_is_general_access_byte_operation_all[5],
-	mem_is_general_access_requesting_all[5],
-	mem_is_stack_access_requesting_all[5],
-	mem_is_stack_access_overflowing_all[5],
-	
-	mem_is_general_or_stack_access_acknowledged_pulse[5],
-	memory_dependency_clear,
-	
-	is_instruction_finishing_this_cycle_pulse[5],
-	
-	instruction_jump_address_next_executer[5],
-	jump_signal_executer[5],
-	jump_signal_next_executer[5],
-	
-	main_clk
-);
-
-core_executer core_executer_inst6(
-	3'h6,
-	jump_index_for_executer,
-	jump_index_next_for_executer,
-	is_new_instruction_entering_this_cycle[6],
-	is_instructions_valid[6],
-	is_instructions_valid_next[6],
-	could_instruction_be_valid_next[6],
-	new_instruction_table[setIndexes[6]],
-	new_instructionID_table[setIndexes[6]],
-	new_instruction_address_table[setIndexes[6]],
-	
-	rename_state_in[setIndexes[6]],
-	rename_state_out[setIndexes[6]],
-	rename_state_from_executers[6],
-
-	generatedDependSelfRegRead_table[setIndexes[6]],
-	generatedDependSelfRegWrite_table[setIndexes[6]],
-	generatedDependSelfSpecial_table[setIndexes[6]],
-	
-	dependRegRead[6],
-	dependRegWrite[6],
-	dependSpecial[6],
-	
-	dependRegRead_next[6],
-	dependRegWrite_next[6],
-	dependSpecial_next[6],
-	dependSpecial_estimate[6],
-	
-	dependRegRead,
-	dependRegWrite,
-	dependSpecial,
-	
-	dependRegRead_next,
-	dependRegWrite_next,
-	dependSpecial_next,
-	dependSpecial_estimate,
-	
-	isAfter[6],
-	isAfter_next[6],
-	
-	instant_updated_core_values,
-	executer6DoWrite,
-	executer6WriteValues,
-	
-	mem_stack_access_size_all[6],
-	mem_target_address_all[6],
-	
-	mem_data_out_type_1[4:0],
-	mem_data_in_all[6],
-	
-	mem_is_access_write_all[6],
-	mem_is_general_access_byte_operation_all[6],
-	mem_is_general_access_requesting_all[6],
-	mem_is_stack_access_requesting_all[6],
-	mem_is_stack_access_overflowing_all[6],
-	
-	mem_is_general_or_stack_access_acknowledged_pulse[6],
-	memory_dependency_clear,
-	
-	is_instruction_finishing_this_cycle_pulse[6],
-	
-	instruction_jump_address_next_executer[6],
-	jump_signal_executer[6],
-	jump_signal_next_executer[6],
-	
-	main_clk
-);
-
-core_executer core_executer_inst7(
-	3'h7,
-	jump_index_for_executer,
-	jump_index_next_for_executer,
-	is_new_instruction_entering_this_cycle[7],
-	is_instructions_valid[7],
-	is_instructions_valid_next[7],
-	could_instruction_be_valid_next[7],
-	new_instruction_table[setIndexes[7]],
-	new_instructionID_table[setIndexes[7]],
-	new_instruction_address_table[setIndexes[7]],
-	
-	rename_state_in[setIndexes[7]],
-	rename_state_out[setIndexes[7]],
-	rename_state_from_executers[7],
-
-	generatedDependSelfRegRead_table[setIndexes[7]],
-	generatedDependSelfRegWrite_table[setIndexes[7]],
-	generatedDependSelfSpecial_table[setIndexes[7]],
-	
-	dependRegRead[7],
-	dependRegWrite[7],
-	dependSpecial[7],
-	
-	dependRegRead_next[7],
-	dependRegWrite_next[7],
-	dependSpecial_next[7],
-	dependSpecial_estimate[7],
-	
-	dependRegRead,
-	dependRegWrite,
-	dependSpecial,
-	
-	dependRegRead_next,
-	dependRegWrite_next,
-	dependSpecial_next,
-	dependSpecial_estimate,
-	
-	isAfter[7],
-	isAfter_next[7],
-	
-	instant_updated_core_values,
-	executer7DoWrite,
-	executer7WriteValues,
-	
-	mem_stack_access_size_all[7],
-	mem_target_address_all[7],
-	
-	mem_data_out_type_1[4:0],
-	mem_data_in_all[7],
-	
-	mem_is_access_write_all[7],
-	mem_is_general_access_byte_operation_all[7],
-	mem_is_general_access_requesting_all[7],
-	mem_is_stack_access_requesting_all[7],
-	mem_is_stack_access_overflowing_all[7],
-	
-	mem_is_general_or_stack_access_acknowledged_pulse[7],
-	memory_dependency_clear,
-	
-	is_instruction_finishing_this_cycle_pulse[7],
-	
-	instruction_jump_address_next_executer[7],
-	jump_signal_executer[7],
-	jump_signal_next_executer[7],
-	
-	main_clk
-);
-wire [7:0] errors;
+end
+endgenerate
 
 memory_interface memory_interface_inst(
 	DRAM_ADDR,
@@ -943,7 +476,6 @@ memory_interface memory_interface_inst(
 	debug_port_states1,
 	main_clk
 );
-
 
 
 assign debug_instruction_fetch_address=mem_target_address_instruction_fetch_0;

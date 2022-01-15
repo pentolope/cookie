@@ -27,7 +27,7 @@ initial begin
 	cache_mem[4]=4;
 end
 initial begin
-`include "AutoGen1.sv"
+`include "AutoGen2.sv"
 end
 reg [9:0] cp;
 reg ce=0;
@@ -484,7 +484,7 @@ memory_io memory__io(
 /*
 initial begin // stopping timer
 	#10;
-	for (i=0;i<13107200;i=i+1) begin//131072//800
+	for (i=0;i<13107200;i=i+1) begin
 		#20;
 	end
 	$display("Stopping Normally due to cutoff timer.");

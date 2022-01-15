@@ -380,7 +380,7 @@ always @(posedge main_clk) begin
 	end
 	data_read_mmio_r<=8'hFF; // could be made undefined
 	if (case_val==4'b0000) begin
-		data_read_mmio_r<=fifo_empty? 8'hED :first_unread_byte[7:0]; // ternary not needed
+		data_read_mmio_r<=fifo_empty? 8'hED :first_unread_byte[7:0]; // ternary should be unnecessary
 	end else if (case_val==4'b0010) begin
 		data_read_mmio_r<=!fifo_empty;
 	end else if (case_val==4'b0011) begin
@@ -401,22 +401,6 @@ always @(posedge main_clk) begin
 	end else if (case_val==4'b1111) begin
 		clear_had_transmit_error<=1;
 	end
-	
-/*
-	case ({is_mmio_write_r,address_mmio_r}) // don't make this unique
-	4'b0000:data_read_mmio_r<=fifo_empty? 8'hED :first_unread_byte[7:0]; // ternary not needed
-	4'b0010:data_read_mmio_r<=!fifo_empty;
-	4'b0011:data_read_mmio_r<=has_byte_to_send_to_device;
-	4'b0100:data_read_mmio_r<=first_unread_byte[8];
-	4'b0110:data_read_mmio_r<=has_dropped_byte;
-	4'b0111:data_read_mmio_r<=had_transmit_error;
-	4'b1000:byte_read_by_host<=1;
-	4'b1001:begin write_byte<=data_write_mmio_r;has_byte_to_send_to_device<=1;end
-	4'b1110:has_dropped_byte<=0;
-	4'b1111:clear_had_transmit_error<=1;
-	default:begin end
-	endcase
-*/
 end
 
 ip_ps2_buffer ip_ps2_buffer_inst(

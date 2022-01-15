@@ -50,7 +50,7 @@ wire [4:0] raw_perm_out;
 wire [4:0] raw_perm_in;
 wire [1:0] least_used_index_calc;
 
-lcell_2 lc_lru_out(least_used_index,least_used_index_calc);
+lcells #(2) lc_lru_out(least_used_index,least_used_index_calc);
 
 `include "AutoGen0.sv"
 

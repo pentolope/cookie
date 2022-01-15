@@ -6,34 +6,46 @@ module dependancy_generation(
 	
 	output [15:0] rename_state_out_extern,
 	output [4:0] new_instructionID_extern,
-	output [32:0] generatedDependSelfRegRead_extern,
-	output [32:0] generatedDependSelfRegWrite_extern,
+	output [31:0] generatedDependSelfRegRead_extern,
+	output [31:0] generatedDependSelfRegWrite_extern,
+	output generatedDependSelfStackPointer_extern,
 	output [2:0] generatedDependSelfSpecial_extern
 );
 
-reg [16:0] generatedDependSelfRegRead;
-reg [16:0] generatedDependSelfRegWrite;
+reg [15:0] generatedDependSelfRegRead;
+reg [15:0] generatedDependSelfRegWrite;
+reg generatedDependSelfStackPointer;
 reg [2:0] generatedDependSelfSpecial;  // .[0]=jump  , .[1]=mem read  , .[2]=mem write
 
-reg [32:0] generatedDependSelfRegReadRenamed;
-reg [32:0] generatedDependSelfRegWriteRenamed;
+reg [31:0] generatedDependSelfRegReadRenamed;
+reg [31:0] generatedDependSelfRegWriteRenamed;
 reg [15:0] rename_state_out;
 
 reg [4:0] new_instructionID;
 reg [4:0] new_instructionIDc;
 always_comb new_instructionID=(& new_instruction[15:12])?{1'b1,new_instruction[11:8]}:{1'b0,new_instruction[15:12]};
-lcell_5 lc_id(new_instructionIDc,new_instructionID);
+lcells #(5) lc_id(new_instructionIDc,new_instructionID);
 assign new_instructionID_extern=new_instructionIDc;
 
-lcell_33 lc_read(generatedDependSelfRegRead_extern,generatedDependSelfRegReadRenamed);
-lcell_33 lc_write(generatedDependSelfRegWrite_extern,generatedDependSelfRegWriteRenamed);
-lcell_3 lc_special(generatedDependSelfSpecial_extern,generatedDependSelfSpecial);
-lcell_16 lc_rename(rename_state_out_extern,rename_state_out);
+assign generatedDependSelfRegRead_extern[17:16]=2'd0;
+assign generatedDependSelfRegWrite_extern[17:16]=2'd0;
+
+lcells #(16) lc_read0(generatedDependSelfRegRead_extern[15:0],generatedDependSelfRegReadRenamed[15:0]);
+lcells #(14) lc_read1(generatedDependSelfRegRead_extern[31:18],generatedDependSelfRegReadRenamed[31:18]);
+lcells #(16) lc_write0(generatedDependSelfRegWrite_extern[15:0],generatedDependSelfRegWriteRenamed[15:0]);
+lcells #(14) lc_write1(generatedDependSelfRegWrite_extern[31:18],generatedDependSelfRegWriteRenamed[31:18]);
+
+lcells #(3) lc_special(generatedDependSelfSpecial_extern,generatedDependSelfSpecial);
+lcells #(14) lc_rename(rename_state_out_extern[15:2],rename_state_out[15:2]);
+assign rename_state_out_extern[1:0]=2'd0;
+
+lcells #(1) lc_stack_pointer(generatedDependSelfStackPointer_extern,generatedDependSelfStackPointer);
 
 always_comb begin
 	generatedDependSelfRegRead=0;
 	generatedDependSelfRegWrite=0;
 	generatedDependSelfSpecial=0;
+	generatedDependSelfStackPointer=0;
 	case (new_instructionIDc)
 	5'h00:begin
 		generatedDependSelfRegWrite[new_instruction[3:0]]=1'b1;
@@ -121,28 +133,24 @@ always_comb begin
 	end
 	5'h10:begin
 		generatedDependSelfRegRead[new_instruction[3:0]]=1'b1;
-		generatedDependSelfRegRead[16]=1'b1;
-		generatedDependSelfRegWrite[16]=1'b1;
+		generatedDependSelfStackPointer=1'b1;
 		generatedDependSelfSpecial[2]=1'b1;
 	end
 	5'h11:begin
 		generatedDependSelfRegRead[new_instruction[3:0]]=1'b1;
 		generatedDependSelfRegRead[new_instruction[7:4]]=1'b1;
-		generatedDependSelfRegRead[16]=1'b1;
-		generatedDependSelfRegWrite[16]=1'b1;
+		generatedDependSelfStackPointer=1'b1;
 		generatedDependSelfSpecial[2]=1'b1;
 	end
 	5'h12:begin
 		generatedDependSelfRegWrite[new_instruction[3:0]]=1'b1;
-		generatedDependSelfRegRead[16]=1'b1;
-		generatedDependSelfRegWrite[16]=1'b1;
+		generatedDependSelfStackPointer=1'b1;
 		generatedDependSelfSpecial[1]=1'b1;
 	end
 	5'h13:begin
 		generatedDependSelfRegWrite[new_instruction[3:0]]=1'b1;
 		generatedDependSelfRegWrite[new_instruction[7:4]]=1'b1;
-		generatedDependSelfRegRead[16]=1'b1;
-		generatedDependSelfRegWrite[16]=1'b1;
+		generatedDependSelfStackPointer=1'b1;
 		generatedDependSelfSpecial[1]=1'b1;
 	end
 	5'h14:begin
@@ -181,19 +189,18 @@ always_comb begin
 		generatedDependSelfRegRead[new_instruction[3:0]]=1'b1;
 		generatedDependSelfRegRead[0]=1'b1;
 		generatedDependSelfRegRead[1]=1'b1;
-		generatedDependSelfRegRead[16]=1'b1;
 		generatedDependSelfRegWrite[0]=1'b1;
-		generatedDependSelfRegWrite[16]=1'b1;
 		generatedDependSelfSpecial[0]=1'b1;
 		generatedDependSelfSpecial[2]=1'b1;
+		generatedDependSelfStackPointer=1'b1;
 	end
 	5'h1B:begin
 		generatedDependSelfRegRead[0]=1'b1;
 		generatedDependSelfRegWrite[0]=1'b1;
 		generatedDependSelfRegWrite[1]=1'b1;
-		generatedDependSelfRegWrite[16]=1'b1;
 		generatedDependSelfSpecial[0]=1'b1;
 		generatedDependSelfSpecial[1]=1'b1;
+		generatedDependSelfStackPointer=1'b1; // this introduces a false dependency. the return instruction does not need to read the stack pointer. it does need to write however, and due to now things work, this should have no performance downsides
 	end
 	5'h1C:begin
 		generatedDependSelfRegRead[new_instruction[7:4]]=1'b1;
@@ -214,18 +221,12 @@ always_comb begin
 	end
 	5'h1F:begin
 		generatedDependSelfRegRead[new_instruction[3:0]]=1'b1;
-		generatedDependSelfRegRead[16]=1'b1;
 		generatedDependSelfRegWrite[new_instruction[3:0]]=1'b1;
-		generatedDependSelfRegWrite[16]=1'b1;
+		generatedDependSelfStackPointer=1'b1;
 	end
 	endcase
 end
 
-
-always_comb begin
-	generatedDependSelfRegReadRenamed[32]=generatedDependSelfRegRead[16];
-	generatedDependSelfRegWriteRenamed[32]=generatedDependSelfRegWrite[16];
-end
 
 always_comb begin
 	// register 0 does not deserve renaming capability because of how it is typically used

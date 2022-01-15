@@ -915,7 +915,7 @@ decode4 decode4_cpiwd(circular_prepared_instruction_write_decoded,circular_prepa
 
 wire [7:0] buffer_size_used_grlc;
 wire [7:0] buffer_size_used_gr;
-lcell_8 lc_buffsizegr(buffer_size_used_grlc,buffer_size_used_gr);
+lcells #(8) lc_buffsizegr(buffer_size_used_grlc,buffer_size_used_gr);
 assign buffer_size_used_gr[0]=(buffer_size_used>=4'h1)? 1'b1:1'b0;
 assign buffer_size_used_gr[1]=(buffer_size_used>=4'h2)? 1'b1:1'b0;
 assign buffer_size_used_gr[2]=(buffer_size_used>=4'h3)? 1'b1:1'b0;
@@ -927,7 +927,7 @@ assign buffer_size_used_gr[7]=(buffer_size_used==4'h8)? 1'b1:1'b0;
 
 wire [15:0] circular_prepared_instruction_write_enable;
 wire [15:0] circular_prepared_instruction_write_enable_lc;
-lcell_16 lc_cpiwe(circular_prepared_instruction_write_enable_lc,circular_prepared_instruction_write_enable);
+lcells #(16) lc_cpiwe(circular_prepared_instruction_write_enable_lc,circular_prepared_instruction_write_enable);
 
 assign circular_prepared_instruction_write_enable[0]=((circular_prepared_instruction_write_decoded[0] && buffer_size_used_grlc[0]) || (circular_prepared_instruction_write_decoded[15] && buffer_size_used_grlc[1]) || (circular_prepared_instruction_write_decoded[14] && buffer_size_used_grlc[2]) || (circular_prepared_instruction_write_decoded[13] && buffer_size_used_grlc[3]) || (circular_prepared_instruction_write_decoded[12] && buffer_size_used_grlc[4]) || (circular_prepared_instruction_write_decoded[11] && buffer_size_used_grlc[5]) || (circular_prepared_instruction_write_decoded[10] && buffer_size_used_grlc[6]) || (circular_prepared_instruction_write_decoded[9] && buffer_size_used_grlc[7]))? 1'b1:1'b0;
 assign circular_prepared_instruction_write_enable[1]=((circular_prepared_instruction_write_decoded[1] && buffer_size_used_grlc[0]) || (circular_prepared_instruction_write_decoded[0] && buffer_size_used_grlc[1]) || (circular_prepared_instruction_write_decoded[15] && buffer_size_used_grlc[2]) || (circular_prepared_instruction_write_decoded[14] && buffer_size_used_grlc[3]) || (circular_prepared_instruction_write_decoded[13] && buffer_size_used_grlc[4]) || (circular_prepared_instruction_write_decoded[12] && buffer_size_used_grlc[5]) || (circular_prepared_instruction_write_decoded[11] && buffer_size_used_grlc[6]) || (circular_prepared_instruction_write_decoded[10] && buffer_size_used_grlc[7]))? 1'b1:1'b0;
@@ -1003,14 +1003,14 @@ always @(posedge main_clk) begin
 end
 
 
-lcell_16 lc0(circular_prepared_instruction_write_values_lc[0],circular_prepared_instruction_write_values[0]);
-lcell_16 lc1(circular_prepared_instruction_write_values_lc[1],circular_prepared_instruction_write_values[1]);
-lcell_16 lc2(circular_prepared_instruction_write_values_lc[2],circular_prepared_instruction_write_values[2]);
-lcell_16 lc3(circular_prepared_instruction_write_values_lc[3],circular_prepared_instruction_write_values[3]);
-lcell_16 lc4(circular_prepared_instruction_write_values_lc[4],circular_prepared_instruction_write_values[4]);
-lcell_16 lc5(circular_prepared_instruction_write_values_lc[5],circular_prepared_instruction_write_values[5]);
-lcell_16 lc6(circular_prepared_instruction_write_values_lc[6],circular_prepared_instruction_write_values[6]);
-lcell_16 lc7(circular_prepared_instruction_write_values_lc[7],circular_prepared_instruction_write_values[7]);
+lcells #(16) lc0(circular_prepared_instruction_write_values_lc[0],circular_prepared_instruction_write_values[0]);
+lcells #(16) lc1(circular_prepared_instruction_write_values_lc[1],circular_prepared_instruction_write_values[1]);
+lcells #(16) lc2(circular_prepared_instruction_write_values_lc[2],circular_prepared_instruction_write_values[2]);
+lcells #(16) lc3(circular_prepared_instruction_write_values_lc[3],circular_prepared_instruction_write_values[3]);
+lcells #(16) lc4(circular_prepared_instruction_write_values_lc[4],circular_prepared_instruction_write_values[4]);
+lcells #(16) lc5(circular_prepared_instruction_write_values_lc[5],circular_prepared_instruction_write_values[5]);
+lcells #(16) lc6(circular_prepared_instruction_write_values_lc[6],circular_prepared_instruction_write_values[6]);
+lcells #(16) lc7(circular_prepared_instruction_write_values_lc[7],circular_prepared_instruction_write_values[7]);
 assign circular_prepared_instruction_write_values_lc[8]=circular_prepared_instruction_write_values_lc[0];
 assign circular_prepared_instruction_write_values_lc[9]=circular_prepared_instruction_write_values_lc[1];
 assign circular_prepared_instruction_write_values_lc[10]=circular_prepared_instruction_write_values_lc[2];

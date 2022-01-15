@@ -101,25 +101,16 @@ waveAdds=[
 '-radix hexadecimal /sim_enviroment/core__main/user_reg',
 '-radix hexadecimal /sim_enviroment/core__main/stack_pointer',
 '/sim_enviroment/core__main/main_clk',
-'-radix hexadecimal /sim_enviroment/core__main/core_executer_inst0/simExecutingInstruction',
-'-radix hexadecimal /sim_enviroment/core__main/core_executer_inst1/simExecutingInstruction',
-'-radix hexadecimal /sim_enviroment/core__main/core_executer_inst2/simExecutingInstruction',
-'-radix hexadecimal /sim_enviroment/core__main/core_executer_inst3/simExecutingInstruction',
-'-radix hexadecimal /sim_enviroment/core__main/core_executer_inst4/simExecutingInstruction',
-'-radix hexadecimal /sim_enviroment/core__main/core_executer_inst5/simExecutingInstruction',
-'-radix hexadecimal /sim_enviroment/core__main/core_executer_inst6/simExecutingInstruction',
-'-radix hexadecimal /sim_enviroment/core__main/core_executer_inst7/simExecutingInstruction',
+'-radix hexadecimal /sim_enviroment/core__main/core_gen[0].core_executer_inst/simExecutingInstruction',
+'-radix hexadecimal /sim_enviroment/core__main/core_gen[1].core_executer_inst/simExecutingInstruction',
+'-radix hexadecimal /sim_enviroment/core__main/core_gen[2].core_executer_inst/simExecutingInstruction',
+'-radix hexadecimal /sim_enviroment/core__main/core_gen[3].core_executer_inst/simExecutingInstruction',
+'-radix hexadecimal /sim_enviroment/core__main/core_gen[4].core_executer_inst/simExecutingInstruction',
+'-radix hexadecimal /sim_enviroment/core__main/core_gen[5].core_executer_inst/simExecutingInstruction',
+'-radix hexadecimal /sim_enviroment/core__main/core_gen[6].core_executer_inst/simExecutingInstruction',
+'-radix hexadecimal /sim_enviroment/core__main/core_gen[7].core_executer_inst/simExecutingInstruction',
 
 '/sim_enviroment/core__main/main_clk',
-
-#'-radix binary /sim_enviroment/core__main/dependRegRead',
-#'-radix binary /sim_enviroment/core__main/dependRegWrite',
-#'-radix binary /sim_enviroment/core__main/dependSpecial',
-#'-radix binary /sim_enviroment/core__main/dependRegRead_next',
-#'-radix binary /sim_enviroment/core__main/dependRegWrite_next',
-#'-radix binary /sim_enviroment/core__main/dependSpecial_next',
-
-#'/sim_enviroment/core__main/main_clk',
 
 '-radix hexadecimal /sim_enviroment/core__main/scheduler_inst/ready_instruction_count_now',
 '-radix hexadecimal /sim_enviroment/core__main/scheduler_inst/ready_instruction_count_next',
@@ -161,7 +152,6 @@ try:
 			contents='\n'.join(filter(lambda x:not ('autogen' in x.lower()),contents.split('\n')))
 			contents+='\n'
 			contents+='vsim -L fiftyfivenm_ver -L altera_ver -L altera_mf_ver -L 220model_ver -L sgate_ver -L altera_lnsim_ver work.sim_enviroment'#-c -t 1ps
-			#contents+='vsim -L altera_mf_ver work.mem_test'
 			contents+='\n'
 			for waveAdd in waveAdds:
 				contents+='add wave '
