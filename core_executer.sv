@@ -6,8 +6,6 @@ module core_executer #(parameter selfIndex) (
 	input [3:0] jumpIndex_next,
 	input is_new_instruction_entering_this_cycle,
 	output is_instruction_valid_extern,
-	output is_instruction_valid_next_extern,
-	output could_instruction_be_valid_next_extern,
 	output possible_remain_valid,
 	
 	output [15:0] instructionOut_extern,
@@ -450,9 +448,6 @@ always @(posedge main_clk) begin if (mem_is_general_access_requesting) assert(is
 reg is_instruction_valid=0;
 assign is_instruction_valid_extern=is_instruction_valid;
 reg is_instruction_valid_next;
-reg could_instruction_be_valid_next; // could_instruction_be_valid_next is an estimation for the scheduler. If 0, it is guaranteed that is_instruction_valid_next is 0. If 1, then is_instruction_valid_next is probably 1 but might be 0.
-lcells #(1) lc_is_instruction_valid_next(is_instruction_valid_next_extern,is_instruction_valid_next);
-lcells #(1) lc_could_instruction_be_valid_next(could_instruction_be_valid_next_extern,could_instruction_be_valid_next);
 
 always @(posedge main_clk) is_instruction_valid<=is_instruction_valid_next;
 
@@ -582,7 +577,6 @@ lcells #(1) lc_j_n(jump_signal_next,(j_uc_lc || (j_co_lc && j_co_sat))?1'b1:1'b0
 
 always_comb begin
 	is_instruction_valid_next=is_instruction_valid;
-	could_instruction_be_valid_next=is_instruction_valid;
 	instruction_jump_address_next={vr1,vr0};
 	j_co=0;
 	j_uc=0;
@@ -594,72 +588,57 @@ always_comb begin
 	unique case (effectiveID)
 	5'h00:begin
 		is_instruction_valid_next=0;
-		could_instruction_be_valid_next=0;
 	end
 	5'h01:begin
 		is_instruction_valid_next=0;
-		could_instruction_be_valid_next=0;
 	end
 	5'h02:begin
 		if (mem_is_access_acknowledged_pulse) begin
 			is_instruction_valid_next=0;
-			could_instruction_be_valid_next=0;
 		end
 	end
 	5'h03:begin
 		if (mem_is_access_acknowledged_pulse) begin
 			is_instruction_valid_next=0;
-			could_instruction_be_valid_next=0;
 		end
 	end
 	5'h04:begin
 		is_instruction_valid_next=0;
-		could_instruction_be_valid_next=0;
 	end
 	5'h05:begin
 		is_instruction_valid_next=0;
-		could_instruction_be_valid_next=0;
 	end
 	5'h06:begin
 		is_instruction_valid_next=0;
-		could_instruction_be_valid_next=0;
 	end
 	5'h07:begin
 		is_instruction_valid_next=0;
-		could_instruction_be_valid_next=0;
 	end
 	5'h08:begin
 		if (mem_is_access_acknowledged_pulse) begin
 			is_instruction_valid_next=0;
-			could_instruction_be_valid_next=0;
 		end
 	end
 	5'h09:begin
 		if (mem_is_access_acknowledged_pulse) begin
 			is_instruction_valid_next=0;
-			could_instruction_be_valid_next=0;
 		end
 	end
 	5'h0A:begin
 		is_instruction_valid_next=0;
-		could_instruction_be_valid_next=0;
 	end
 	5'h0B:begin
 		is_instruction_valid_next=0;
-		could_instruction_be_valid_next=0;
 	end
 	5'h0C:begin
 		is_instruction_valid_next=0;
-		could_instruction_be_valid_next=0;
 	end
 	5'h0D:begin
 		is_instruction_valid_next=0;
-		could_instruction_be_valid_next=0;
 	end
 	5'h0E:begin
 		is_instruction_valid_next=0;
 		j_co=1;
-		could_instruction_be_valid_next=0;
 	end
 	5'h0F:begin
 		// could not execute this cycle
@@ -674,7 +653,6 @@ always_comb begin
 		endcase
 		if (mem_is_access_acknowledged_pulse) begin
 			is_instruction_valid_next=0;
-			could_instruction_be_valid_next=0;
 		end
 	end
 	5'h11:begin
@@ -687,7 +665,6 @@ always_comb begin
 		endcase
 		if (mem_is_access_acknowledged_pulse) begin
 			is_instruction_valid_next=0;
-			could_instruction_be_valid_next=0;
 		end
 	end
 	5'h12:begin
@@ -700,7 +677,6 @@ always_comb begin
 		endcase
 		if (mem_is_access_acknowledged_pulse) begin
 			is_instruction_valid_next=0;
-			could_instruction_be_valid_next=0;
 		end
 	end
 	5'h13:begin
@@ -713,20 +689,16 @@ always_comb begin
 		endcase
 		if (mem_is_access_acknowledged_pulse) begin
 			is_instruction_valid_next=0;
-			could_instruction_be_valid_next=0;
 		end
 	end
 	5'h14:begin
 		is_instruction_valid_next=0;
-		could_instruction_be_valid_next=0;
 	end
 	5'h15:begin
 		is_instruction_valid_next=0;
-		could_instruction_be_valid_next=0;
 	end
 	5'h16:begin
 		is_instruction_valid_next=0;
-		could_instruction_be_valid_next=0;
 	end
 	5'h17:begin
 		unique case (state)
@@ -734,7 +706,6 @@ always_comb begin
 		end
 		2:begin
 			is_instruction_valid_next=0;
-			could_instruction_be_valid_next=0;
 		end
 		endcase
 	end
@@ -744,7 +715,6 @@ always_comb begin
 		end
 		2:begin
 			is_instruction_valid_next=0;
-			could_instruction_be_valid_next=0;
 		end
 		endcase
 	end
@@ -784,7 +754,6 @@ always_comb begin
 		endcase
 		if (mem_is_access_acknowledged_pulse) begin
 			is_instruction_valid_next=0;
-			could_instruction_be_valid_next=0;
 		end
 	end
 	5'h1B:begin
@@ -803,23 +772,19 @@ always_comb begin
 	5'h1C:begin
 		if (mem_is_access_acknowledged_pulse) begin
 			is_instruction_valid_next=0;
-			could_instruction_be_valid_next=0;
 		end
 	end
 	5'h1D:begin
 		if (mem_is_access_acknowledged_pulse) begin
 			is_instruction_valid_next=0;
-			could_instruction_be_valid_next=0;
 		end
 	end
 	5'h1E:begin
 		is_instruction_valid_next=0;
 		j_uc=1;
-		could_instruction_be_valid_next=0;
 	end
 	5'h1F:begin
 		is_instruction_valid_next=0;
-		could_instruction_be_valid_next=0;
 	end
 	endcase
 	if (memory_dependency_clear[selfIndex]) begin
@@ -830,7 +795,6 @@ always_comb begin
 	end
 	if (is_new_instruction_entering_this_cycle) begin
 		is_instruction_valid_next=1;
-		could_instruction_be_valid_next=1;
 		dependSelfRegRead_next=generatedDependSelfRegRead;
 		dependSelfRegWrite_next=generatedDependSelfRegWrite;
 		dependSelfSpecial_next=generatedDependSelfSpecial;

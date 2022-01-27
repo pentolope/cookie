@@ -354,8 +354,6 @@ core_executer #(i) core_executer_inst(
 	jump_index_next_for_executer,
 	is_new_instruction_entering_this_cycle[i],
 	is_instructions_valid[i],
-	is_instructions_valid_next[i],
-	could_instruction_be_valid_next[i],
 	possible_remain_valid[i],
 	
 	instructions[i],
