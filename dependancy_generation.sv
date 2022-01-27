@@ -127,8 +127,8 @@ always_comb begin
 		generatedDependSelfSpecial[0]=1'b1;
 	end
 	5'h0F:begin // this is not actually possible
-		generatedDependSelfRegRead=17'hx;
-		generatedDependSelfRegWrite=17'hx;
+		generatedDependSelfRegRead=16'hx;
+		generatedDependSelfRegWrite=16'hx;
 		generatedDependSelfSpecial=2'hx;
 	end
 	5'h10:begin

@@ -297,6 +297,8 @@ if (k!=16 && k!=17) begin
 		{a[7][k],a[6][k],a[5][k],a[4][k],a[3][k],a[2][k],a[1][k],a[0][k]},
 		'{i7[k],i6[k],i5[k],i4[k],i3[k],i2[k],i1[k],i0[k]}
 	);
+end else begin
+	assign o[k]=16'hx;
 end end
 endgenerate
 
@@ -639,6 +641,8 @@ for (i=0;i<32;i=i+1) begin : gen2
 		end else begin
 			lcells #(16) lc_final(final_result[i],dec5_vr[0][i]?sv[i]:default_values[i]);
 		end
+	end else begin
+		assign final_result[i]=16'hx;
 	end
 end
 endgenerate
