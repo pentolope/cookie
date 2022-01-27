@@ -2,17 +2,14 @@
 
 module scheduler(
 	output [1:0] used_ready_instruction_count_extern,
-	output [7:0] is_new_instruction_entering_this_cycle_extern,
+	output [7:0] is_new_instruction_entering_this_cycle,
 	output [7:0] isAfter_extern [7:0],
 	output [7:0] isAfter_next_extern [7:0],
 	output [1:0] setIndexes_extern [7:0],
 	
-	input [7:0] is_instructions_valid_next,
-	input [7:0] could_instruction_be_valid_next,
-	input jump_triggering_next,
+	input [7:0] possible_remain_valid,
 	input jump_triggering_now,
 	input [1:0] ready_instruction_count_now,
-	input [1:0] ready_instruction_count_next,
 	
 	input main_clk
 );
@@ -85,14 +82,6 @@ assign lut0[6'b111010]=12'bxxxxxxxxxxxx;
 assign lut0[6'b111100]=12'bxxxxxxxxxxxx;
 
 
-reg [7:0] is_new_instruction_entering_this_cycle;
-reg [7:0] instructions_might_be_valid_next;
-reg [7:0] instructions_might_be_valid_now=0;
-reg [7:0] is_instructions_valid=0;
-always @(posedge main_clk) is_instructions_valid<=is_instructions_valid_next;
-always @(posedge main_clk) instructions_might_be_valid_now<=instructions_might_be_valid_next;
-always_comb instructions_might_be_valid_next=could_instruction_be_valid_next;
-
 
 wire [1:0] popcnt4 [15:0];
 assign popcnt4[4'b0000]=0;
@@ -112,23 +101,56 @@ assign popcnt4[4'b1101]=3;
 assign popcnt4[4'b1110]=3;
 assign popcnt4[4'b1111]=3;
 
-wire [1:0] popcntConsume_next0;
-wire [1:0] popcntConsume_next1;
-wire [2:0] popcntConsume_next2;
-wire [1:0] popcntConsume_next3;
-reg  [1:0] popcntConsume_3=3;
 
-lcells #(2) lc_popcnt0(popcntConsume_next0,popcnt4[~instructions_might_be_valid_next[3:0]]);
-lcells #(2) lc_popcnt1(popcntConsume_next1,popcnt4[~instructions_might_be_valid_next[7:4]]);
 
-assign popcntConsume_next2=popcntConsume_next0 + popcntConsume_next1;
-assign popcntConsume_next3=(popcntConsume_next2>2'd3)?(2'd3):(popcntConsume_next2[1:0]);
+wire [1:0] popcntConsume0;
+wire [1:0] popcntConsume1;
+wire [2:0] popcntConsume2;
+wire [1:0] popcntConsume3;
 
-reg [1:0] used_ready_instruction_count=0;
 
+lcells #(2) lc_popcnt0(popcntConsume0,popcnt4[~possible_remain_valid[3:0]]);
+lcells #(2) lc_popcnt1(popcntConsume1,popcnt4[~possible_remain_valid[7:4]]);
+
+assign popcntConsume2=popcntConsume0 + popcntConsume1;
+lcells #(2) lc_popcnt3(popcntConsume3,(popcntConsume2>2'd3)?(2'd3):(popcntConsume2[1:0]));
+wire [1:0] used_ready_instruction_count;
+lcells #(2) lc_used_ready_instruction_count(used_ready_instruction_count,(ready_instruction_count_now > popcntConsume3)?popcntConsume3:ready_instruction_count_now);
 assign used_ready_instruction_count_extern=used_ready_instruction_count;
 
-reg [1:0] setIndexes [7:0];
+reg [1:0] count_for0a;
+reg [1:0] count_for1a;
+reg [1:0] count_for0;
+reg [1:0] count_for1;
+
+lcells #(2) lc_count_for0(count_for0,count_for0a);
+lcells #(2) lc_count_for1(count_for1,count_for1a);
+
+always_comb begin
+	if (popcntConsume0 >= ready_instruction_count_now) begin
+		count_for0a=ready_instruction_count_now;
+		count_for1a=0;
+	end else begin
+		count_for0a=popcntConsume0;
+		count_for1a=ready_instruction_count_now - popcntConsume0;
+		if (count_for1a > popcntConsume1) count_for1a=popcntConsume1;
+	end
+	count_for0a=count_for0a & {2{!jump_triggering_now}};
+	count_for1a=count_for1a & {2{!jump_triggering_now}};
+end
+
+wire [11:0] tmp0;
+wire [11:0] tmp1;
+wire [5:0] tmp2;
+wire [5:0] tmp3;
+lcells #(12) lc_g0(tmp0,lut0[tmp2]);
+lcells #(12) lc_g1(tmp1,lut0[tmp3]);
+assign tmp2[3:0]=~(possible_remain_valid[3:0]);
+assign tmp2[5:4]=count_for0;
+assign tmp3[3:0]=~(possible_remain_valid[7:4]);
+assign tmp3[5:4]=count_for1;
+
+wire [1:0] setIndexes [7:0];
 
 lcells #(2) lc0_setIndexes(setIndexes_extern[0],setIndexes[0]);
 lcells #(2) lc1_setIndexes(setIndexes_extern[1],setIndexes[1]);
@@ -139,46 +161,20 @@ lcells #(2) lc5_setIndexes(setIndexes_extern[5],setIndexes[5]);
 lcells #(2) lc6_setIndexes(setIndexes_extern[6],setIndexes[6]);
 lcells #(2) lc7_setIndexes(setIndexes_extern[7],setIndexes[7]);
 
-assign is_new_instruction_entering_this_cycle_extern=is_new_instruction_entering_this_cycle;
+assign is_new_instruction_entering_this_cycle[3:0]=tmp0[3:0];
+assign setIndexes[0]=tmp0[ 5: 4];
+assign setIndexes[1]=tmp0[ 7: 6];
+assign setIndexes[2]=tmp0[ 9: 8];
+assign setIndexes[3]=tmp0[11:10];
 
-reg [1:0] count_for0_next;
-reg [1:0] count_for1_next;
+assign is_new_instruction_entering_this_cycle[7:4]=tmp1[3:0];
+assign setIndexes[4]=tmp1[ 5: 4]+count_for0;
+assign setIndexes[5]=tmp1[ 7: 6]+count_for0;
+assign setIndexes[6]=tmp1[ 9: 8]+count_for0;
+assign setIndexes[7]=tmp1[11:10]+count_for0;
 
-always_comb begin
-	if (popcntConsume_next0 >= ready_instruction_count_next) begin
-		count_for0_next=ready_instruction_count_next;
-		count_for1_next=0;
-	end else begin
-		count_for0_next=popcntConsume_next0;
-		count_for1_next=ready_instruction_count_next - popcntConsume_next0;
-		if (count_for1_next > popcntConsume_next1) count_for1_next=popcntConsume_next1;
-	end
-	count_for0_next=count_for0_next & {2{!jump_triggering_next}};
-	count_for1_next=count_for1_next & {2{!jump_triggering_next}};
-end
+////
 
-always_comb begin
-	if (ready_instruction_count_now > popcntConsume_3) begin // could also be viewed as `ready_instruction_count_now >= popcntConsume_3`
-		used_ready_instruction_count=popcntConsume_3;
-	end else begin
-		used_ready_instruction_count=ready_instruction_count_now;
-	end
-	used_ready_instruction_count=used_ready_instruction_count & {2{!jump_triggering_now}};
-end
-
-always @(posedge main_clk) assert ((count_for0+count_for1)==used_ready_instruction_count);
-
-reg [1:0] count_for0=0;
-reg [1:0] count_for1=0;
-
-always @(posedge main_clk) begin
-	popcntConsume_3<=popcntConsume_next3;
-	count_for0<=count_for0_next;
-	count_for1<=count_for1_next;
-end
-
-reg [1:0] count_left0;
-reg [1:0] count_left1;
 
 reg [7:0] isAfter [7:0]='{127,63,31,15,7,3,1,0};
 reg [7:0] isAfter_true [7:0];
@@ -256,29 +252,6 @@ always @(posedge main_clk) isAfter<=isAfter_next;
 
 assign isAfter_extern=isAfter_true;
 assign isAfter_next_extern=isAfter_next;
-
-wire [11:0] tmp0;
-wire [11:0] tmp1;
-wire [5:0] tmp2;
-wire [5:0] tmp3;
-lcells #(12) lc_g0(tmp0,lut0[tmp2]);
-lcells #(12) lc_g1(tmp1,lut0[tmp3]);
-assign tmp2[3:0]=~(instructions_might_be_valid_now[3:0]);
-assign tmp2[5:4]=count_for0;
-assign tmp3[3:0]=~(instructions_might_be_valid_now[7:4]);
-assign tmp3[5:4]=count_for1;
-
-assign is_new_instruction_entering_this_cycle[3:0]=tmp0[3:0];
-assign setIndexes[0]=tmp0[ 5: 4];
-assign setIndexes[1]=tmp0[ 7: 6];
-assign setIndexes[2]=tmp0[ 9: 8];
-assign setIndexes[3]=tmp0[11:10];
-
-assign is_new_instruction_entering_this_cycle[7:4]=tmp1[3:0];
-assign setIndexes[4]=tmp1[ 5: 4]+count_for0;
-assign setIndexes[5]=tmp1[ 7: 6]+count_for0;
-assign setIndexes[6]=tmp1[ 9: 8]+count_for0;
-assign setIndexes[7]=tmp1[11:10]+count_for0;
 
 always_comb begin
 	isAfter_temp=isAfter_true;

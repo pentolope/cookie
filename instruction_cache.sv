@@ -164,7 +164,6 @@ module instruction_cache(
 	output [15:0] ready_instructions_extern [2:0],
 	output [25:0] ready_instructions_address_table [2:0],
 	output [1:0] ready_instruction_count_now_extern,
-	output [1:0] ready_instruction_count_next_extern,
 
 	input  [15:0] data_in_raw  [7:0],
 	input is_data_coming_in [1:0],
@@ -197,7 +196,6 @@ assign ready_instructions_address_table[1][0]=1'b0;
 assign ready_instructions_address_table[2][0]=1'b0;
 
 assign ready_instruction_count_now_extern=ready_instruction_count_now;
-assign ready_instruction_count_next_extern=ready_instruction_count_next;
 
 
 always @(posedge main_clk) begin
@@ -235,9 +233,14 @@ assign circular_prepared_instruction_read_table_at_prepared_instructions[1]=prep
 assign circular_prepared_instruction_read_table_at_prepared_instructions[2]=prepared_instructions[circular_prepared_instruction_read_table[2]];
 assign circular_prepared_instruction_read_table_at_prepared_instructions[3]=prepared_instructions[circular_prepared_instruction_read_table[3]];
 
+wire [1:0] prepared_instruction_count_for_compare;
+lcells #(2) lc_prepared_instruction_count_for_compare(prepared_instruction_count_for_compare,(prepared_instruction_count[3:2]==2'b00)?(prepared_instruction_count[1:0]):(2'b11));
 
-wire [1:0] ready_fill_satisfied;assign ready_fill_satisfied=(ready_fill_request<=prepared_instruction_count)?(ready_fill_request): // could also be less then
-	((prepared_instruction_count[3:2]==2'b00)?(prepared_instruction_count[1:0]):(2'b11));
+wire [1:0] ready_fill_satisfied;
+
+always @(posedge main_clk) assert(((ready_fill_request<=prepared_instruction_count)?(ready_fill_request):((prepared_instruction_count[3:2]==2'b00)?(prepared_instruction_count[1:0]):(2'b11)))==ready_fill_satisfied);
+
+lcells #(2) lc_ready_fill_satisfied(ready_fill_satisfied,(ready_fill_request<=prepared_instruction_count_for_compare)?(ready_fill_request):prepared_instruction_count_for_compare); // could also be less then
 
 wire [3:0] buffer_size_avalible;
 wire [15:0] buffer_instructions [7:0];

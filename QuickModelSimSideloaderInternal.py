@@ -109,18 +109,33 @@ waveAdds=[
 '-radix hexadecimal /sim_enviroment/core__main/core_gen[5].core_executer_inst/simExecutingInstruction',
 '-radix hexadecimal /sim_enviroment/core__main/core_gen[6].core_executer_inst/simExecutingInstruction',
 '-radix hexadecimal /sim_enviroment/core__main/core_gen[7].core_executer_inst/simExecutingInstruction',
+'/sim_enviroment/core__main/core_gen[0].core_executer_inst/did_new_instruction_enter_last_cycle',
+'/sim_enviroment/core__main/core_gen[1].core_executer_inst/did_new_instruction_enter_last_cycle',
+'/sim_enviroment/core__main/core_gen[2].core_executer_inst/did_new_instruction_enter_last_cycle',
+'/sim_enviroment/core__main/core_gen[3].core_executer_inst/did_new_instruction_enter_last_cycle',
+'/sim_enviroment/core__main/core_gen[4].core_executer_inst/did_new_instruction_enter_last_cycle',
+'/sim_enviroment/core__main/core_gen[5].core_executer_inst/did_new_instruction_enter_last_cycle',
+'/sim_enviroment/core__main/core_gen[6].core_executer_inst/did_new_instruction_enter_last_cycle',
+'/sim_enviroment/core__main/core_gen[7].core_executer_inst/did_new_instruction_enter_last_cycle',
+
+
 
 '/sim_enviroment/core__main/main_clk',
 
+'/sim_enviroment/core__main/scheduler_inst/popcntConsume0',
+'/sim_enviroment/core__main/scheduler_inst/popcntConsume1',
+'/sim_enviroment/core__main/scheduler_inst/popcntConsume2',
+'/sim_enviroment/core__main/scheduler_inst/popcntConsume3',
+'/sim_enviroment/core__main/scheduler_inst/count_for0a',
+'/sim_enviroment/core__main/scheduler_inst/count_for1a',
+'/sim_enviroment/core__main/scheduler_inst/count_for0',
+'/sim_enviroment/core__main/scheduler_inst/count_for1',
 '-radix hexadecimal /sim_enviroment/core__main/scheduler_inst/ready_instruction_count_now',
-'-radix hexadecimal /sim_enviroment/core__main/scheduler_inst/ready_instruction_count_next',
-'-radix hexadecimal /sim_enviroment/core__main/scheduler_inst/used_ready_instruction_count',
-'-radix binary /sim_enviroment/core__main/scheduler_inst/is_instructions_valid',
-'-radix binary /sim_enviroment/core__main/scheduler_inst/is_instructions_valid_next',
-'-radix binary /sim_enviroment/core__main/scheduler_inst/instructions_might_be_valid_next',
+'-radix binary /sim_enviroment/core__main/scheduler_inst/possible_remain_valid',
 '-radix binary /sim_enviroment/core__main/scheduler_inst/is_new_instruction_entering_this_cycle',
 '-radix hexadecimal /sim_enviroment/core__main/scheduler_inst/setIndexes',
 '/sim_enviroment/core__main/scheduler_inst/jump_triggering_next',
+'/sim_enviroment/core__main/scheduler_inst/jump_triggering_now',
 '-radix binary /sim_enviroment/core__main/scheduler_inst/isAfter',
 
 '/sim_enviroment/core__main/main_clk'

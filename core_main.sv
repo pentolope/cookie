@@ -196,7 +196,6 @@ wire [7:0] is_instructions_valid_next;
 wire [7:0] could_instruction_be_valid_next;
 
 wire [1:0] ready_instruction_count_now;
-wire [1:0] ready_instruction_count_next;
 wire [1:0] used_ready_instruction_count;
 
 always @(posedge main_clk) begin
@@ -217,7 +216,6 @@ instruction_cache instruction_cache_inst(
 	.ready_instructions_extern(new_instruction_table),
 	.ready_instructions_address_table(new_instruction_address_table),
 	.ready_instruction_count_now_extern(ready_instruction_count_now),
-	.ready_instruction_count_next_extern(ready_instruction_count_next),
 	.data_in_raw(mem_data_out_type_0),
 	.is_data_coming_in(temp_wire_pair0),
 	.void_instruction_fetch_output(mem_void_instruction_fetch),
@@ -298,7 +296,7 @@ wire [2:0] dependSpecial_estimate [7:0];
 wire [7:0] isAfter [7:0];
 wire [7:0] isAfter_next [7:0];
 wire [1:0] setIndexes [7:0];
-
+wire [7:0] possible_remain_valid;
 
 scheduler scheduler_inst(
 	used_ready_instruction_count,
@@ -307,12 +305,9 @@ scheduler scheduler_inst(
 	isAfter_next,
 	setIndexes,
 	
-	is_instructions_valid_next,
-	could_instruction_be_valid_next,
-	jump_triggering_next,
+	possible_remain_valid,
 	jump_triggering_now,
 	ready_instruction_count_now,
-	ready_instruction_count_next,
 	
 	main_clk
 );
@@ -361,6 +356,7 @@ core_executer #(i) core_executer_inst(
 	is_instructions_valid[i],
 	is_instructions_valid_next[i],
 	could_instruction_be_valid_next[i],
+	possible_remain_valid[i],
 	
 	instructions[i],
 	new_instruction_table[setIndexes[i]],

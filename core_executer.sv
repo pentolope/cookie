@@ -8,6 +8,7 @@ module core_executer #(parameter selfIndex) (
 	output is_instruction_valid_extern,
 	output is_instruction_valid_next_extern,
 	output could_instruction_be_valid_next_extern,
+	output possible_remain_valid,
 	
 	output [15:0] instructionOut_extern,
 	input [15:0] instructionIn_extern,
@@ -76,7 +77,8 @@ genvar i;
 wire [4:0] effectiveID;
 
 reg [15:0] rename_state_out=0;
-
+reg [15:0] rename_state_outr=0;
+always @(posedge main_clk) rename_state_outr<=rename_state_out;
 assign external_rename_state_out=rename_state_out;
 
 reg doSpecialWrite=0;
@@ -89,8 +91,8 @@ wire [15:0] writeValues_e [16:0];
 assign doWrite_extern[32]=doWrite[16];
 assign doWrite_extern[ 1: 0]=doWrite[1:0];
 assign doWrite_extern[17:16]=2'b0;
-assign doWrite_extern[15: 2]=doWrite[15:2] & ~(rename_state_out[15:2]);
-assign doWrite_extern[31:18]=doWrite[15:2] &  (rename_state_out[15:2]);
+assign doWrite_extern[15: 2]=doWrite[15:2] & ~(rename_state_outr[15:2]);
+assign doWrite_extern[31:18]=doWrite[15:2] &  (rename_state_outr[15:2]);
 
 generate
 for (i=0;i<17;i=i+1) begin : gen0
@@ -117,8 +119,7 @@ assign dependSelfRegRead_next_extern=dependSelfRegRead_next;
 assign dependSelfRegWrite_next_extern=dependSelfRegWrite_next;
 assign dependSelfSpecial_next_extern=dependSelfSpecial_next;
 
-assign dependSelfSpecial_estimate_extern[0]=dependSelfSpecial_next[0];
-assign dependSelfSpecial_estimate_extern[2:1]=dependSelfSpecial_estimate[2:1];
+assign dependSelfSpecial_estimate_extern[2:0]=dependSelfSpecial_estimate[2:0];
 
 
 wire [32:0] readBlockedByDepend;
@@ -150,7 +151,7 @@ for (i=0;i<8;i=i+1) begin : gen1
 end
 endgenerate
 
-lcells #(1) lcWillMemBeUnblocked(willMemBeUnblocked,(isMemUnblockedSourceValues==8'h0)? 1'b1:1'b0);
+lcells #(1) lcWillMemBeUnblocked(willMemBeUnblocked,(isMemUnblockedSourceValues==8'h0 && !is_new_instruction_entering_this_cycle)? 1'b1:1'b0);
 always @(posedge main_clk) begin
 	isMemUnblocked<=willMemBeUnblocked;
 end
@@ -462,6 +463,96 @@ always @(posedge main_clk) begin if (^effectiveID===1'bx) $stop; end
 reg [31:0] instruction_jump_address_next;
 assign instruction_jump_address_next_extern=instruction_jump_address_next;
 
+reg is_one_cycle_instruction=0;
+
+lcells #(1) lc_possible_remain_valid(possible_remain_valid,did_new_instruction_enter_last_cycle | (is_instruction_valid?(isUnblocked?(is_one_cycle_instruction?(1'b0):(1'b1)):1'b1):1'b0));
+
+always @(posedge main_clk) begin
+	is_one_cycle_instruction<=0;
+	unique case (instructionInID)
+	5'h00:begin
+		is_one_cycle_instruction<=1'b1;
+	end
+	5'h01:begin
+		is_one_cycle_instruction<=1'b1;
+	end
+	5'h02:begin
+	end
+	5'h03:begin
+	end
+	5'h04:begin
+		is_one_cycle_instruction<=1'b1;
+	end
+	5'h05:begin
+		is_one_cycle_instruction<=1'b1;
+	end
+	5'h06:begin
+		is_one_cycle_instruction<=1'b1;
+	end
+	5'h07:begin
+		is_one_cycle_instruction<=1'b1;
+	end
+	5'h08:begin
+	end
+	5'h09:begin
+	end
+	5'h0A:begin
+		is_one_cycle_instruction<=1'b1;
+	end
+	5'h0B:begin
+		is_one_cycle_instruction<=1'b1;
+	end
+	5'h0C:begin
+		is_one_cycle_instruction<=1'b1;
+	end
+	5'h0D:begin
+		is_one_cycle_instruction<=1'b1;
+	end
+	5'h0E:begin
+		// although this does finish in one cycle, it is the conditional jump instruction. due to particular details with jumping and voiding, it cannot use is_one_cycle_instruction
+	end
+	5'h0F:begin
+	end
+	5'h10:begin
+	end
+	5'h11:begin
+	end
+	5'h12:begin
+	end
+	5'h13:begin
+	end
+	5'h14:begin
+		is_one_cycle_instruction<=1'b1;
+	end
+	5'h15:begin
+		is_one_cycle_instruction<=1'b1;
+	end
+	5'h16:begin
+		is_one_cycle_instruction<=1'b1;
+	end
+	5'h17:begin
+	end
+	5'h18:begin
+	end
+	5'h19:begin
+	end
+	5'h1A:begin
+	end
+	5'h1B:begin
+	end
+	5'h1C:begin
+	end
+	5'h1D:begin
+	end
+	5'h1E:begin
+		// although this does finish in one cycle, it is the jump instruction.
+	end
+	5'h1F:begin
+		is_one_cycle_instruction<=1'b1;
+	end
+	endcase
+end
+
 reg j_co;
 reg j_uc;
 wire j_co_lc;
@@ -469,8 +560,11 @@ wire j_uc_lc;
 lcells #(1) lc_j_co(j_co_lc,j_co);
 lcells #(1) lc_j_uc(j_uc_lc,j_uc);
 
-wire special_estimate_id;
-lcells #(1) lc_special_estimate_id(special_estimate_id,(instructionInID==5'h0E)? 1'b1:1'b0);
+reg special_estimate_id=0;
+always @(posedge main_clk) begin
+	special_estimate_id<=(instructionInID==5'h0E)? 1'b1:1'b0;
+	if (is_new_instruction_entering_this_cycle) special_estimate_id<=0;
+end
 
 lcells #(1) lc_special_estimate_nj(dependSelfSpecial_estimate[0],(special_estimate_id && isUnblocked && is_instruction_valid)? 1'b0:dependSelfSpecial[0]);
 
@@ -786,9 +880,6 @@ reg [15:0] wv_3;
 reg [15:0] wv_4;
 reg [15:0] wv_5;
 reg [15:0] wv_6;
-
-reg [15:0] mem_data_out_r [4:0];
-always @(posedge main_clk) mem_data_out_r<=mem_data_out;
 
 always_comb begin
 	temporaryB=16'hx;
@@ -1478,7 +1569,9 @@ always @(posedge main_clk) begin
 	if (effectiveID==5'h0F) assert(!mem_is_general_access_requesting);
 end
 
-wire [15:0] simExecutingInstruction=((effectiveID==5'h0F)?(is_instruction_valid?16'hx:16'hz):(isMemUnblocked?instructionIn:{instructionIn[15:8],8'hxx})); // this is only used for the simulator
+reg simValueForVisualization=0;
+always @(*) simValueForVisualization<=#1 ~simValueForVisualization | is_new_instruction_entering_this_cycle;
+wire [15:0] simExecutingInstruction=((effectiveID==5'h0F)?(is_instruction_valid?((did_new_instruction_enter_last_cycle?simValueForVisualization:1'b1)?16'hx:16'hz):16'hz):(isMemUnblocked?instructionIn:{instructionIn[15:8],8'hxx})); // this is only used for the simulator
 
 
 
