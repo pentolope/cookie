@@ -4,7 +4,7 @@
 `include "memory_interface.sv"
 `include "instruction_cache.sv"
 `include "dependancy_generation.sv"
-`include "scheduler.sv"
+`include "dispatcher.sv"
 `include "core_executer.sv"
 
 
@@ -298,7 +298,7 @@ wire [7:0] isAfter_next [7:0];
 wire [1:0] setIndexes [7:0];
 wire [7:0] possible_remain_valid;
 
-scheduler scheduler_inst(
+dispatcher dispatcher_inst(
 	used_ready_instruction_count,
 	is_new_instruction_entering_this_cycle,
 	isAfter,

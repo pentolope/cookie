@@ -1,6 +1,6 @@
 `timescale 1 ps / 1 ps
 
-module scheduler(
+module dispatcher(
 	output [1:0] used_ready_instruction_count_extern,
 	output [7:0] is_new_instruction_entering_this_cycle,
 	output [7:0] isAfter_extern [7:0],
