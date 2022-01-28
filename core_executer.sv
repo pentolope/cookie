@@ -460,7 +460,7 @@ assign instruction_jump_address_next_extern=instruction_jump_address_next;
 
 reg is_one_cycle_instruction=0;
 
-lcells #(1) lc_possible_remain_valid(possible_remain_valid,did_new_instruction_enter_last_cycle | (is_instruction_valid?(isUnblocked?(is_one_cycle_instruction?(1'b0):(1'b1)):1'b1):1'b0));
+lcells #(1) lc_possible_remain_valid(possible_remain_valid,(is_instruction_valid?(isUnblocked?(is_one_cycle_instruction?(1'b0):(1'b1)):1'b1):1'b0));
 
 always @(posedge main_clk) begin
 	is_one_cycle_instruction<=0;
