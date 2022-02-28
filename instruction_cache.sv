@@ -212,12 +212,11 @@ reg [3:0] prepared_instruction_count=0;
 reg [3:0] circular_prepared_instruction_read=0;
 reg [3:0] circular_prepared_instruction_write=0;
 
-wire [3:0] circular_prepared_instruction_read_table [3:0];
+wire [3:0] circular_prepared_instruction_read_table [2:0];
 wire [3:0] circular_prepared_instruction_write_table [7:0];
 assign circular_prepared_instruction_read_table[0]=circular_prepared_instruction_read;
 assign circular_prepared_instruction_read_table[1]=circular_prepared_instruction_read+4'h1;
 assign circular_prepared_instruction_read_table[2]=circular_prepared_instruction_read+4'h2;
-assign circular_prepared_instruction_read_table[3]=circular_prepared_instruction_read+4'h3;
 assign circular_prepared_instruction_write_table[0]=circular_prepared_instruction_write;
 assign circular_prepared_instruction_write_table[1]=circular_prepared_instruction_write+4'h1;
 assign circular_prepared_instruction_write_table[2]=circular_prepared_instruction_write+4'h2;
@@ -227,11 +226,10 @@ assign circular_prepared_instruction_write_table[5]=circular_prepared_instructio
 assign circular_prepared_instruction_write_table[6]=circular_prepared_instruction_write+4'h6;
 assign circular_prepared_instruction_write_table[7]=circular_prepared_instruction_write+4'h7;
 
-wire [15:0] circular_prepared_instruction_read_table_at_prepared_instructions [3:0];
+wire [15:0] circular_prepared_instruction_read_table_at_prepared_instructions [2:0];
 assign circular_prepared_instruction_read_table_at_prepared_instructions[0]=prepared_instructions[circular_prepared_instruction_read_table[0]];
 assign circular_prepared_instruction_read_table_at_prepared_instructions[1]=prepared_instructions[circular_prepared_instruction_read_table[1]];
 assign circular_prepared_instruction_read_table_at_prepared_instructions[2]=prepared_instructions[circular_prepared_instruction_read_table[2]];
-assign circular_prepared_instruction_read_table_at_prepared_instructions[3]=prepared_instructions[circular_prepared_instruction_read_table[3]];
 
 wire [1:0] prepared_instruction_count_for_compare;
 lcells #(2) lc_prepared_instruction_count_for_compare(prepared_instruction_count_for_compare,(prepared_instruction_count[3:2]==2'b00)?(prepared_instruction_count[1:0]):(2'b11));
