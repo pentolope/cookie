@@ -362,7 +362,7 @@ reg_mux_full reg_mux_full_inst(
 
 generate
 genvar i;
-for (i=0;i<8;i=i+1) begin : core_gen
+for (i=0;i<4;i=i+1) begin : core_gen
 core_executer #(i) core_executer_inst(
 	jump_index_for_executer,
 	jump_index_next_for_executer,
@@ -433,7 +433,7 @@ core_executer #(i) core_executer_inst(
 );
 
 end
-for (i=8;i<8;i=i+1) begin : core_gen_blank
+for (i=4;i<8;i=i+1) begin : core_gen_blank
 assign is_instructions_valid[i]=1'b0;
 assign possible_remain_valid[i]=1'b0;
 	
