@@ -1,5 +1,8 @@
 `timescale 1 ps / 1 ps
 
+`include "HardFloat/HardFloat_primitives.v"
+`include "HardFloat/HardFloat_rawFN.v"
+`include "HardFloat/isSigNaNRecFN.v"
 `include "HardFloat/fNToRecFN.v"
 `include "HardFloat/addRecFN.v"
 `include "HardFloat/mulRecFN.v"
