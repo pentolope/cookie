@@ -67,6 +67,8 @@ module core_executer #(parameter selfIndex) (
 	output jump_signal_extern,
 	output jump_signal_next_extern,
 	
+	output execute_now_pulse,
+	
 	input main_clk
 );
 
@@ -572,10 +574,17 @@ always @(posedge main_clk) begin
 end
 
 wire j_co_sat;
+
 lcells #(1) lc_j_co_sat(j_co_sat,(vr2==16'h0)?1'b1:1'b0);
 lcells #(1) lc_j_n(jump_signal_next,(j_uc_lc || (j_co_lc && j_co_sat))?1'b1:1'b0);
 
+reg execute_now_pulse_combinational = 0;
+reg execute_now_pulse_r = 0;
+always @(posedge main_clk) execute_now_pulse_r <= execute_now_pulse_combinational;
+assign execute_now_pulse = execute_now_pulse_r;
+
 always_comb begin
+	execute_now_pulse_combinational=0;
 	is_instruction_valid_next=is_instruction_valid;
 	instruction_jump_address_next={vr1,vr0};
 	j_co=0;
@@ -588,57 +597,72 @@ always_comb begin
 	unique case (effectiveID)
 	5'h00:begin
 		is_instruction_valid_next=0;
+		execute_now_pulse_combinational=1;
 	end
 	5'h01:begin
 		is_instruction_valid_next=0;
+		execute_now_pulse_combinational=1;
 	end
 	5'h02:begin
 		if (mem_is_access_acknowledged_pulse) begin
 			is_instruction_valid_next=0;
+			execute_now_pulse_combinational=1;
 		end
 	end
 	5'h03:begin
 		if (mem_is_access_acknowledged_pulse) begin
 			is_instruction_valid_next=0;
+			execute_now_pulse_combinational=1;
 		end
 	end
 	5'h04:begin
 		is_instruction_valid_next=0;
+		execute_now_pulse_combinational=1;
 	end
 	5'h05:begin
 		is_instruction_valid_next=0;
+		execute_now_pulse_combinational=1;
 	end
 	5'h06:begin
 		is_instruction_valid_next=0;
+		execute_now_pulse_combinational=1;
 	end
 	5'h07:begin
 		is_instruction_valid_next=0;
+		execute_now_pulse_combinational=1;
 	end
 	5'h08:begin
 		if (mem_is_access_acknowledged_pulse) begin
 			is_instruction_valid_next=0;
+			execute_now_pulse_combinational=1;
 		end
 	end
 	5'h09:begin
 		if (mem_is_access_acknowledged_pulse) begin
 			is_instruction_valid_next=0;
+			execute_now_pulse_combinational=1;
 		end
 	end
 	5'h0A:begin
 		is_instruction_valid_next=0;
+		execute_now_pulse_combinational=1;
 	end
 	5'h0B:begin
 		is_instruction_valid_next=0;
+		execute_now_pulse_combinational=1;
 	end
 	5'h0C:begin
 		is_instruction_valid_next=0;
+		execute_now_pulse_combinational=1;
 	end
 	5'h0D:begin
 		is_instruction_valid_next=0;
+		execute_now_pulse_combinational=1;
 	end
 	5'h0E:begin
 		is_instruction_valid_next=0;
 		j_co=1;
+		execute_now_pulse_combinational=1;
 	end
 	5'h0F:begin
 		// could not execute this cycle
@@ -653,6 +677,7 @@ always_comb begin
 		endcase
 		if (mem_is_access_acknowledged_pulse) begin
 			is_instruction_valid_next=0;
+			execute_now_pulse_combinational=1;
 		end
 	end
 	5'h11:begin
@@ -665,6 +690,7 @@ always_comb begin
 		endcase
 		if (mem_is_access_acknowledged_pulse) begin
 			is_instruction_valid_next=0;
+			execute_now_pulse_combinational=1;
 		end
 	end
 	5'h12:begin
@@ -677,6 +703,7 @@ always_comb begin
 		endcase
 		if (mem_is_access_acknowledged_pulse) begin
 			is_instruction_valid_next=0;
+			execute_now_pulse_combinational=1;
 		end
 	end
 	5'h13:begin
@@ -689,16 +716,20 @@ always_comb begin
 		endcase
 		if (mem_is_access_acknowledged_pulse) begin
 			is_instruction_valid_next=0;
+			execute_now_pulse_combinational=1;
 		end
 	end
 	5'h14:begin
 		is_instruction_valid_next=0;
+		execute_now_pulse_combinational=1;
 	end
 	5'h15:begin
 		is_instruction_valid_next=0;
+		execute_now_pulse_combinational=1;
 	end
 	5'h16:begin
 		is_instruction_valid_next=0;
+		execute_now_pulse_combinational=1;
 	end
 	5'h17:begin
 		unique case (state)
@@ -706,6 +737,7 @@ always_comb begin
 		end
 		2:begin
 			is_instruction_valid_next=0;
+			execute_now_pulse_combinational=1;
 		end
 		endcase
 	end
@@ -715,6 +747,7 @@ always_comb begin
 		end
 		2:begin
 			is_instruction_valid_next=0;
+			execute_now_pulse_combinational=1;
 		end
 		endcase
 	end
@@ -738,6 +771,7 @@ always_comb begin
 		end
 		9:begin
 			is_instruction_valid_next=0;
+			execute_now_pulse_combinational=1;
 		end
 		endcase
 	end
@@ -754,6 +788,7 @@ always_comb begin
 		endcase
 		if (mem_is_access_acknowledged_pulse) begin
 			is_instruction_valid_next=0;
+			execute_now_pulse_combinational=1;
 		end
 	end
 	5'h1B:begin
@@ -766,25 +801,30 @@ always_comb begin
 		3:begin
 			is_instruction_valid_next=0;
 			j_uc=1;
+			execute_now_pulse_combinational=1;
 		end
 		endcase
 	end
 	5'h1C:begin
 		if (mem_is_access_acknowledged_pulse) begin
 			is_instruction_valid_next=0;
+			execute_now_pulse_combinational=1;
 		end
 	end
 	5'h1D:begin
 		if (mem_is_access_acknowledged_pulse) begin
 			is_instruction_valid_next=0;
+			execute_now_pulse_combinational=1;
 		end
 	end
 	5'h1E:begin
 		is_instruction_valid_next=0;
 		j_uc=1;
+		execute_now_pulse_combinational=1;
 	end
 	5'h1F:begin
 		is_instruction_valid_next=0;
+		execute_now_pulse_combinational=1;
 	end
 	endcase
 	if (memory_dependency_clear[selfIndex]) begin

@@ -430,6 +430,8 @@ fake_dram fake__dram(
 wire [9:0] debug_port_states2;
 wire [9:0] debug_port_states0;
 wire [9:0] debug_port_states1;
+wire [9:0] stat_signals_0;
+wire [7:0] stat_signals_1;
 
 core_main core__main(
 	DRAM_ADDR,
@@ -455,7 +457,9 @@ core_main core__main(
 	debug_instruction_fetch_address,
 	debug_port_states2,
 	debug_port_states0,
-	debug_port_states1
+	debug_port_states1,
+	stat_signals_0,
+	stat_signals_1
 );
 
 memory_io memory__io(
@@ -464,6 +468,9 @@ memory_io memory__io(
 	.address_io(address_io),
 	.control_io(control_io),
 	
+	.stat_signals_0(stat_signals_0),
+	.stat_signals_1(stat_signals_1),
+
 	.VGA_B(VGA_B),.VGA_G(VGA_G),.VGA_R(VGA_R),.VGA_HS(VGA_HS),.VGA_VS(VGA_VS),
 	
 	.led_out_state(LEDR),

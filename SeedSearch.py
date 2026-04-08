@@ -54,6 +54,8 @@ if ("set_global_assignment -name SEED 1" in qsf_content) and not bad_initial_see
 		print("Removing previous seed search...")
 		subprocess.call("rmdir /S /Q seed_search",shell=True)
 	os.system("title SeedSearch Starting")
+	subprocess.call('"%QUARTUS_ROOTDIR%/bin64/quartus_map.exe" --read_settings_files=on --write_settings_files=off cookie -c cookie --analysis_and_elaboration',shell=True)
+	subprocess.call('"%QUARTUS_ROOTDIR%/bin64/quartus_map.exe" --read_settings_files=on --write_settings_files=off cookie -c cookie',shell=True)
 	print("Finding files...")
 	directory_structure=directory_filter(directory_filter(initial_directory_find(),"simulation"+sep),"output_files"+sep)
 	directory_list=list(filter(lambda y:y!="output_files"+sep,filter(lambda x:x!="simulation"+sep,directory_extract(directory_structure))))

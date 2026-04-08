@@ -32,7 +32,10 @@ module core_main(
 	output [25:0] debug_instruction_fetch_address,
 	output [9:0] debug_port_states2,
 	output [9:0] debug_port_states0,
-	output [9:0] debug_port_states1
+	output [9:0] debug_port_states1,
+	
+	output [9:0] stat_signals_0_out,
+	output [7:0] stat_signals_1_out
 );
 
 reg [15:0] stack_pointer=0;
@@ -74,6 +77,13 @@ always @(posedge main_clk) begin
 	if (^user_reg[31]===1'bx) $stop;
 	if (^stack_pointer===1'bx) $stop;
 end
+
+wire [7:0] stat_signals_1;
+
+wire stat_hyperfetch_success_no_wait_pulse;
+wire stat_hyperfetch_success_with_wait_pulse;
+wire stat_recent_jump_success_pulse;
+wire stat_instruction_prefetch_fail_pulse;
 
 wire [32:0] executerDoWrite [7:0];
 wire [15:0] executerWriteValues [7:0][32:0];
@@ -225,6 +235,10 @@ instruction_cache instruction_cache_inst(
 	.jump_triggering(jump_triggering_now),
 	.jump_address(instruction_jump_address_selected[25:1]),
 	.used_ready_instruction_count(used_ready_instruction_count),
+	.stat_hyperfetch_success_no_wait_pulse(stat_hyperfetch_success_no_wait_pulse),
+	.stat_hyperfetch_success_with_wait_pulse(stat_hyperfetch_success_with_wait_pulse),
+	.stat_recent_jump_success_pulse(stat_recent_jump_success_pulse),
+	.stat_instruction_prefetch_fail_pulse(stat_instruction_prefetch_fail_pulse),
 	.main_clk(main_clk)
 );
 
@@ -414,8 +428,48 @@ core_executer #(i) core_executer_inst(
 	instruction_jump_address_next_executer[i],
 	jump_signal_executer[i],
 	jump_signal_next_executer[i],
+	stat_signals_1[i],
 	main_clk
 );
+
+end
+for (i=8;i<8;i=i+1) begin : core_gen_blank
+assign is_instructions_valid[i]=1'b0;
+assign possible_remain_valid[i]=1'b0;
+	
+assign instructions[i]=16'h0;
+	
+assign rename_state_from_executers[i]=33'h0;
+	
+assign dependRegRead[i]=33'h0;
+assign dependRegWrite[i]=33'h0;
+assign dependSpecial[i]=3'h0;
+	
+assign dependRegRead_next[i]=33'h0;
+assign dependRegWrite_next[i]=33'h0;
+assign dependSpecial_next[i]=3'h0;
+assign dependSpecial_estimate[i]=3'h0;
+	
+	
+assign doSpecialWrite[i]=1'b0;
+assign executerDoWrite[i]=33'h0;
+assign executerWriteValues[i]='{16'h0,16'h0,16'h0,16'h0,16'h0,16'h0,16'h0,16'h0,16'h0,16'h0,16'h0,16'h0,16'h0,16'h0,16'h0,16'h0,16'h0,16'h0,16'h0,16'h0,16'h0,16'h0,16'h0,16'h0,16'h0,16'h0,16'h0,16'h0,16'h0,16'h0,16'h0,16'h0,16'h0};
+	
+assign mem_stack_access_size_all[i]=3'h0;
+assign mem_target_address_all[i]=32'h0;
+	
+assign mem_data_in_all[i]='{16'h0,16'h0,16'h0,16'h0};
+	
+assign mem_is_access_write_all[i]=1'b0;
+assign mem_is_general_access_byte_operation_all[i]=1'b0;
+assign mem_is_general_access_requesting_all[i]=1'b0;
+assign mem_is_stack_access_requesting_all[i]=1'b0;
+assign mem_is_stack_access_overflowing_all[i]=1'b0;
+		
+assign instruction_jump_address_next_executer[i]=32'h0;
+assign jump_signal_executer[i]=1'b0;
+assign jump_signal_next_executer[i]=1'b0;
+assign stat_signals_1[i]=1'b0;
 
 end
 endgenerate
@@ -468,6 +522,13 @@ memory_interface memory_interface_inst(
 	
 	debug_port_states0,
 	debug_port_states1,
+	
+	stat_signals_0_out,
+	stat_hyperfetch_success_no_wait_pulse,
+	stat_hyperfetch_success_with_wait_pulse,
+	stat_recent_jump_success_pulse,
+	stat_instruction_prefetch_fail_pulse,
+
 	main_clk
 );
 
@@ -476,5 +537,6 @@ assign debug_instruction_fetch_address=mem_target_address_instruction_fetch_0;
 assign debug_stack_pointer=stack_pointer;
 assign debug_user_reg=user_reg[15:0];
 
+assign stat_signals_1_out=stat_signals_1;
 
 endmodule

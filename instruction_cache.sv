@@ -174,8 +174,23 @@ module instruction_cache(
 	input jump_triggering,
 	input [24:0] jump_address,
 	input [1:0] used_ready_instruction_count,
+	
+	output stat_hyperfetch_success_no_wait_pulse,
+	output stat_hyperfetch_success_with_wait_pulse,
+	output stat_recent_jump_success_pulse,
+	output stat_instruction_prefetch_fail_pulse,
+
 	input main_clk
 );
+
+reg stat_hyperfetch_success_no_wait_pulse_r=0;
+reg stat_hyperfetch_success_with_wait_pulse_r=0;
+reg stat_recent_jump_success_pulse_r=0;
+reg stat_instruction_prefetch_fail_pulse_r=0;
+assign stat_hyperfetch_success_no_wait_pulse=stat_hyperfetch_success_no_wait_pulse_r;
+assign stat_hyperfetch_success_with_wait_pulse=stat_hyperfetch_success_with_wait_pulse_r;
+assign stat_recent_jump_success_pulse=stat_recent_jump_success_pulse_r;
+assign stat_instruction_prefetch_fail_pulse=stat_instruction_prefetch_fail_pulse_r;
 
 reg [24:0] instruction_pointer_out=25'h3FF0;
 
@@ -1055,6 +1070,10 @@ reg [4:0] extra_hyperjump_known_NTCNC;
 reg [4:0] extra_haltingjump_known_NTCNC;
 reg [3:0] recent_jump_data_size_NTCNC [3:0];
 reg update_hyperfetch_helper_trigger_NTCNC;
+reg stat_hyperfetch_success_no_wait_pulse_NTCNC;
+reg stat_hyperfetch_success_with_wait_pulse_NTCNC;
+reg stat_recent_jump_success_pulse_NTCNC;
+reg stat_instruction_prefetch_fail_pulse_NTCNC;
 
 
 always @(posedge main_clk) begin
@@ -1089,6 +1108,11 @@ always @(posedge main_clk) begin
 	extra_haltingjump_known<=extra_haltingjump_known_NTCNC;
 	recent_jump_data_size<=recent_jump_data_size_NTCNC;
 	update_hyperfetch_helper_trigger<=update_hyperfetch_helper_trigger_NTCNC;
+	stat_hyperfetch_success_no_wait_pulse_r<=stat_hyperfetch_success_no_wait_pulse_NTCNC;
+	stat_hyperfetch_success_with_wait_pulse_r<=stat_hyperfetch_success_with_wait_pulse_NTCNC;
+	stat_recent_jump_success_pulse_r<=stat_recent_jump_success_pulse_NTCNC;
+	stat_instruction_prefetch_fail_pulse_r<=stat_instruction_prefetch_fail_pulse_NTCNC;
+
 end
 
 always_comb begin
@@ -1125,6 +1149,11 @@ always_comb begin
 	void_instruction_fetch_NTCNC=0;
 	update_hyperfetch_helper_trigger_NTCNC=0;
 	update_hyperfetch_helper_trigger_NOW=0;
+	stat_hyperfetch_success_no_wait_pulse_NTCNC=0;
+	stat_hyperfetch_success_with_wait_pulse_NTCNC=0;
+	stat_recent_jump_success_pulse_NTCNC=0;
+	stat_instruction_prefetch_fail_pulse_NTCNC=0;
+
 	
 	recent_jump_matchy_NTCNC[0][0]=(recent_jump_address_difference[0][0][24:4]==21'h0)? 1'b1:1'b0;
 	recent_jump_matchy_NTCNC[1][0]=(recent_jump_address_difference[1][0][24:4]==21'h0)? 1'b1:1'b0;
@@ -1371,6 +1400,7 @@ always_comb begin
 			extra_hyperjump_known_NTCNC[4]=1'b0;
 			waiting_on_jump_NTCNC=extra_haltingjump_known[0];
 			update_hyperfetch_helper_trigger_NTCNC=1;
+			stat_recent_jump_success_pulse_NTCNC=1;
 		end else if (jump_address==recent_jump_addresses[1] && recent_jump_data_valid[1][0]) begin
 			prepared_instruction_count_NTCNC=recent_jump_data_size[1];
 			circular_prepared_instruction_write_NTCNC=recent_jump_data_size[1];
@@ -1385,6 +1415,7 @@ always_comb begin
 			extra_hyperjump_known_NTCNC[4]=1'b0;
 			waiting_on_jump_NTCNC=extra_haltingjump_known[1];
 			update_hyperfetch_helper_trigger_NTCNC=1;
+			stat_recent_jump_success_pulse_NTCNC=1;
 		end else if (jump_address==recent_jump_addresses[2] && recent_jump_data_valid[2][0]) begin
 			prepared_instruction_count_NTCNC=recent_jump_data_size[2];
 			circular_prepared_instruction_write_NTCNC=recent_jump_data_size[2];
@@ -1399,6 +1430,7 @@ always_comb begin
 			extra_hyperjump_known_NTCNC[4]=1'b0;
 			waiting_on_jump_NTCNC=extra_haltingjump_known[2];
 			update_hyperfetch_helper_trigger_NTCNC=1;
+			stat_recent_jump_success_pulse_NTCNC=1;
 		end else if (jump_address==recent_jump_addresses[3] && recent_jump_data_valid[3][0]) begin
 			prepared_instruction_count_NTCNC=recent_jump_data_size[3];
 			circular_prepared_instruction_write_NTCNC=recent_jump_data_size[3];
@@ -1413,6 +1445,7 @@ always_comb begin
 			extra_hyperjump_known_NTCNC[4]=1'b0;
 			waiting_on_jump_NTCNC=extra_haltingjump_known[3];
 			update_hyperfetch_helper_trigger_NTCNC=1;
+			stat_recent_jump_success_pulse_NTCNC=1;
 		end else if (jump_address==instruction_fetch0_pointer && hyperfetch_address_valid) begin
 			if (instruction_fetch_requesting!=2'b00) begin
 				waiting_on_jump_NTCNC=1; // waiting_on_jump isn't actually what is happening, but it is going to be used to achieve the correct behaviour
@@ -1420,6 +1453,7 @@ always_comb begin
 				void_instruction_fetch_NTCNC=0;
 				instruction_fetch_requesting_NTCNC=instruction_fetch_requesting; // this is important, because normally these requests are changed. but here, they should stay the same
 				hyperfetch_buffer_size_NTCNC=hyperfetch_buffer_size;
+				stat_hyperfetch_success_with_wait_pulse_NTCNC=1;
 			end else begin
 				prepared_instruction_count_NTCNC=hyperfetch_buffer_size;
 				circular_prepared_instruction_write_NTCNC=hyperfetch_buffer_size;
@@ -1434,6 +1468,7 @@ always_comb begin
 				extra_hyperjump_known_NTCNC[4]=1'b0;
 				waiting_on_jump_NTCNC=extra_haltingjump_known[4];
 				update_hyperfetch_helper_trigger_NTCNC=1;
+				stat_hyperfetch_success_no_wait_pulse_NTCNC=1;
 			end
 		end else begin
 			hyperfetch_address_valid_NTCNC=0;
@@ -1449,6 +1484,7 @@ always_comb begin
 			2:begin extra_haltingjump_known_NTCNC[2]=1'b0;extra_hyperjump_known_NTCNC[2]=1'b0;end
 			3:begin extra_haltingjump_known_NTCNC[3]=1'b0;extra_hyperjump_known_NTCNC[3]=1'b0;end
 			endcase
+			stat_instruction_prefetch_fail_pulse_NTCNC=1;
 		end
 	end
 	

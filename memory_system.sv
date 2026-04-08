@@ -33,8 +33,21 @@ module memory_system(
 	
 	output [15:0] cd_access_out_full_data [7:0],
 	
+	output stat_cache_fault_waiting,
+	output stat_cache_fault_pulse,
+	output stat_cache_fault_prefetch_nonbusy_on_success_pulse,
+	output stat_cache_fault_prefetch_nonbusy_on_fail_pulse,
+	output stat_cache_fault_prefetch_busy_on_success_pulse,
+	output stat_cache_fault_prefetch_busy_on_fail_pulse,
+
 	input  main_clk
 );
+
+reg stat_cache_fault_waiting_r=0;
+reg stat_cache_fault_pulse_r=0;
+
+assign stat_cache_fault_waiting=stat_cache_fault_waiting_r;
+assign stat_cache_fault_pulse=stat_cache_fault_pulse_r;
 
 reg [1:0] tick_tock_phase1=0;
 reg [1:0] tick_tock_phase2=0;
@@ -119,6 +132,9 @@ reg change_way_for_data=0;
 always @(posedge main_clk) begin
 	if (hard_fault && !was_hard_faulting) change_way_for_data<=1;
 	if (is_cache_being_filled) change_way_for_data<=0;
+	
+	stat_cache_fault_waiting_r<=change_way_for_data;
+	stat_cache_fault_pulse_r<=(change_way_for_data == 1'b1 && stat_cache_fault_waiting_r == 1'b0)?1'b1:1'b0;
 end
 
 
@@ -226,6 +242,11 @@ dram_controller dram_controller_inst(
 	DRAM_UDQM,
 	DRAM_WE_N,
 	
+	stat_cache_fault_prefetch_nonbusy_on_success_pulse,
+	stat_cache_fault_prefetch_nonbusy_on_fail_pulse,
+	stat_cache_fault_prefetch_busy_on_success_pulse,
+	stat_cache_fault_prefetch_busy_on_fail_pulse,
+
 	main_clk
 );
 

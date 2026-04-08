@@ -22,8 +22,22 @@ module dram_controller(
 	output		          		DRAM_UDQM,
 	output		          		DRAM_WE_N,
 	
+	output stat_cache_fault_prefetch_nonbusy_on_success_pulse,
+	output stat_cache_fault_prefetch_nonbusy_on_fail_pulse,
+	output stat_cache_fault_prefetch_busy_on_success_pulse,
+	output stat_cache_fault_prefetch_busy_on_fail_pulse,
+
 	input  main_clk
 );
+
+reg stat_cache_fault_prefetch_nonbusy_on_success_pulse_r=0;
+reg stat_cache_fault_prefetch_nonbusy_on_fail_pulse_r=0;
+reg stat_cache_fault_prefetch_busy_on_success_pulse_r=0;
+reg stat_cache_fault_prefetch_busy_on_fail_pulse_r=0;
+assign stat_cache_fault_prefetch_nonbusy_on_success_pulse=stat_cache_fault_prefetch_nonbusy_on_success_pulse_r;
+assign stat_cache_fault_prefetch_nonbusy_on_fail_pulse=stat_cache_fault_prefetch_nonbusy_on_fail_pulse_r;
+assign stat_cache_fault_prefetch_busy_on_success_pulse=stat_cache_fault_prefetch_busy_on_success_pulse_r;
+assign stat_cache_fault_prefetch_busy_on_fail_pulse=stat_cache_fault_prefetch_busy_on_fail_pulse_r;
 
 
 reg DRAM_DQ_oe_r=0; // 0==high-z  ;  1==driven by DRAM_DQ_rOUT
@@ -161,7 +175,11 @@ reg [5:0] controller_state=0;
 always @(posedge main_clk) begin
 	controller_state<=controller_state; // assignment not needed, it is implied
 	
-	
+	stat_cache_fault_prefetch_nonbusy_on_success_pulse_r<=0;
+	stat_cache_fault_prefetch_nonbusy_on_fail_pulse_r<=0;
+	stat_cache_fault_prefetch_busy_on_success_pulse_r<=0;
+	stat_cache_fault_prefetch_busy_on_fail_pulse_r<=0;
+
 	dram_controller_ack_read_pulse_r<=0;
 	DRAM_DQ_oe_r<=0;
 	DRAM_ADDR_r<=0;
@@ -226,6 +244,12 @@ always @(posedge main_clk) begin
 				controller_state<=40;
 				addr_for_read<=addr_req_read;
 				prefeched_is_valid<=0;
+				
+				if (dram_controller_req_read_pulse_side_dram == dram_controller_req_read_pending) begin
+					stat_cache_fault_prefetch_nonbusy_on_success_pulse_r<=1;
+				end else begin
+					stat_cache_fault_prefetch_busy_on_success_pulse_r<=1;
+				end
 			end else if (bank_status_general[dram_addr_bank_for_read_from_unsaved]==0) begin
 				controller_state<=4;
 				prefeched_is_valid<=1; // prefetch will occur, bank is garenteed to be ready when it is needed
@@ -234,6 +258,12 @@ always @(posedge main_clk) begin
 				DRAM_RAS_r<=0;// activate command
 				DRAM_ADDR_r<=dram_addr_row_for_read_from_unsaved;
 				DRAM_BA_r<=dram_addr_bank_for_read_from_unsaved;
+				
+				if (dram_controller_req_read_pulse_side_dram == dram_controller_req_read_pending) begin
+					stat_cache_fault_prefetch_nonbusy_on_fail_pulse_r<=1;
+				end else begin
+					stat_cache_fault_prefetch_busy_on_fail_pulse_r<=1;
+				end
 			end
 		end
 	end

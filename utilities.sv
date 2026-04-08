@@ -16,6 +16,188 @@ lcells #(16) lc2(o[2],i[2]);
 lcells #(16) lc3(o[3],i[3]);
 endmodule
 
+module stat_counter_64_8(
+	output [63:0] counter_out,
+	
+	input [7:0] stat_signal,
+	input freeze_it,
+	input reset_it,
+	
+	input main_clk
+);
+
+reg [7:0] stat_signal_stage_0_r = 0;
+wire [2:0] stat_signal_stage_1_r [1:0];
+reg [2:0] stat_signal_stage_2_r = 0;
+
+reg [63:0] counter_out_r = 0;
+assign counter_out = counter_out_r;
+
+reg [16:0] counter_internal_0 [3:0] = '{17'b0,17'b0,17'b0,17'b0};
+
+wire [2:0] popcnt4 [15:0];
+assign popcnt4[4'b0000]=0;
+assign popcnt4[4'b0001]=1;
+assign popcnt4[4'b0010]=1;
+assign popcnt4[4'b0011]=2;
+assign popcnt4[4'b0100]=1;
+assign popcnt4[4'b0101]=2;
+assign popcnt4[4'b0110]=2;
+assign popcnt4[4'b0111]=3;
+assign popcnt4[4'b1000]=1;
+assign popcnt4[4'b1001]=2;
+assign popcnt4[4'b1010]=2;
+assign popcnt4[4'b1011]=3;
+assign popcnt4[4'b1100]=2;
+assign popcnt4[4'b1101]=3;
+assign popcnt4[4'b1110]=3;
+assign popcnt4[4'b1111]=4;
+
+assign stat_signal_stage_1_r[0] = popcnt4[stat_signal_stage_0_r[3:0]];
+assign stat_signal_stage_1_r[1] = popcnt4[stat_signal_stage_0_r[7:4]];
+
+
+always @(posedge main_clk) begin
+	stat_signal_stage_0_r <= stat_signal;
+	
+	if (freeze_it == 1'b1) begin
+		stat_signal_stage_0_r <= 8'b0;
+	end
+	
+	stat_signal_stage_2_r <= stat_signal_stage_1_r[0] + stat_signal_stage_1_r[1];
+	
+	counter_out_r[15: 0] <= counter_internal_0[0][15:0];
+	counter_out_r[31:16] <= counter_internal_0[1][15:0];
+	counter_out_r[47:32] <= counter_internal_0[2][15:0];
+	counter_out_r[63:48] <= counter_internal_0[3][15:0];
+	
+	counter_internal_0[0][16:0] <= counter_internal_0[0][16:0] + stat_signal_stage_2_r;
+	counter_internal_0[1][16:0] <= counter_internal_0[1][16:0] + counter_internal_0[0][16];
+	counter_internal_0[2][16:0] <= counter_internal_0[2][16:0] + counter_internal_0[1][16];
+	counter_internal_0[3][16:0] <= counter_internal_0[3][16:0] + counter_internal_0[2][16];
+	
+	if (counter_internal_0[0][16] == 1'b1) begin
+		counter_internal_0[0][16] <= 1'b0;
+	end
+	
+	if (counter_internal_0[1][16] == 1'b1) begin
+		counter_internal_0[1][16] <= 1'b0;
+	end
+	
+	if (counter_internal_0[2][16] == 1'b1) begin
+		counter_internal_0[2][16] <= 1'b0;
+	end
+	
+	if (reset_it == 1'b1) begin
+		counter_internal_0[0][16:0] <= 17'b0;
+		counter_internal_0[1][16:0] <= 17'b0;
+		counter_internal_0[2][16:0] <= 17'b0;
+		counter_internal_0[3][16:0] <= 17'b0;
+	end
+end
+
+endmodule
+
+module stat_counter_64_1(
+	output [63:0] counter_out,
+	
+	input stat_signal,
+	input freeze_it,
+	input reset_it,
+	
+	input main_clk
+);
+
+reg stat_signal_not_frozen_r = 0;
+
+reg [63:0] counter_out_r = 0;
+assign counter_out = counter_out_r;
+
+reg [16:0] counter_internal_0 [3:0] = '{17'b0,17'b0,17'b0,17'b0};
+
+always @(posedge main_clk) begin
+	stat_signal_not_frozen_r <= stat_signal;
+	
+	if (freeze_it == 1'b1) begin
+		stat_signal_not_frozen_r <= 1'b0;
+	end
+	
+	counter_out_r[15: 0] <= counter_internal_0[0][15:0];
+	counter_out_r[31:16] <= counter_internal_0[1][15:0];
+	counter_out_r[47:32] <= counter_internal_0[2][15:0];
+	counter_out_r[63:48] <= counter_internal_0[3][15:0];
+	
+	counter_internal_0[0][16:0] <= counter_internal_0[0][16:0] + stat_signal_not_frozen_r;
+	counter_internal_0[1][16:0] <= counter_internal_0[1][16:0] + counter_internal_0[0][16];
+	counter_internal_0[2][16:0] <= counter_internal_0[2][16:0] + counter_internal_0[1][16];
+	counter_internal_0[3][16:0] <= counter_internal_0[3][16:0] + counter_internal_0[2][16];
+	
+	if (counter_internal_0[0][16] == 1'b1) begin
+		counter_internal_0[0][16] <= 1'b0;
+	end
+	
+	if (counter_internal_0[1][16] == 1'b1) begin
+		counter_internal_0[1][16] <= 1'b0;
+	end
+	
+	if (counter_internal_0[2][16] == 1'b1) begin
+		counter_internal_0[2][16] <= 1'b0;
+	end
+	
+
+	if (reset_it == 1'b1) begin
+		counter_internal_0[0][16:0] <= 17'b0;
+		counter_internal_0[1][16:0] <= 17'b0;
+		counter_internal_0[2][16:0] <= 17'b0;
+		counter_internal_0[3][16:0] <= 17'b0;
+	end
+end
+
+endmodule
+
+module stat_counter_32_1(
+	output [31:0] counter_out,
+	
+	input stat_signal,
+	input freeze_it,
+	input reset_it,
+	
+	input main_clk
+);
+
+reg stat_signal_not_frozen_r = 0;
+
+reg [31:0] counter_out_r = 0;
+assign counter_out = counter_out_r;
+
+reg [16:0] counter_internal_0 [1:0] = '{17'b0,17'b0};
+
+always @(posedge main_clk) begin
+	stat_signal_not_frozen_r <= stat_signal;
+	
+	if (freeze_it == 1'b1) begin
+		stat_signal_not_frozen_r <= 1'b0;
+	end
+	
+	
+	counter_out_r[15: 0] <= counter_internal_0[0][15:0];
+	counter_out_r[31:16] <= counter_internal_0[1][15:0];
+	
+	counter_internal_0[0][16:0] <= counter_internal_0[0][16:0] + stat_signal_not_frozen_r;
+	counter_internal_0[1][16:0] <= counter_internal_0[1][16:0] + counter_internal_0[0][16];
+
+	if (counter_internal_0[0][16] == 1'b1) begin
+		counter_internal_0[0][16] <= 1'b0;
+	end
+	
+	if (reset_it == 1'b1) begin
+		counter_internal_0[0][16:0] <= 17'b0;
+		counter_internal_0[1][16:0] <= 17'b0;
+	end
+end
+
+endmodule
+
 module division_remainder(
 	output [15:0] quotient,
 	output [15:0] remainder,

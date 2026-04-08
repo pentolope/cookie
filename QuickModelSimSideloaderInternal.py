@@ -1,6 +1,5 @@
-
-fileBasePath="H:\\FPGA\\projects\\cookie\\simulation\\"
-
+import os
+from time import sleep
 
 
 waveAdds=[
@@ -137,52 +136,76 @@ waveAdds=[
 '/sim_enviroment/core__main/dispatcher_inst/jump_triggering_now',
 '-radix binary /sim_enviroment/core__main/dispatcher_inst/isAfter',
 
-'/sim_enviroment/core__main/main_clk'
+'/sim_enviroment/core__main/main_clk',
+
+'-radix hexadecimal /sim_enviroment/memory__io/stat_manager_inst/mux_counters',
+'-radix hexadecimal /sim_enviroment/memory__io/stat_manager_inst/stat_counter_freeze_r',
+'-radix hexadecimal /sim_enviroment/memory__io/stat_manager_inst/stat_counter_reset_r',
+'-radix hexadecimal /sim_enviroment/memory__io/stat_manager_inst/address_io_r',
+'-radix hexadecimal /sim_enviroment/memory__io/stat_manager_inst/control_io_r',
+'/sim_enviroment/core__main/main_clk',
+]
+
+thisDir = str(os.path.dirname(os.path.abspath(__file__))).replace('\\','/')
+
+initial_content=[
+'''
+transcript on
+if {[file exists rtl_work]} {
+	vdel -lib rtl_work -all
+}
+vlib rtl_work
+vmap work rtl_work
+vlog -sv -work work +incdir+'''+thisDir+''' {'''+thisDir+'''/ip_pll_vga.v}
+vlog -sv -work work +incdir+'''+thisDir+''' {'''+thisDir+'''/ip_pll_internal.v}
+vlog -sv -work work +incdir+'''+thisDir+''' {'''+thisDir+'''/ip_cache_LRU.v}
+vlog -sv -work work +incdir+'''+thisDir+''' {'''+thisDir+'''/ip_cache_dirty.v}
+vlog -sv -work work +incdir+'''+thisDir+''' {'''+thisDir+'''/ip_cache_data.v}
+vlog -sv -work work +incdir+'''+thisDir+''' {'''+thisDir+'''/ip_cache_addr_way3.v}
+vlog -sv -work work +incdir+'''+thisDir+''' {'''+thisDir+'''/ip_cache_addr_way2.v}
+vlog -sv -work work +incdir+'''+thisDir+''' {'''+thisDir+'''/ip_cache_addr_way1.v}
+vlog -sv -work work +incdir+'''+thisDir+''' {'''+thisDir+'''/ip_cache_addr_way0.v}
+vlog -sv -work work +incdir+'''+thisDir+''' {'''+thisDir+'''/sd_card_mmio.v}
+vlog -sv -work work +incdir+'''+thisDir+''' {'''+thisDir+'''/vga_memory.v}
+vlog -sv -work work +incdir+'''+thisDir+''' {'''+thisDir+'''/ip_ps2_buffer.v}
+vlog -sv -work work +incdir+'''+thisDir+''' {'''+thisDir+'''/ip_instruction_cache_ram.v}
+vlog -sv -work work +incdir+'''+thisDir+'''/db {'''+thisDir+'''/db/ip_pll_internal_altpll.v}
+vlog -sv -work work +incdir+'''+thisDir+'''/db {'''+thisDir+'''/db/ip_pll_vga_altpll.v}
+vlog -sv -work work +incdir+'''+thisDir+''' {'''+thisDir+'''/top_cookie.sv}
+vlog -sv -work work +incdir+'''+thisDir+''' {'''+thisDir+'''/simulation.sv}
+'''
 ]
 
 try:
-	from time import sleep
-
-	filePathHijackTarget=fileBasePath+"modelsim\\cookie_run_msim_rtl_verilog.do"
-
-	f=open(filePathHijackTarget,'w')
-	f.write('')
+	
+	fileBasePath = thisDir + "\\simulation\\"
+	filePathHijackTarget=fileBasePath+"questa\\cookie_run_msim_rtl_verilog.do"
+	
+	f=open(filePathHijackTarget,'r')
+	contents=f.read()
+	isReady=len(contents)!=0
 	f.close()
-	
-	f=open(fileBasePath+"hijacker_ready.txt",'w')
-	f.write('y')
-	f.close()
-	
-	print('modelsim fixer ready...')
-	
-	hasHijacked=False
-	while not hasHijacked:
-		f=open(filePathHijackTarget,'r')
-		contents=f.read()
-		isReady=len(contents)!=0
+	if isReady:
+		contents='cd "' + thisDir + '"'
+		contents+='\n'
+		contents+='\n'.join(initial_content)
+		contents+='\n'
+		contents+='vsim -L fiftyfivenm_ver -L altera_ver -L altera_mf_ver -L 220model_ver -L sgate_ver -L altera_lnsim_ver work.sim_enviroment'#-c -t 1ps
+		contents+='\n'
+		for waveAdd in waveAdds:
+			contents+='add wave '
+			contents+=waveAdd
+			contents+='\n'
+		contents+='\n'
+		contents+='run -all'
+		contents+='\n'
+		f=open(filePathHijackTarget,'w')
+		f.write(contents)
 		f.close()
-		if isReady:
-			print('Hijacking in progress...')
-			contents='\n'.join(filter(lambda x:not ('autogen' in x.lower()),contents.split('\n')))
-			contents+='\n'
-			contents+='vsim -L fiftyfivenm_ver -L altera_ver -L altera_mf_ver -L 220model_ver -L sgate_ver -L altera_lnsim_ver work.sim_enviroment'#-c -t 1ps
-			contents+='\n'
-			for waveAdd in waveAdds:
-				contents+='add wave '
-				contents+=waveAdd
-				contents+='\n'
-			contents+='\n'
-			contents+='run -all'
-			contents+='\n'
-			f=open(filePathHijackTarget,'w')
-			f.write(contents)
-			f.close()
-			hasHijacked=True
-		sleep(.001)
 except Exception as ex:
 	print('Error!')
 	print(ex)
 	input('Press Enter to Exit:')
 	raise
-print('Finished!')
+print('Finished writing ModelSim script!')
 sleep(.2)

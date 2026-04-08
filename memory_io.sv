@@ -4,12 +4,199 @@
 `include "sd_card_controller.sv"
 `include "ps2_controller.sv"
 
+module stat_manager(
+	output [15:0] data_out_io,
+	input  [15:0] data_in_io_r,
+	input  [31:0] address_io_r,
+	input  [ 1:0] control_io_r, // {do_partial_write_instant,do_byte_operation_instant}
+	
+	/*
+	[0] = cache_fault_waiting
+	[1] = cache_fault_pulse
+	[2] = cache_fault_prefetch_nonbusy_on_success_pulse
+	[3] = cache_fault_prefetch_nonbusy_on_fail_pulse
+	[4] = cache_fault_prefetch_busy_on_success_pulse
+	[5] = cache_fault_prefetch_busy_on_fail_pulse
+	[6] = hyperfetch_success_no_wait_pulse
+	[7] = hyperfetch_success_with_wait_pulse
+	[8] = recent_jump_success_pulse
+	[9] = instruction_prefetch_fail_pulse
+	*/
+	input  [9:0] stat_signals_0,
+	
+	// pulses when execution cores run instructions
+	input  [7:0] stat_signals_1,
+	
+	input main_clk
+);
+
+
+reg [15:0] data_out_io_r = 0;
+reg stat_counter_freeze_r = 0;
+reg stat_counter_reset_r = 0;
+
+assign data_out_io = data_out_io_r;
+
+wire [63:0] mux_counters [12:0];
+wire [63:0] mux_out_full_counter;
+wire [15:0] mux_word_counter [3:0];
+wire [15:0] mux_out_word_counter;
+
+assign mux_out_full_counter = mux_counters[address_io_r[6:3]];
+assign mux_word_counter[0] = mux_out_full_counter[15: 0];
+assign mux_word_counter[1] = mux_out_full_counter[31:16];
+assign mux_word_counter[2] = mux_out_full_counter[47:32];
+assign mux_word_counter[3] = mux_out_full_counter[63:48];
+assign mux_out_word_counter = mux_word_counter[address_io_r[2:1]];
+
+// Read the places to write to
+assign mux_counters[0][    0] = stat_counter_freeze_r;
+assign mux_counters[0][15: 1] = 15'h0;
+assign mux_counters[0][31:16] = 16'hxxxxxxxxxxxxxxxx;
+assign mux_counters[0][47:32] = 16'hxxxxxxxxxxxxxxxx;
+assign mux_counters[0][63:48] = 16'hxxxxxxxxxxxxxxxx;
+
+// total cycle counter
+stat_counter_64_1 stat_counter_inst_1(
+	.counter_out(mux_counters[1]),
+	.stat_signal(1'b1),
+	.freeze_it(stat_counter_freeze_r),
+	.reset_it(stat_counter_reset_r),
+	.main_clk(main_clk)
+);
+
+// instruction run count
+stat_counter_64_8 stat_counter_inst_2(
+	.counter_out(mux_counters[2]),
+	.stat_signal(stat_signals_1),
+	.freeze_it(stat_counter_freeze_r),
+	.reset_it(stat_counter_reset_r),
+	.main_clk(main_clk)
+);
+
+// cycles spent in cache fault
+stat_counter_64_1 stat_counter_inst_3(
+	.counter_out(mux_counters[3]),
+	.stat_signal(stat_signals_0[0]),
+	.freeze_it(stat_counter_freeze_r),
+	.reset_it(stat_counter_reset_r),
+	.main_clk(main_clk)
+);
+
+// cache fault count
+assign mux_counters[4][63:32] = 32'hxxxxxxxx;
+stat_counter_32_1 stat_counter_inst_4(
+	.counter_out(mux_counters[4][31:0]),
+	.stat_signal(stat_signals_0[1]),
+	.freeze_it(stat_counter_freeze_r),
+	.reset_it(stat_counter_reset_r),
+	.main_clk(main_clk)
+);
+
+// cache fault prefetch nonbusy on success count
+assign mux_counters[5][63:32] = 32'hxxxxxxxx;
+stat_counter_32_1 stat_counter_inst_5(
+	.counter_out(mux_counters[5][31:0]),
+	.stat_signal(stat_signals_0[2]),
+	.freeze_it(stat_counter_freeze_r),
+	.reset_it(stat_counter_reset_r),
+	.main_clk(main_clk)
+);
+
+// cache fault prefetch nonbusy on fail count
+assign mux_counters[6][63:32] = 32'hxxxxxxxx;
+stat_counter_32_1 stat_counter_inst_6(
+	.counter_out(mux_counters[6][31:0]),
+	.stat_signal(stat_signals_0[3]),
+	.freeze_it(stat_counter_freeze_r),
+	.reset_it(stat_counter_reset_r),
+	.main_clk(main_clk)
+);
+
+// cache fault prefetch busy on success count
+assign mux_counters[7][63:32] = 32'hxxxxxxxx;
+stat_counter_32_1 stat_counter_inst_7(
+	.counter_out(mux_counters[7][31:0]),
+	.stat_signal(stat_signals_0[4]),
+	.freeze_it(stat_counter_freeze_r),
+	.reset_it(stat_counter_reset_r),
+	.main_clk(main_clk)
+);
+
+// cache fault prefetch busy on fail count
+assign mux_counters[8][63:32] = 32'hxxxxxxxx;
+stat_counter_32_1 stat_counter_inst_8(
+	.counter_out(mux_counters[8][31:0]),
+	.stat_signal(stat_signals_0[5]),
+	.freeze_it(stat_counter_freeze_r),
+	.reset_it(stat_counter_reset_r),
+	.main_clk(main_clk)
+);
+
+// hyperfetch no wait success count
+stat_counter_64_1 stat_counter_inst_9(
+	.counter_out(mux_counters[9]),
+	.stat_signal(stat_signals_0[6]),
+	.freeze_it(stat_counter_freeze_r),
+	.reset_it(stat_counter_reset_r),
+	.main_clk(main_clk)
+);
+
+// hyperfetch with wait success count
+stat_counter_64_1 stat_counter_inst_10(
+	.counter_out(mux_counters[10]),
+	.stat_signal(stat_signals_0[7]),
+	.freeze_it(stat_counter_freeze_r),
+	.reset_it(stat_counter_reset_r),
+	.main_clk(main_clk)
+);
+
+// recent jump success count
+stat_counter_64_1 stat_counter_inst_11(
+	.counter_out(mux_counters[11]),
+	.stat_signal(stat_signals_0[8]),
+	.freeze_it(stat_counter_freeze_r),
+	.reset_it(stat_counter_reset_r),
+	.main_clk(main_clk)
+);
+
+// instruction prefetch fail count
+stat_counter_64_1 stat_counter_inst_12(
+	.counter_out(mux_counters[12]),
+	.stat_signal(stat_signals_0[9]),
+	.freeze_it(stat_counter_freeze_r),
+	.reset_it(stat_counter_reset_r),
+	.main_clk(main_clk)
+);
+
+
+always @(posedge main_clk) begin
+	stat_counter_reset_r <= 1'b0;
+	
+	if (address_io_r[31] == 1'b1 && address_io_r[25:23]==3'd4) begin
+		if (control_io_r[1]==1'b1) begin
+			if (address_io_r[15:0] == 16'h00) begin
+				stat_counter_freeze_r <= data_in_io_r[0];
+			end else if (address_io_r[15:0] == 16'h04) begin
+				stat_counter_reset_r <= 1'b1;
+			end
+		end
+	end
+	
+	data_out_io_r <= mux_out_word_counter;
+end
+
+endmodule
+
 module memory_io(
 	output [15:0] data_out_io,
 	input  [15:0] data_in_io,
 	input  [31:0] address_io,
 	input  [ 1:0] control_io, // {do_partial_write_instant,do_byte_operation_instant}
 	
+	input  [9:0] stat_signals_0, // see stat_manager
+	input  [7:0] stat_signals_1, // see stat_manager
+
 	output		     [3:0]		VGA_B,
 	output		     [3:0]		VGA_G,
 	output		     [3:0]		VGA_R,
@@ -41,6 +228,7 @@ Address access mapping:
 	address_io[25:23]==1 : VGA's VRAM
 	address_io[25:23]==2 : sd card controller
 	address_io[25:23]==3 : ps2 controller
+	address_io[25:23]==4 : stat counters
 
 Typical considerations for IO mapped devices:
 	All IO devices will not "react" (change state) due to a memory read. However, they may change state due to other factors, which could change the resulting value of the read.
@@ -53,13 +241,17 @@ Warning for ignoring IO mapped device's protocols:
 
 Special considerations for VGA's VRAM:
 	When address 32766 (within it's IO address area) is read with a byte access it will give the frame counter instead of the contents of memory at that location.
-	See `vga_driver.sv` for more information on what address do what.
+	See `vga_driver.sv` for more information on what addresses do what.
 
 Special considerations for sd card controller:
 	See `sd_card_controller.sv`
 
 Special considerations for ps2 controller:
 	See `ps2_controller.sv`
+
+Special considerations for stat counters:
+	Use word accesses only.
+	Do not attempt to write to counters, only write to control words.
 
 Access protocol for VGA's VRAM:
 	Read and Write is allowed for byte and word access. Anything can be written at any time.
@@ -74,11 +266,31 @@ Access protocol for sd card controller:
 Access protocol for ps2 controller:
 	See `ps2_controller.sv`
 
+Access protocol for stat counters:
+	Write 1 to address 0x00 to freeze counters. This prevents counting and stablizes the counters so that they can be read without error.
+	Perform 4 read accesses to counters and discard results.
+	Read any stat counters:
+		64 bit counter at 0x08 is total cycle counter
+		64 bit counter at 0x10 is instruction run count
+		64 bit counter at 0x18 is cycles spent in cache fault
+		32 bit counter at 0x20 is cache fault count
+		32 bit counter at 0x28 is cache fault prefetch nonbusy on success count
+		32 bit counter at 0x30 is cache fault prefetch nonbusy on fail count
+		32 bit counter at 0x38 is cache fault prefetch busy on success count
+		32 bit counter at 0x40 is cache fault prefetch busy on fail count
+		64 bit counter at 0x48 is hyperfetch success no wait count
+		64 bit counter at 0x50 is hyperfetch success with wait count
+		64 bit counter at 0x58 is recent jump success count
+		64 bit counter at 0x60 is instruction prefetch fail count
+
+	You may write any value to address 0x04 to reset counters to 0.
+	Write 0 to address 0x00 to unfreeze counters. This enables counting.
 */
 
 wire [15:0] data_in_io_modified={(control_io[0]?data_in_io[7:0]:data_in_io[15:8]),(data_in_io[7:0])};
 reg [31:0] address_io_r=0;
 reg [ 1:0] control_io_r=0;
+reg [15:0] data_in_io_r=0;
 reg [31:0] address_io_rr=0;
 reg [ 1:0] control_io_rr=0;
 reg [15:0] data_in_io_modified_r=0;
@@ -86,6 +298,7 @@ always @(posedge main_clk) begin
 	data_in_io_modified_r<=data_in_io_modified;
 	address_io_r<=address_io;
 	control_io_r<=control_io;
+	data_in_io_r<=data_in_io;
 	
 	address_io_rr<=address_io_r;
 	control_io_rr<=control_io_r;
@@ -98,7 +311,7 @@ assign out_mux[0]=16'h0; // LEDs on circuit board cannot be read
 // out_mux[1] is VGA memory
 // out_mux[2] is sd card controller
 // out_mux[3] is ps2 controller
-assign out_mux[4]=16'h0; // not connected
+// out_mux[4] is stat counters
 assign out_mux[5]=16'h0; // not connected
 assign out_mux[6]=16'h0; // not connected
 assign out_mux[7]=16'h0; // not connected
@@ -152,5 +365,16 @@ ps2_controller ps2_controller_inst(
 	.main_clk(main_clk)
 );
 assign out_mux[3][15:8]=out_mux[3][7:0];
+
+stat_manager stat_manager_inst(
+	.data_out_io(out_mux[4]),
+	
+	.data_in_io_r(data_in_io_r),
+	.address_io_r(address_io_r),
+	.control_io_r(control_io_r),
+	.stat_signals_0(stat_signals_0),
+	.stat_signals_1(stat_signals_1),
+	.main_clk(main_clk)
+);
 
 endmodule

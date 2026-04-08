@@ -56,8 +56,35 @@ module memory_interface(
 	output [9:0] debug_port_states0,
 	output [9:0] debug_port_states1,
 	
+	output [9:0] stat_signals_0_out,
+	input stat_hyperfetch_success_no_wait_pulse,
+	input stat_hyperfetch_success_with_wait_pulse,
+	input stat_recent_jump_success_pulse,
+	input stat_instruction_prefetch_fail_pulse,
+	
 	input  main_clk
 );
+
+wire [9:0] stat_signals_0;
+
+wire stat_cache_fault_waiting;
+wire stat_cache_fault_pulse;
+wire stat_cache_fault_prefetch_nonbusy_on_success_pulse;
+wire stat_cache_fault_prefetch_nonbusy_on_fail_pulse;
+wire stat_cache_fault_prefetch_busy_on_success_pulse;
+wire stat_cache_fault_prefetch_busy_on_fail_pulse;
+
+assign stat_signals_0[0] = stat_cache_fault_waiting;
+assign stat_signals_0[1] = stat_cache_fault_pulse;
+assign stat_signals_0[2] = stat_cache_fault_prefetch_nonbusy_on_success_pulse;
+assign stat_signals_0[3] = stat_cache_fault_prefetch_nonbusy_on_fail_pulse;
+assign stat_signals_0[4] = stat_cache_fault_prefetch_busy_on_success_pulse;
+assign stat_signals_0[5] = stat_cache_fault_prefetch_busy_on_fail_pulse;
+assign stat_signals_0[6] = stat_hyperfetch_success_no_wait_pulse;
+assign stat_signals_0[7] = stat_hyperfetch_success_with_wait_pulse;
+assign stat_signals_0[8] = stat_recent_jump_success_pulse;
+assign stat_signals_0[9] = stat_instruction_prefetch_fail_pulse;
+assign stat_signals_0_out = stat_signals_0;
 
 wire [7:0] is_stack_access_overflowing=is_stack_access_overflowing_extern;
 
@@ -503,7 +530,21 @@ wire write_new_request_at0;
 wire write_new_request_at1;
 lcells #(1) lc_write_new_request_at0(write_new_request_at0,(next_new_index[4:2]!=3'd0 && (next_new_index[4:3]==2'd3 || tick_tock_phase0[0]==1'b0))? 1'b1:1'b0);
 lcells #(1) lc_write_new_request_at1(write_new_request_at1,(next_new_index[4:2]!=3'd0 && (next_new_index[4:3]==2'd3 || tick_tock_phase0[0]==1'b1))? 1'b1:1'b0);
-
+always @(posedge main_clk) begin
+	memory_dependency_clear<=0;
+	if (next_new_index>=5'd8) memory_dependency_clear[next_new_index[2:0]]<=1'b1;
+	
+	if (state_for_io == 2'd0) begin
+		     if (is_general_access_requesting[0] && target_address_executer[0][31]) begin memory_dependency_clear[0]<=1'b1;end
+		else if (is_general_access_requesting[1] && target_address_executer[1][31]) begin memory_dependency_clear[1]<=1'b1;end
+		else if (is_general_access_requesting[2] && target_address_executer[2][31]) begin memory_dependency_clear[2]<=1'b1;end
+		else if (is_general_access_requesting[3] && target_address_executer[3][31]) begin memory_dependency_clear[3]<=1'b1;end
+		else if (is_general_access_requesting[4] && target_address_executer[4][31]) begin memory_dependency_clear[4]<=1'b1;end
+		else if (is_general_access_requesting[5] && target_address_executer[5][31]) begin memory_dependency_clear[5]<=1'b1;end
+		else if (is_general_access_requesting[6] && target_address_executer[6][31]) begin memory_dependency_clear[6]<=1'b1;end
+		else if (is_general_access_requesting[7] && target_address_executer[7][31]) begin memory_dependency_clear[7]<=1'b1;end
+	end
+end
 always @(posedge main_clk) begin
 	if (void_instruction_fetch) begin
 		resolving_memory_access_from_instruction_fetch[0]<=1'b0;
@@ -538,8 +579,7 @@ always @(posedge main_clk) begin
 	end
 	if (next_new_index[4:2]==3'd0) assert (next_new_index==5'd0);
 	
-	memory_dependency_clear<=0;
-	if (next_new_index>=5'd8) memory_dependency_clear[next_new_index[2:0]]<=1'b1;
+	////
 	
 	if (is_general_or_stack_access_acknowledged_pulse[0]) resolving_memory_access_from_executer[0]<=1'b0;
 	if (is_general_or_stack_access_acknowledged_pulse[1]) resolving_memory_access_from_executer[1]<=1'b0;
@@ -587,6 +627,7 @@ always @(posedge main_clk) begin
 	
 	unique case (state_for_io)
 	0:begin
+	/*
 		     if (is_general_access_requesting[0] && target_address_executer[0][31]) begin state_for_io<=1;executer_index_for_io<=0;memory_dependency_clear[0]<=1'b1;end
 		else if (is_general_access_requesting[1] && target_address_executer[1][31]) begin state_for_io<=1;executer_index_for_io<=1;memory_dependency_clear[1]<=1'b1;end
 		else if (is_general_access_requesting[2] && target_address_executer[2][31]) begin state_for_io<=1;executer_index_for_io<=2;memory_dependency_clear[2]<=1'b1;end
@@ -595,6 +636,15 @@ always @(posedge main_clk) begin
 		else if (is_general_access_requesting[5] && target_address_executer[5][31]) begin state_for_io<=1;executer_index_for_io<=5;memory_dependency_clear[5]<=1'b1;end
 		else if (is_general_access_requesting[6] && target_address_executer[6][31]) begin state_for_io<=1;executer_index_for_io<=6;memory_dependency_clear[6]<=1'b1;end
 		else if (is_general_access_requesting[7] && target_address_executer[7][31]) begin state_for_io<=1;executer_index_for_io<=7;memory_dependency_clear[7]<=1'b1;end
+		*/
+		     if (is_general_access_requesting[0] && target_address_executer[0][31]) begin state_for_io<=1;executer_index_for_io<=0;end
+		else if (is_general_access_requesting[1] && target_address_executer[1][31]) begin state_for_io<=1;executer_index_for_io<=1;end
+		else if (is_general_access_requesting[2] && target_address_executer[2][31]) begin state_for_io<=1;executer_index_for_io<=2;end
+		else if (is_general_access_requesting[3] && target_address_executer[3][31]) begin state_for_io<=1;executer_index_for_io<=3;end
+		else if (is_general_access_requesting[4] && target_address_executer[4][31]) begin state_for_io<=1;executer_index_for_io<=4;end
+		else if (is_general_access_requesting[5] && target_address_executer[5][31]) begin state_for_io<=1;executer_index_for_io<=5;end
+		else if (is_general_access_requesting[6] && target_address_executer[6][31]) begin state_for_io<=1;executer_index_for_io<=6;end
+		else if (is_general_access_requesting[7] && target_address_executer[7][31]) begin state_for_io<=1;executer_index_for_io<=7;end
 	end
 	1:begin
 		state_for_io<=2;
@@ -664,6 +714,13 @@ memory_system memory_system_inst(
 	tt_is_write_op,
 	
 	cd_access_out_full_data,
+	
+	stat_cache_fault_waiting,
+	stat_cache_fault_pulse,
+	stat_cache_fault_prefetch_nonbusy_on_success_pulse,
+	stat_cache_fault_prefetch_nonbusy_on_fail_pulse,
+	stat_cache_fault_prefetch_busy_on_success_pulse,
+	stat_cache_fault_prefetch_busy_on_fail_pulse,
 	
 	main_clk
 );

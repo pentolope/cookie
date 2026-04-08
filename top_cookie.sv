@@ -160,6 +160,8 @@ wire [9:0] debug_port_states0;
 wire [9:0] debug_port_states1;
 wire [9:0] debug_port_states2;
 wire [9:0] led_mux [3:0];
+wire [9:0] stat_signals_0;
+wire [7:0] stat_signals_1;
 assign led_mux[0]=led_state;
 assign led_mux[1]=debug_port_states2;
 assign led_mux[2]=debug_port_states0;
@@ -190,7 +192,9 @@ core_main core__main(
 	debug_instruction_fetch_address,
 	debug_port_states2,
 	debug_port_states0,
-	debug_port_states1
+	debug_port_states1,
+	stat_signals_0,
+	stat_signals_1
 );
 
 generate_hex_display_base16 generate_hex_display_inst(
@@ -222,6 +226,9 @@ memory_io memory__io(
 	.data_in_io(data_in_io),
 	.address_io(address_io),
 	.control_io(control_io),
+	
+	.stat_signals_0(stat_signals_0),
+	.stat_signals_1(stat_signals_1),
 	
 	.VGA_B(VGA_B),.VGA_G(VGA_G),.VGA_R(VGA_R),.VGA_HS(VGA_HS),.VGA_VS(VGA_VS),
 	

@@ -14,3 +14,14 @@ simulation/modelsim/*
 boot.bin
 boot1.asm
 boot2.asm
+fpga_boot_binary_1.bin
+fpga_boot_binary_2.bin
+/rtl_work
+/simulation
+transcript
+vsim.wlf
+wlft31sd7e
+wlftqf49ye
+modelsim.ini
+levels1.txt
+levels2.txt
