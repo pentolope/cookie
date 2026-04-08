@@ -299,9 +299,9 @@ Access protocol for HardFloat helper:
 		0x06: operand B low 16 bits
 		0x08: operand B high 16 bits
 	Write command word at 0x00 with bit0=1 to start an operation. Opcode in bits [3:1]:
-		0=ADD, 1=SUB, 2=MUL, 3=EQ, 4=LT, 5=LE
+		0=ADD, 1=SUB, 2=MUL, 3=EQ, 4=LT, 5=LE, 6=DIV
 	Read back:
-		0x00 status/control: bit0=busy (always 0), bit1=result_ready, bits[4:2]=last opcode
+		0x00 status/control: bit0=busy (division in-flight), bit1=result_ready, bits[4:2]=last opcode
 		0x0A result low 16 bits
 		0x0C result high 16 bits
 		0x0E flags (exception flags in [4:0], compare bits in [7:5] for compare operations)

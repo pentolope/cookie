@@ -6,6 +6,7 @@
 `include "HardFloat/fNToRecFN.v"
 `include "HardFloat/addRecFN.v"
 `include "HardFloat/mulRecFN.v"
+`include "HardFloat/divSqrtRecFN_small.v"
 `include "HardFloat/compareRecFN.v"
 `include "HardFloat/recFNToFN.v"
 
@@ -24,6 +25,7 @@ localparam [2:0] OP_MUL = 3'd2;
 localparam [2:0] OP_EQ  = 3'd3;
 localparam [2:0] OP_LT  = 3'd4;
 localparam [2:0] OP_LE  = 3'd5;
+localparam [2:0] OP_DIV = 3'd6;
 
 reg [31:0] operand_a_r = 32'h0;
 reg [31:0] operand_b_r = 32'h0;
@@ -31,6 +33,7 @@ reg [31:0] result_r = 32'h0;
 reg [2:0]  last_opcode_r = OP_ADD;
 reg [15:0] flags_r = 16'h0;
 reg        result_ready_r = 1'b0;
+reg        div_inflight_r = 1'b0;
 
 wire [32:0] rec_a;
 wire [32:0] rec_b;
@@ -90,16 +93,40 @@ compareRecFN #(8, 24) compare_rec_inst(
 wire [31:0] fn_add;
 wire [31:0] fn_sub;
 wire [31:0] fn_mul;
+wire [31:0] fn_div;
 recFNToFN #(8, 24) add_to_fn_inst(.in(rec_add), .out(fn_add));
 recFNToFN #(8, 24) sub_to_fn_inst(.in(rec_sub), .out(fn_sub));
 recFNToFN #(8, 24) mul_to_fn_inst(.in(rec_mul), .out(fn_mul));
+
+wire [32:0] rec_div;
+wire [4:0]  exc_div;
+wire        div_in_ready;
+wire        div_out_valid;
+wire        div_start_req =
+	is_mmio_write && !is_mmio_byte && address_mmio[4:1] == 4'd0 && data_write_mmio[0] && data_write_mmio[3:1] == OP_DIV;
+divSqrtRecFN_small #(8, 24) div_rec_inst(
+	.nReset(1'b1),
+	.clock(main_clk),
+	.control(1'b0),
+	.inReady(div_in_ready),
+	.inValid(div_start_req && div_in_ready),
+	.sqrtOp(1'b0),
+	.a(rec_a),
+	.b(rec_b),
+	.roundingMode(`round_near_even),
+	.outValid(div_out_valid),
+	.sqrtOpOut(),
+	.out(rec_div),
+	.exceptionFlags(exc_div)
+);
+recFNToFN #(8, 24) div_to_fn_inst(.in(rec_div), .out(fn_div));
 
 reg [15:0] data_read_mmio_r = 16'h0;
 assign data_read_mmio = data_read_mmio_r;
 
 always_comb begin
 	case (address_mmio[4:1])
-		4'd0: data_read_mmio_r = {11'h0, last_opcode_r, result_ready_r, 1'b0};
+		4'd0: data_read_mmio_r = {11'h0, last_opcode_r, result_ready_r, div_inflight_r};
 		4'd1: data_read_mmio_r = operand_a_r[15:0];
 		4'd2: data_read_mmio_r = operand_a_r[31:16];
 		4'd3: data_read_mmio_r = operand_b_r[15:0];
@@ -112,44 +139,72 @@ always_comb begin
 end
 
 always @(posedge main_clk) begin
+	if (div_out_valid) begin
+		result_r <= fn_div;
+		flags_r <= {11'h0, exc_div};
+		result_ready_r <= 1'b1;
+		last_opcode_r <= OP_DIV;
+		div_inflight_r <= 1'b0;
+	end
+
 	if (is_mmio_write && !is_mmio_byte) begin
 		case (address_mmio[4:1])
 			4'd0: begin
 				if (data_write_mmio[0]) begin
 					last_opcode_r <= data_write_mmio[3:1];
-					result_ready_r <= 1'b1;
 					case (data_write_mmio[3:1])
 						OP_ADD: begin
 							result_r <= fn_add;
 							flags_r <= {11'h0, exc_add};
+							result_ready_r <= 1'b1;
+							div_inflight_r <= 1'b0;
 						end
 						OP_SUB: begin
 							result_r <= fn_sub;
 							flags_r <= {11'h0, exc_sub};
+							result_ready_r <= 1'b1;
+							div_inflight_r <= 1'b0;
 						end
 						OP_MUL: begin
 							result_r <= fn_mul;
 							flags_r <= {11'h0, exc_mul};
+							result_ready_r <= 1'b1;
+							div_inflight_r <= 1'b0;
 						end
 						OP_EQ: begin
 							result_r <= {31'h0, cmp_eq};
 							flags_r <= {8'h0, cmp_gt, cmp_eq, cmp_lt, exc_cmp};
+							result_ready_r <= 1'b1;
+							div_inflight_r <= 1'b0;
 						end
 						OP_LT: begin
 							result_r <= {31'h0, cmp_lt};
 							flags_r <= {8'h0, cmp_gt, cmp_eq, cmp_lt, exc_cmp};
+							result_ready_r <= 1'b1;
+							div_inflight_r <= 1'b0;
 						end
 						OP_LE: begin
 							result_r <= {31'h0, (cmp_lt | cmp_eq)};
 							flags_r <= {8'h0, cmp_gt, cmp_eq, cmp_lt, exc_cmp};
+							result_ready_r <= 1'b1;
+							div_inflight_r <= 1'b0;
+						end
+						OP_DIV: begin
+							if (div_in_ready) begin
+								result_ready_r <= 1'b0;
+								div_inflight_r <= 1'b1;
+							end
 						end
 						default: begin
 							result_r <= 32'h0;
 							flags_r <= 16'h0;
+							result_ready_r <= 1'b1;
+							div_inflight_r <= 1'b0;
 						end
 					endcase
 				end else if (data_write_mmio[1]) begin
 					result_ready_r <= 1'b0;
+					div_inflight_r <= 1'b0;
 				end
 			end
 			4'd1: operand_a_r[15:0] <= data_write_mmio;
