@@ -3,6 +3,7 @@
 `include "vga_driver.sv"
 `include "sd_card_controller.sv"
 `include "ps2_controller.sv"
+`include "hardfloat_mmio.sv"
 
 module stat_manager(
 	output [15:0] data_out_io,
@@ -229,6 +230,7 @@ Address access mapping:
 	address_io[25:23]==2 : sd card controller
 	address_io[25:23]==3 : ps2 controller
 	address_io[25:23]==4 : stat counters
+	address_io[25:23]==5 : HardFloat helper
 
 Typical considerations for IO mapped devices:
 	All IO devices will not "react" (change state) due to a memory read. However, they may change state due to other factors, which could change the resulting value of the read.
@@ -252,6 +254,10 @@ Special considerations for ps2 controller:
 Special considerations for stat counters:
 	Use word accesses only.
 	Do not attempt to write to counters, only write to control words.
+
+Special considerations for HardFloat helper:
+	Use word accesses only.
+	The device is command based and only runs an operation when command word bit 0 is written as 1.
 
 Access protocol for VGA's VRAM:
 	Read and Write is allowed for byte and word access. Anything can be written at any time.
@@ -285,6 +291,21 @@ Access protocol for stat counters:
 
 	You may write any value to address 0x04 to reset counters to 0.
 	Write 0 to address 0x00 to unfreeze counters. This enables counting.
+
+Access protocol for HardFloat helper:
+	Write operands as IEEE-754 single precision:
+		0x02: operand A low 16 bits
+		0x04: operand A high 16 bits
+		0x06: operand B low 16 bits
+		0x08: operand B high 16 bits
+	Write command word at 0x00 with bit0=1 to start an operation. Opcode in bits [3:1]:
+		0=ADD, 1=SUB, 2=MUL, 3=EQ, 4=LT, 5=LE
+	Read back:
+		0x00 status/control: bit0=busy (always 0), bit1=result_ready, bits[4:2]=last opcode
+		0x0A result low 16 bits
+		0x0C result high 16 bits
+		0x0E flags (exception flags in [4:0], compare bits in [7:5] for compare operations)
+	Write command word with bit1=1 to clear result_ready.
 */
 
 wire [15:0] data_in_io_modified={(control_io[0]?data_in_io[7:0]:data_in_io[15:8]),(data_in_io[7:0])};
@@ -312,7 +333,7 @@ assign out_mux[0]=16'h0; // LEDs on circuit board cannot be read
 // out_mux[2] is sd card controller
 // out_mux[3] is ps2 controller
 // out_mux[4] is stat counters
-assign out_mux[5]=16'h0; // not connected
+// out_mux[5] is HardFloat helper
 assign out_mux[6]=16'h0; // not connected
 assign out_mux[7]=16'h0; // not connected
 
@@ -365,6 +386,17 @@ ps2_controller ps2_controller_inst(
 	.main_clk(main_clk)
 );
 assign out_mux[3][15:8]=out_mux[3][7:0];
+
+
+
+hardfloat_mmio hardfloat_mmio_inst(
+	.data_read_mmio(out_mux[5]),
+	.data_write_mmio(data_in_io_modified),
+	.address_mmio(address_io[4:0]),
+	.is_mmio_write(control_io[1] && address_io[31] && address_io[25:23]==3'd5),
+	.is_mmio_byte(control_io[0]),
+	.main_clk(main_clk)
+);
 
 stat_manager stat_manager_inst(
 	.data_out_io(out_mux[4]),
