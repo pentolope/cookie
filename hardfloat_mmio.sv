@@ -97,7 +97,7 @@ recFNToFN #(8, 24) mul_to_fn_inst(.in(rec_mul), .out(fn_mul));
 reg [15:0] data_read_mmio_r = 16'h0;
 assign data_read_mmio = data_read_mmio_r;
 
-always @(*) begin
+always_comb begin
 	case (address_mmio[4:1])
 		4'd0: data_read_mmio_r = {11'h0, last_opcode_r, result_ready_r, 1'b0};
 		4'd1: data_read_mmio_r = operand_a_r[15:0];
