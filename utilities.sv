@@ -773,7 +773,7 @@ end
 
 
 wire write_verifed;
-lcell lc_write_verifed(.out(write_verifed),.in(|(doSpecialWrite & ex_index_decoded)));
+assign write_verifed = |(doSpecialWrite & ex_index_decoded);
 
 reg uses_vr1=0;
 always @(posedge main_clk) uses_vr1<=uses_vr1_data[ex_index_future];
@@ -781,7 +781,7 @@ always @(posedge main_clk) uses_vr1<=uses_vr1_data[ex_index_future];
 wire [15:0] rename_state_at_ex_index_future;
 assign rename_state_at_ex_index_future=rename_state_from_executers[ex_index_future];
 wire [7:0] instruction_info_at_ex_index_future;
-lcells #(8) lc_instruction_info_at_ex_index_future(instruction_info_at_ex_index_future,instructions[ex_index_future][7:0]);
+assign instruction_info_at_ex_index_future = instructions[ex_index_future][7:0];
 
 reg [15:0] target_index_decoded [1:0];
 reg [1:0] renamed_vr=0;
@@ -801,13 +801,13 @@ end
 
 
 wire [31:0] dec5_vr [1:0]; // not actually the decoded value, it is slightly different
-lcells #(16) lc_0(dec5_vr[0][15: 0],({16{write_verifed & !renamed_vr[0]}} & target_index_decoded[0]      ) | dec5_vr[1][15: 0]);
-lcells #(14) lc_1(dec5_vr[0][31:18],({14{write_verifed &  renamed_vr[0]}} & target_index_decoded[0][15:2]) | dec5_vr[1][31:18]);
-lcells #(16) lc_2(dec5_vr[1][15: 0],({16{write_verifed & !renamed_vr[1] & uses_vr1}} & target_index_decoded[1]      ));
-lcells #(14) lc_3(dec5_vr[1][31:18],({14{write_verifed &  renamed_vr[1] & uses_vr1}} & target_index_decoded[1][15:2]));
+assign dec5_vr[0][15: 0] = ({16{write_verifed & !renamed_vr[0]}} & target_index_decoded[0]      ) | dec5_vr[1][15: 0];
+assign dec5_vr[0][31:18] = ({14{write_verifed &  renamed_vr[0]}} & target_index_decoded[0][15:2]) | dec5_vr[1][31:18];
+assign dec5_vr[1][15: 0] = ({16{write_verifed & !renamed_vr[1] & uses_vr1}} & target_index_decoded[1]      );
+assign dec5_vr[1][31:18] = ({14{write_verifed &  renamed_vr[1] & uses_vr1}} & target_index_decoded[1][15:2]);
 
-lcells #(16) lc_4(special_sv[0],(write_verifed && is_return)?mem_data[3]:default_values[0]);
-lcells #(16) lc_5(special_sv[1],(write_verifed && is_return)?mem_data[2]:default_values[1]);
+assign special_sv[0] = (write_verifed && is_return)?mem_data[3]:default_values[0];
+assign special_sv[1] = (write_verifed && is_return)?mem_data[2]:default_values[1];
 
 generate
 genvar i;
@@ -817,11 +817,11 @@ for (i=0;i<8;i=i+1) begin : gen1
 end
 for (i=0;i<32;i=i+1) begin : gen2
 	if (i!=16 && i!=17) begin
-		lcells #(16) lc_sv(sv[i],dec5_vr[1][i]?mem_data[1]:mem_data[0]);
+		assign sv[i] = dec5_vr[1][i]?mem_data[1]:mem_data[0];
 		if (i==0 || i==1) begin
-			lcells #(16) lc_final(final_result[i],dec5_vr[0][i]?sv[i]:special_sv[i]);
+			assign final_result[i] = dec5_vr[0][i]?sv[i]:special_sv[i];
 		end else begin
-			lcells #(16) lc_final(final_result[i],dec5_vr[0][i]?sv[i]:default_values[i]);
+			assign final_result[i] = dec5_vr[0][i]?sv[i]:default_values[i];
 		end
 	end else begin
 		assign final_result[i]=16'hx;
