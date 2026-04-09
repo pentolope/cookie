@@ -676,60 +676,9 @@ lcells #(3) lc27_1(ic6[7],i6[7]);
 
 
 assign sc=s;
-wire [7:0] sd;
-decode3 lc_decode3_s(sd,sc);
 
 assign o0=ic0[sc];
-
-wire [63:0] t0 [7:0];
-wire [63:0] t1;
-wire [15:0] t2 [3:0];
-assign t0[0][63:48]=ic2[0][3];
-assign t0[0][47:32]=ic2[0][2];
-assign t0[0][31:16]=ic2[0][1];
-assign t0[0][15: 0]=ic2[0][0];
-assign t0[1][63:48]=ic2[1][3];
-assign t0[1][47:32]=ic2[1][2];
-assign t0[1][31:16]=ic2[1][1];
-assign t0[1][15: 0]=ic2[1][0];
-assign t0[2][63:48]=ic2[2][3];
-assign t0[2][47:32]=ic2[2][2];
-assign t0[2][31:16]=ic2[2][1];
-assign t0[2][15: 0]=ic2[2][0];
-assign t0[3][63:48]=ic2[3][3];
-assign t0[3][47:32]=ic2[3][2];
-assign t0[3][31:16]=ic2[3][1];
-assign t0[3][15: 0]=ic2[3][0];
-assign t0[4][63:48]=ic2[4][3];
-assign t0[4][47:32]=ic2[4][2];
-assign t0[4][31:16]=ic2[4][1];
-assign t0[4][15: 0]=ic2[4][0];
-assign t0[5][63:48]=ic2[5][3];
-assign t0[5][47:32]=ic2[5][2];
-assign t0[5][31:16]=ic2[5][1];
-assign t0[5][15: 0]=ic2[5][0];
-assign t0[6][63:48]=ic2[6][3];
-assign t0[6][47:32]=ic2[6][2];
-assign t0[6][31:16]=ic2[6][1];
-assign t0[6][15: 0]=ic2[6][0];
-assign t0[7][63:48]=ic2[7][3];
-assign t0[7][47:32]=ic2[7][2];
-assign t0[7][31:16]=ic2[7][1];
-assign t0[7][15: 0]=ic2[7][0];
-assign t1=
-	(t0[0]&{64{sd[0]}})|
-	(t0[1]&{64{sd[1]}})|
-	(t0[2]&{64{sd[2]}})|
-	(t0[3]&{64{sd[3]}})|
-	(t0[4]&{64{sd[4]}})|
-	(t0[5]&{64{sd[5]}})|
-	(t0[6]&{64{sd[6]}})|
-	(t0[7]&{64{sd[7]}});
-assign t2[3]=t1[63:48];
-assign t2[2]=t1[47:32];
-assign t2[1]=t1[31:16];
-assign t2[0]=t1[15: 0];
-assign o2=t2;
+assign o2=ic2[sc];
 
 lcells #(3) lc_muxed_access_length(o4,ic4[sc]);
 lcells #(3) lc_muxed_access_length0(o5,ic5[sc]);
@@ -830,7 +779,6 @@ end
 endgenerate
 
 endmodule
-
 
 
 
