@@ -751,13 +751,11 @@ module reg_mux_from_memory(
 	input main_clk
 );
 
-reg [2:0] ex_index_r = 0;
+reg [7:0] ex_index_decoded = 0;
 reg       is_return_r = 0;
 reg       uses_vr1_r = 0;
-reg [3:0] target0_r = 0;
-reg [3:0] target1_r = 0;
-reg       renamed0_r = 0;
-reg       renamed1_r = 0;
+reg [15:0] target_index_decoded [1:0];
+reg [1:0] renamed_vr = 0;
 
 reg [2:0] ex_index_future;
 always @(*) begin
@@ -772,56 +770,61 @@ always @(*) begin
 end
 
 always @(posedge main_clk) begin
-	ex_index_r <= ex_index_future;
+	ex_index_decoded <= 8'h00;
+	ex_index_decoded[ex_index_future] <= 1'b1;
 
 	if (instructions[ex_index_future][15:8] == 8'hFB) begin
 		is_return_r <= 1'b1;
 		uses_vr1_r <= 1'b0;
-		target0_r <= 4'h0;
-		target1_r <= 4'h0;
-		renamed0_r <= 1'b0;
-		renamed1_r <= 1'b0;
+		target_index_decoded[0] <= 16'h0000;
+		target_index_decoded[1] <= 16'h0000;
+		renamed_vr[0] <= 1'b0;
+		renamed_vr[1] <= 1'b0;
 	end else begin
 		is_return_r <= 1'b0;
 		uses_vr1_r <= (instructions[ex_index_future][15:8] == 8'hF3);
-		target0_r <= instructions[ex_index_future][3:0];
-		target1_r <= instructions[ex_index_future][7:4];
-		renamed0_r <= rename_state_from_executers[ex_index_future][instructions[ex_index_future][3:0]];
-		renamed1_r <= rename_state_from_executers[ex_index_future][instructions[ex_index_future][7:4]];
+		target_index_decoded[0] <= 16'h0001 << instructions[ex_index_future][3:0];
+		target_index_decoded[1] <= 16'h0001 << instructions[ex_index_future][7:4];
+		renamed_vr[0] <= rename_state_from_executers[ex_index_future][instructions[ex_index_future][3:0]];
+		renamed_vr[1] <= rename_state_from_executers[ex_index_future][instructions[ex_index_future][7:4]];
 	end
 end
 
 wire write_verifed;
-assign write_verifed = doSpecialWrite[ex_index_r];
+assign write_verifed = |(doSpecialWrite & ex_index_decoded);
 
-integer i;
-integer write_index0;
-integer write_index1;
-always @(*) begin
-	for (i=0;i<32;i=i+1) begin
-		final_result[i]=default_values[i];
-	end
-	final_result[16]=16'hx;
-	final_result[17]=16'hx;
+wire [31:0] dec5_vr [1:0];
+wire [15:0] special_sv [1:0];
+wire [15:0] sv [31:0];
 
-	if (write_verifed) begin
-		if (is_return_r) begin
-			final_result[0]=mem_data[3];
-			final_result[1]=mem_data[2];
+assign dec5_vr[1][15:0]  = ({16{write_verifed & !renamed_vr[1] & uses_vr1_r}} & target_index_decoded[1]);
+assign dec5_vr[1][31:18] = ({14{write_verifed &  renamed_vr[1] & uses_vr1_r}} & target_index_decoded[1][15:2]);
+assign dec5_vr[1][17:16] = 2'b00;
+
+assign dec5_vr[0][15:0]  = ({16{write_verifed & !renamed_vr[0]}} & target_index_decoded[0]) | dec5_vr[1][15:0];
+assign dec5_vr[0][31:18] = ({14{write_verifed &  renamed_vr[0]}} & target_index_decoded[0][15:2]) | dec5_vr[1][31:18];
+assign dec5_vr[0][17:16] = 2'b00;
+
+assign special_sv[0] = (write_verifed && is_return_r) ? mem_data[3] : default_values[0];
+assign special_sv[1] = (write_verifed && is_return_r) ? mem_data[2] : default_values[1];
+
+generate
+genvar i;
+for (i=0;i<32;i=i+1) begin : gen2
+	if (i!=16 && i!=17) begin
+		assign sv[i] = dec5_vr[1][i] ? mem_data[1] : mem_data[0];
+		if (i==0 || i==1) begin
+			assign final_result[i] = dec5_vr[0][i] ? sv[i] : special_sv[i];
 		end else begin
-			write_index0 = target0_r + (renamed0_r ? 16 : 0);
-			if (write_index0 != 16 && write_index0 != 17) final_result[write_index0]=mem_data[0];
-			if (uses_vr1_r) begin
-				write_index1 = target1_r + (renamed1_r ? 16 : 0);
-				if (write_index1 != 16 && write_index1 != 17) final_result[write_index1]=mem_data[1];
-			end
+			assign final_result[i] = dec5_vr[0][i] ? sv[i] : default_values[i];
 		end
+	end else begin
+		assign final_result[i] = 16'hx;
 	end
 end
+endgenerate
 
 endmodule
-
-
 
 
 
